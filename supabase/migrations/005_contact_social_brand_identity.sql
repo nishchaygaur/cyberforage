@@ -2,11 +2,7 @@
 -- 005_contact_social_brand_identity.sql: Contact, Social Links & Brand Identity CMS
 -- ==============================================================================
 
--- 1. Extend social_links with optional description
-ALTER TABLE public.social_links
-ADD COLUMN IF NOT EXISTS description TEXT;
-
--- 2. Extend contact_information with WhatsApp and custom modal copy
+-- 1. Extend contact_information with WhatsApp and custom modal copy
 ALTER TABLE public.contact_information
 ADD COLUMN IF NOT EXISTS whatsapp TEXT,
 ADD COLUMN IF NOT EXISTS contact_modal_description TEXT;

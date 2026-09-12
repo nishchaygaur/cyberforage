@@ -197,7 +197,6 @@ export interface Database {
           label: string;
           url: string;
           icon: string | null;
-          description: string | null;
           enabled: boolean;
           display_order: number;
           created_at: string;
@@ -209,7 +208,6 @@ export interface Database {
           label: string;
           url: string;
           icon?: string | null;
-          description?: string | null;
           enabled?: boolean;
           display_order?: number;
           created_at?: string;
@@ -221,7 +219,6 @@ export interface Database {
           label?: string;
           url?: string;
           icon?: string | null;
-          description?: string | null;
           enabled?: boolean;
           display_order?: number;
           created_at?: string;

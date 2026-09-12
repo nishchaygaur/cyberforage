@@ -35,7 +35,6 @@ export interface SocialLinkItem {
   label: string;
   url: string;
   icon: string | null;
-  description: string | null;
   enabled: boolean;
   display_order: number;
 }
@@ -71,7 +70,6 @@ export function SocialListClient({ initialLinks }: { initialLinks: SocialLinkIte
     label: "GitHub",
     url: "",
     icon: "github",
-    description: "",
     display_order: 1,
     enabled: true,
   });
@@ -88,7 +86,6 @@ export function SocialListClient({ initialLinks }: { initialLinks: SocialLinkIte
       label: defaults.label,
       url: "",
       icon: defaults.icon,
-      description: "",
       display_order: links.length + 1,
       enabled: true,
     });
@@ -106,7 +103,6 @@ export function SocialListClient({ initialLinks }: { initialLinks: SocialLinkIte
       label: link.label,
       url: link.url,
       icon: link.icon || link.platform || "custom",
-      description: link.description || "",
       display_order: link.display_order,
       enabled: link.enabled,
     });
@@ -241,7 +237,6 @@ export function SocialListClient({ initialLinks }: { initialLinks: SocialLinkIte
       label: formState.label.trim(),
       url: validation.formattedUrl,
       icon: formState.icon || formState.platform,
-      description: formState.description.trim() || null,
       enabled: formState.enabled,
       display_order: formState.display_order,
     };
@@ -457,20 +452,6 @@ export function SocialListClient({ initialLinks }: { initialLinks: SocialLinkIte
                   className="w-full px-3 py-2 rounded-xl bg-[#040812] border border-white/15 text-white text-sm font-mono focus:outline-none focus:border-cyan-400/50"
                 />
               </div>
-
-              {/* Optional Description */}
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-mono uppercase tracking-wider text-white/70 mb-1">
-                  Optional Description
-                </label>
-                <input
-                  type="text"
-                  value={formState.description}
-                  onChange={(e) => setFormState((p) => ({ ...p, description: e.target.value }))}
-                  placeholder="e.g. Official repository for cybersecurity tools"
-                  className="w-full px-3 py-2 rounded-xl bg-[#040812] border border-white/15 text-white text-sm focus:outline-none focus:border-cyan-400/50"
-                />
-              </div>
             </div>
 
             {/* Visibility toggle & Action Buttons */}
@@ -570,7 +551,6 @@ export function SocialListClient({ initialLinks }: { initialLinks: SocialLinkIte
                           <div className="text-sm font-medium text-white">{link.label}</div>
                           <div className="text-[11px] font-mono text-white/40 capitalize">
                             {link.platform}
-                            {link.description && ` • ${link.description}`}
                           </div>
                         </div>
                       </div>

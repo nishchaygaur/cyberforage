@@ -17,7 +17,6 @@ export const DEFAULT_PUBLIC_SOCIALS: SocialRow[] = [
     label: "GitHub",
     url: SOCIAL_LINKS.github,
     icon: "github",
-    description: "Open-source repositories and tools",
     enabled: true,
     display_order: 1,
     created_at: new Date().toISOString(),
@@ -114,10 +113,10 @@ export async function createSocialLink(link: SocialInsert) {
     platform: (link.platform || "custom").toLowerCase().trim(),
     url: val.formattedUrl,
     icon: (link.icon || link.platform || "custom").toLowerCase().trim(),
-    description: link.description?.trim() || null,
     enabled: link.enabled !== undefined ? link.enabled : true,
     display_order: link.display_order ?? 0,
   };
+  delete (payload as any).description;
 
   const { data, error } = await supabase
     .from("social_links")
@@ -166,6 +165,7 @@ export async function updateSocialLink(id: string, updates: SocialUpdate): Promi
     .maybeSingle();
 
   const payload: SocialUpdate = { ...updates };
+  delete (payload as any).description;
 
   if (updates.label !== undefined) {
     if (!updates.label.trim()) throw new Error("Label cannot be empty.");
@@ -188,10 +188,6 @@ export async function updateSocialLink(id: string, updates: SocialUpdate): Promi
 
   if (updates.icon !== undefined) {
     payload.icon = updates.icon ? updates.icon.toLowerCase().trim() : null;
-  }
-
-  if (updates.description !== undefined) {
-    payload.description = updates.description ? updates.description.trim() : null;
   }
 
   payload.updated_at = new Date().toISOString();
@@ -218,7 +214,6 @@ export async function updateSocialLink(id: string, updates: SocialUpdate): Promi
           label: payload.label || currentLink?.label || "Social Link",
           url: payload.url || currentLink?.url || "",
           icon: payload.icon !== undefined ? payload.icon : (currentLink?.icon || null),
-          description: payload.description !== undefined ? payload.description : (currentLink?.description || null),
           enabled: payload.enabled !== undefined ? payload.enabled : (currentLink?.enabled ?? true),
           display_order: payload.display_order ?? (currentLink?.display_order || 0),
           created_at: currentLink?.created_at || new Date().toISOString(),
