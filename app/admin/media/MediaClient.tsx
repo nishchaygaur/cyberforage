@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useTransition } from "react";
 import { Upload, Search, Copy, Check, Trash2, Eye, Image as ImageIcon, AlertCircle } from "lucide-react";
@@ -173,6 +173,7 @@ export function MediaClient({ initialMedia }: { initialMedia: MediaItem[] }) {
               className="group relative rounded-xl border border-white/10 bg-[#081220]/80 overflow-hidden hover:border-cyan-400/40 transition-all flex flex-col"
             >
               <div className="aspect-square bg-black/40 relative overflow-hidden flex items-center justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={item.public_url}
                   alt={item.alt_text || item.file_name}
@@ -240,6 +241,7 @@ export function MediaClient({ initialMedia }: { initialMedia: MediaItem[] }) {
             </div>
 
             <div className="max-h-96 overflow-hidden rounded-xl border border-white/10 bg-black/50 flex items-center justify-center p-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={previewItem.public_url}
                 alt={previewItem.file_name}
