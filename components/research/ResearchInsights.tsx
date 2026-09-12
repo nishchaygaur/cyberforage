@@ -2,7 +2,9 @@ import React from "react";
 import { ArrowRight } from "lucide-react";
 import { ARTICLE_PREVIEWS, ArticlePreview } from "@/lib/constants/siteData";
 
-export const ResearchInsights: React.FC = () => {
+export const ResearchInsights: React.FC<{ articles?: ArticlePreview[] }> = ({
+  articles = ARTICLE_PREVIEWS,
+}) => {
   const renderThumbnail = (type: ArticlePreview["imageType"]) => {
     switch (type) {
       case "phishing":
@@ -88,7 +90,7 @@ export const ResearchInsights: React.FC = () => {
 
         {/* 3 Article Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {ARTICLE_PREVIEWS.map((article) => (
+          {articles.map((article) => (
             <div
               key={article.title}
               className="p-5 rounded-2xl bg-[#071120]/80 border border-white/[0.07] hover:border-white/[0.15] backdrop-blur-sm transition-all duration-300 flex flex-col justify-between group cursor-pointer hover:shadow-[0_0_20px_rgba(0,0,0,0.6)]"

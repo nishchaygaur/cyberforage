@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { X, Send, Mail, CheckCircle2 } from "lucide-react";
 
+import { submitContactAction } from "@/app/admin/actions";
+
 interface ContactModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -12,15 +14,31 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
   const [submitted, setSubmitted] = useState(false);
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email) {
+    if (!email) return;
+
+    setIsSubmitting(true);
+    try {
+      await submitContactAction({
+        name: email.split("@")[0],
+        email: email.trim(),
+        subject: "General Inquiry / Collaboration",
+        message: message.trim(),
+      });
+    } catch {
+      // Graceful fallback for offline / mock mode
+    } finally {
+      setIsSubmitting(false);
       setSubmitted(true);
       setTimeout(() => {
         setSubmitted(false);
+        setEmail("");
+        setMessage("");
         onClose();
       }, 2500);
     }
@@ -101,10 +119,11 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-lg bg-[#00E5BE] hover:bg-[#00F0C0] text-[#04131E] font-semibold text-sm transition-all shadow-[0_0_20px_rgba(0,229,190,0.3)] cursor-pointer"
+                  disabled={isSubmitting}
+                  className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-lg bg-[#00E5BE] hover:bg-[#00F0C0] text-[#04131E] font-semibold text-sm transition-all shadow-[0_0_20px_rgba(0,229,190,0.3)] cursor-pointer disabled:opacity-50"
                 >
                   <Send className="w-4 h-4" />
-                  <span>Transmit Inquiry</span>
+                  <span>{isSubmitting ? "Transmitting..." : "Transmit Inquiry"}</span>
                 </button>
               </div>
 

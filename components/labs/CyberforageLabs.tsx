@@ -2,7 +2,7 @@ import React from "react";
 import { ArrowRight, ChevronRight, Box, Shield, Search, Bug, Network } from "lucide-react";
 import { AVAILABLE_LABS, LabItem } from "@/lib/constants/siteData";
 
-export const CyberforageLabs: React.FC = () => {
+export const CyberforageLabs: React.FC<{ labs?: LabItem[] }> = ({ labs = AVAILABLE_LABS }) => {
   const getLabIcon = (iconType: LabItem["iconType"], accent: LabItem["accent"]) => {
     switch (iconType) {
       case "cube":
@@ -117,7 +117,7 @@ export const CyberforageLabs: React.FC = () => {
                 Available Labs
               </div>
               <div className="space-y-1.5">
-                {AVAILABLE_LABS.map((lab) => (
+                {labs.map((lab) => (
                   <div
                     key={lab.name}
                     className="flex items-center justify-between p-2.5 rounded-lg hover:bg-white/[0.04] transition-colors group cursor-pointer border border-transparent hover:border-white/[0.05]"

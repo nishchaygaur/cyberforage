@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { Navbar } from "@/components/navbar/Navbar";
 import { Hero } from "@/components/hero/Hero";
 import { Ecosystem } from "@/components/ecosystem/Ecosystem";
@@ -9,8 +9,17 @@ import { Technologies } from "@/components/technologies/Technologies";
 import { ResearchInsights } from "@/components/research/ResearchInsights";
 import { OpenSourceBanner } from "@/components/open-source/OpenSourceBanner";
 import { Footer } from "@/components/footer/Footer";
+import { getPublishedLabs } from "@/lib/data/labs";
+import { getPublishedArticles } from "@/lib/data/research";
 
-export default function HomePage() {
+export const revalidate = 60; // ISR revalidation every 60s or on-demand via revalidatePath
+
+export default async function HomePage() {
+  const [labs, articles] = await Promise.all([
+    getPublishedLabs(),
+    getPublishedArticles(),
+  ]);
+
   return (
     <main className="min-h-screen bg-[#040812] text-white flex flex-col">
       {/* 1. Navbar */}
@@ -29,13 +38,13 @@ export default function HomePage() {
       <WhatWeExplore />
 
       {/* 6. Cyberforage Labs */}
-      <CyberforageLabs />
+      <CyberforageLabs labs={labs} />
 
       {/* 7. Technologies */}
       <Technologies />
 
       {/* 8. Research & Insights */}
-      <ResearchInsights />
+      <ResearchInsights articles={articles} />
 
       {/* 9. Open Source & Contact CTA */}
       <OpenSourceBanner />
