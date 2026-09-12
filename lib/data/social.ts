@@ -40,18 +40,18 @@ export async function getPublicSocialLinks(): Promise<SocialRow[]> {
       .eq("enabled", true)
       .order("display_order", { ascending: true });
 
-    if (error || !links || links.length === 0) {
+    if (error) {
+      console.error("Error fetching social links:", error);
       return DEFAULT_PUBLIC_SOCIALS;
     }
 
-    // Filter out any legacy placeholders that might have been seeded (e.g. bare domain linkedin.com)
-    return links.filter((link) => {
-      if (link.platform === "linkedin" && (link.url === "https://linkedin.com" || link.url === "https://www.linkedin.com" || link.url === "https://linkedin.com/")) {
-        return false;
-      }
-      return true;
-    });
-  } catch {
+    if (!links || links.length === 0) {
+      return [];
+    }
+
+    return links;
+  } catch (err) {
+    console.error("Failed to get public social links:", err);
     return DEFAULT_PUBLIC_SOCIALS;
   }
 }
@@ -148,6 +148,8 @@ export async function createSocialLink(link: SocialInsert) {
   });
 
   revalidatePath("/");
+  revalidatePath("/about");
+  revalidatePath("/contact");
   revalidatePath("/admin/social");
   return createdRecord;
 }
@@ -230,6 +232,8 @@ export async function updateSocialLink(id: string, updates: SocialUpdate): Promi
   });
 
   revalidatePath("/");
+  revalidatePath("/about");
+  revalidatePath("/contact");
   revalidatePath("/admin/social");
   return updatedRecord;
 }
@@ -257,6 +261,8 @@ export async function deleteSocialLink(id: string) {
   });
 
   revalidatePath("/");
+  revalidatePath("/about");
+  revalidatePath("/contact");
   revalidatePath("/admin/social");
   return { success: true };
 }
@@ -292,6 +298,8 @@ export async function reorderSocialLinks(orderedIds: string[]) {
   });
 
   revalidatePath("/");
+  revalidatePath("/about");
+  revalidatePath("/contact");
   revalidatePath("/admin/social");
   return { success: true };
 }

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
@@ -38,7 +38,8 @@ export function ExplorationListClient({ initialItems }: { initialItems: Explorat
     );
     startTransition(async () => {
       try {
-        await updateExplorationAction(item.id, { enabled: newEnabled });
+        const res = await updateExplorationAction(item.id, { enabled: newEnabled });
+        if (res && !res.success) throw new Error(res.error || "Failed to update item status.");
         router.refresh();
       } catch (err: any) {
         setErrorMessage(err.message || "Failed to update item status.");
@@ -54,7 +55,8 @@ export function ExplorationListClient({ initialItems }: { initialItems: Explorat
     setIsDeleting(true);
     setErrorMessage("");
     try {
-      await deleteExplorationAction(deleteTarget.id);
+      const res = await deleteExplorationAction(deleteTarget.id);
+      if (res && !res.success) throw new Error(res.error || "Failed to delete item.");
       setItems((prev) => prev.filter((i) => i.id !== deleteTarget.id));
       setDeleteTarget(null);
       router.refresh();

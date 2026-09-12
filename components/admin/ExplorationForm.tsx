@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -45,13 +45,17 @@ export function ExplorationForm({ initialData, isEdit = false }: ExplorationForm
     };
 
     try {
-      if (isEdit) {
-        await updateExplorationAction(initialData.id, payload);
-      } else {
-        await createExplorationAction(payload);
+      const res = isEdit
+        ? await updateExplorationAction(initialData.id, payload)
+        : await createExplorationAction(payload);
+
+      if (!res.success) {
+        setErrorMessage(res.error || "Failed to save exploration area.");
+        setIsSubmitting(false);
+        return;
       }
+
       router.push("/admin/exploration");
-      router.refresh();
     } catch (err: any) {
       setErrorMessage(err.message || "Failed to save exploration area.");
       setIsSubmitting(false);

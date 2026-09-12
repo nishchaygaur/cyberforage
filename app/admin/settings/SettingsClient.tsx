@@ -52,7 +52,8 @@ export function SettingsClient({ initialSettings }: { initialSettings: any }) {
         announcement_banner_text: formData.announcement_banner_text.trim() || null,
       };
 
-      await updateSiteSettingsAction(payload);
+      const res = await updateSiteSettingsAction(payload);
+      if (res && !res.success) throw new Error(res.error || "Failed to update site settings.");
       setSuccessMessage("Site settings and brand identity updated successfully.");
       router.refresh();
     } catch (err: any) {

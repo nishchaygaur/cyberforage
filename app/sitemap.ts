@@ -1,6 +1,8 @@
-﻿import { MetadataRoute } from "next";
+import { MetadataRoute } from "next";
 import { getPublishedProjects } from "@/lib/data/projects";
 import { getPublishedArticles } from "@/lib/data/research";
+
+export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://cyberforage.space";
@@ -13,28 +15,40 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1,
     },
     {
-      url: `${baseUrl}/#projects`,
+      url: `${baseUrl}/projects`,
       lastModified: new Date(),
       changeFrequency: "weekly",
-      priority: 0.8,
+      priority: 0.9,
     },
     {
-      url: `${baseUrl}/#labs`,
+      url: `${baseUrl}/labs`,
       lastModified: new Date(),
       changeFrequency: "weekly",
-      priority: 0.8,
+      priority: 0.9,
     },
     {
-      url: `${baseUrl}/#research`,
+      url: `${baseUrl}/research`,
       lastModified: new Date(),
       changeFrequency: "weekly",
-      priority: 0.8,
+      priority: 0.9,
     },
     {
-      url: `${baseUrl}/#technologies`,
+      url: `${baseUrl}/tools`,
       lastModified: new Date(),
       changeFrequency: "monthly",
-      priority: 0.7,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/about`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/contact`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.8,
     },
   ];
 
@@ -45,14 +59,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ]);
 
     const projectRoutes: MetadataRoute.Sitemap = projects.map((p) => ({
-      url: `${baseUrl}/#project-${p.id}`,
+      url: `${baseUrl}/projects#${p.id}`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.7,
     }));
 
     const articleRoutes: MetadataRoute.Sitemap = articles.map((a, idx) => ({
-      url: `${baseUrl}/#article-${idx + 1}`,
+      url: `${baseUrl}/research#article-${idx + 1}`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.7,

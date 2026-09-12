@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { ARTICLE_PREVIEWS, ArticlePreview } from "@/lib/constants/siteData";
 
@@ -79,20 +80,21 @@ export const ResearchInsights: React.FC<{ articles?: ArticlePreview[] }> = ({
               Research & Insights
             </h2>
           </div>
-          <a
-            href="#research"
+          <Link
+            href="/research"
             className="mt-3 sm:mt-0 inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-slate-400 hover:text-[#00F0C0] transition-colors self-start sm:self-auto"
           >
             <span>Visit Research</span>
             <ArrowRight className="w-3.5 h-3.5" />
-          </a>
+          </Link>
         </div>
 
         {/* 3 Article Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {articles.map((article) => (
-            <div
+            <Link
               key={article.title}
+              href="/research"
               className="p-5 rounded-2xl bg-[#071120]/80 border border-white/[0.07] hover:border-white/[0.15] backdrop-blur-sm transition-all duration-300 flex flex-col justify-between group cursor-pointer hover:shadow-[0_0_20px_rgba(0,0,0,0.6)]"
             >
               <div className="flex items-start gap-4 mb-4">
@@ -118,7 +120,7 @@ export const ResearchInsights: React.FC<{ articles?: ArticlePreview[] }> = ({
                   <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-1" />
                 </span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

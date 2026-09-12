@@ -58,7 +58,8 @@ export function SeoClient({ initialSettings }: { initialSettings: any }) {
     };
 
     try {
-      await updateSeoAction(payload);
+      const res = await updateSeoAction(payload);
+      if (res && !res.success) throw new Error(res.error || "Failed to update SEO settings.");
       setSuccessMessage("SEO metadata updated successfully.");
       router.refresh();
     } catch (err: any) {

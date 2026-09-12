@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -50,13 +50,17 @@ export function LabForm({ initialData, isEdit = false }: LabFormProps) {
     };
 
     try {
-      if (isEdit) {
-        await updateLabAction(initialData.id, payload);
-      } else {
-        await createLabAction(payload);
+      const res = isEdit
+        ? await updateLabAction(initialData.id, payload)
+        : await createLabAction(payload);
+
+      if (!res.success) {
+        setErrorMessage(res.error || "Failed to save lab.");
+        setIsSubmitting(false);
+        return;
       }
+
       router.push("/admin/labs");
-      router.refresh();
     } catch (err: any) {
       setErrorMessage(err.message || "Failed to save lab.");
       setIsSubmitting(false);

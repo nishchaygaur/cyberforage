@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import { ArrowRight, ChevronRight, Box, Shield, Search, Bug, Network } from "lucide-react";
 import { AVAILABLE_LABS, LabItem } from "@/lib/constants/siteData";
 
@@ -101,13 +102,13 @@ export const CyberforageLabs: React.FC<{ labs?: LabItem[] }> = ({ labs = AVAILAB
                 learn through real-world security scenarios.
               </p>
               <div>
-                <a
-                  href="#labs"
+                <Link
+                  href="/labs"
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#050E1A] hover:bg-[#00F0C0]/10 border border-[#00F0C0]/40 hover:border-[#00F0C0] text-xs font-medium text-white transition-all group"
                 >
                   <span>Explore Labs</span>
                   <ArrowRight className="w-3.5 h-3.5 text-[#00F0C0] transition-transform group-hover:translate-x-1" />
-                </a>
+                </Link>
               </div>
             </div>
 
@@ -118,8 +119,9 @@ export const CyberforageLabs: React.FC<{ labs?: LabItem[] }> = ({ labs = AVAILAB
               </div>
               <div className="space-y-1.5">
                 {labs.map((lab) => (
-                  <div
+                  <Link
                     key={lab.name}
+                    href="/labs"
                     className="flex items-center justify-between p-2.5 rounded-lg hover:bg-white/[0.04] transition-colors group cursor-pointer border border-transparent hover:border-white/[0.05]"
                   >
                     <div className="flex items-center gap-2.5">
@@ -137,7 +139,7 @@ export const CyberforageLabs: React.FC<{ labs?: LabItem[] }> = ({ labs = AVAILAB
                       </span>
                       <ChevronRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-[#00F0C0] transition-colors" />
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>

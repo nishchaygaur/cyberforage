@@ -97,13 +97,17 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
     };
 
     try {
-      if (isEdit) {
-        await updateProjectAction(initialData.id, payload, tagsArray);
-      } else {
-        await createProjectAction(payload, tagsArray);
+      const res = isEdit
+        ? await updateProjectAction(initialData.id, payload, tagsArray)
+        : await createProjectAction(payload, tagsArray);
+
+      if (!res.success) {
+        setErrorMessage(res.error || "Failed to save project. Ensure database is connected.");
+        setIsSubmitting(false);
+        return;
       }
+
       router.push("/admin/projects");
-      router.refresh();
     } catch (err: any) {
       setErrorMessage(err.message || "Failed to save project. Ensure database is connected.");
       setIsSubmitting(false);

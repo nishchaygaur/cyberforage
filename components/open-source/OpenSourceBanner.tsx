@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { SOCIAL_LINKS } from "@/lib/constants/siteData";
 import { ContactModal } from "@/components/contact/ContactModal";
 import { SocialRow } from "@/lib/data/social";
 import { ContactInfoRow } from "@/lib/data/contact";
@@ -18,9 +18,9 @@ export const OpenSourceBanner: React.FC<OpenSourceBannerProps> = ({
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
 
-  const githubUrl =
-    socialLinks?.find((l) => l.platform.toLowerCase() === "github")?.url ||
-    SOCIAL_LINKS.github;
+  const githubSocial = socialLinks?.find(
+    (l) => l.platform.toLowerCase() === "github" && l.enabled !== false
+  );
 
   return (
     <section
@@ -61,15 +61,25 @@ export const OpenSourceBanner: React.FC<OpenSourceBannerProps> = ({
                     Explore our repositories, contribute and be part of the journey.
                   </p>
 
-                  <a
-                    href={githubUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#050E1A] hover:bg-[#00F0C0]/10 border border-[#00F0C0]/40 hover:border-[#00F0C0] text-xs font-medium text-white transition-all group"
-                  >
-                    <span>Visit GitHub</span>
-                    <ArrowRight className="w-3.5 h-3.5 text-[#00F0C0] transition-transform group-hover:translate-x-1" />
-                  </a>
+                  {githubSocial?.url ? (
+                    <a
+                      href={githubSocial.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#050E1A] hover:bg-[#00F0C0]/10 border border-[#00F0C0]/40 hover:border-[#00F0C0] text-xs font-medium text-white transition-all group"
+                    >
+                      <span>Visit GitHub</span>
+                      <ArrowRight className="w-3.5 h-3.5 text-[#00F0C0] transition-transform group-hover:translate-x-1" />
+                    </a>
+                  ) : (
+                    <Link
+                      href="/projects"
+                      className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#050E1A] hover:bg-[#00F0C0]/10 border border-[#00F0C0]/40 hover:border-[#00F0C0] text-xs font-medium text-white transition-all group"
+                    >
+                      <span>Explore Projects</span>
+                      <ArrowRight className="w-3.5 h-3.5 text-[#00F0C0] transition-transform group-hover:translate-x-1" />
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>

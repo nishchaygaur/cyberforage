@@ -42,6 +42,25 @@ export async function getPublishedArticles(): Promise<ArticlePreview[]> {
   }
 }
 
+export async function getPublishedResearchRows(): Promise<ResearchRow[]> {
+  try {
+    const supabase = await createClient();
+    if (!supabase) return [];
+
+    const { data, error } = await supabase
+      .from("research_articles")
+      .select("*, research_tags(tag)")
+      .eq("published", true)
+      .order("publication_date", { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.error("getPublishedResearchRows error:", err);
+    return [];
+  }
+}
+
 export async function getAllArticles(filters?: { search?: string; published?: boolean }) {
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
@@ -104,6 +123,7 @@ export async function createArticle(article: ResearchInsert, tags: string[] = []
   });
 
   revalidatePath("/");
+  revalidatePath("/research");
   return data;
 }
 
@@ -138,6 +158,7 @@ export async function updateArticle(id: string, updates: ResearchUpdate, tags?: 
   });
 
   revalidatePath("/");
+  revalidatePath("/research");
   return data;
 }
 
@@ -159,5 +180,6 @@ export async function deleteArticle(id: string) {
   });
 
   revalidatePath("/");
+  revalidatePath("/research");
   return { success: true };
 }

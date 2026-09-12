@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import { Shield, Brain, Cog, ArrowRight } from "lucide-react";
 import { ECOSYSTEM_CARDS } from "@/lib/constants/siteData";
 import { SiteSettingsRow } from "@/lib/data/site";
@@ -78,13 +79,13 @@ export const Ecosystem: React.FC<EcosystemProps> = ({ siteSettings }) => {
             )}
 
             <div>
-              <a
-                href="#projects"
+              <Link
+                href="/about"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#06101E]/90 hover:bg-[#0A182E] text-slate-200 hover:text-white border border-[#00E5BE]/30 hover:border-[#00E5BE] text-sm font-medium transition-all group"
               >
                 <span>Learn More</span>
                 <ArrowRight className="w-4 h-4 text-[#00E5BE] transition-transform group-hover:translate-x-1" />
-              </a>
+              </Link>
             </div>
           </div>
 

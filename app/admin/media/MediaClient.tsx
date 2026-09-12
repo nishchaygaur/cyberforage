@@ -54,8 +54,10 @@ export function MediaClient({ initialMedia }: { initialMedia: MediaItem[] }) {
     formData.append("altText", altText.trim());
 
     try {
-      const newMedia = await uploadMediaAction(formData);
-      setMediaList((prev) => [newMedia, ...prev]);
+      const res = await uploadMediaAction(formData);
+      if (res && !res.success) throw new Error(res.error || "Failed to upload file. Ensure Supabase Storage is configured.");
+      const uploaded = res?.data;
+      if (uploaded) setMediaList((prev) => [uploaded, ...prev]);
       setSuccessMessage(`File "${file.name}" uploaded successfully.`);
       setAltText("");
       e.target.value = "";
@@ -70,7 +72,8 @@ export function MediaClient({ initialMedia }: { initialMedia: MediaItem[] }) {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
-      await deleteMediaAction(deleteTarget.id);
+      const res = await deleteMediaAction(deleteTarget.id);
+      if (res && !res.success) throw new Error(res.error || "Failed to delete file.");
       setMediaList((prev) => prev.filter((m) => m.id !== deleteTarget.id));
       if (previewItem?.id === deleteTarget.id) setPreviewItem(null);
       setDeleteTarget(null);

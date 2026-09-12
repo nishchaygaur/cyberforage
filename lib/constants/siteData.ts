@@ -4,13 +4,13 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { label: "Home", href: "#home" },
-  { label: "Projects", href: "#projects" },
-  { label: "Labs", href: "#labs" },
-  { label: "Research", href: "#research" },
-  { label: "Tools", href: "#technologies" },
-  { label: "About", href: "#ecosystem" },
-  { label: "Contact", href: "#contact" },
+  { label: "Home", href: "/" },
+  { label: "Projects", href: "/projects" },
+  { label: "Labs", href: "/labs" },
+  { label: "Research", href: "/research" },
+  { label: "Tools", href: "/tools" },
+  { label: "About", href: "/about" },
+  { label: "Contact", href: "/contact" },
 ];
 
 export const SOCIAL_LINKS = {
@@ -53,6 +53,17 @@ export interface ProjectData {
   accent: "cyan" | "purple" | "rose";
   workflow?: string[];
   tags?: string[];
+  project_url?: string | null;
+  demo_url?: string | null;
+  github_url?: string | null;
+  documentation_url?: string | null;
+  featured?: boolean;
+  published?: boolean;
+  category?: string | null;
+  status?: string | null;
+  icon?: string | null;
+  year?: string | null;
+  slug?: string | null;
 }
 
 export const FEATURED_PROJECTS: ProjectData[] = [

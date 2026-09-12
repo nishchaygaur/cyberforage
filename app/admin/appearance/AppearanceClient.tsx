@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { Save, Palette, RotateCcw } from "lucide-react";
@@ -46,7 +46,8 @@ export function AppearanceClient({ initialSettings }: { initialSettings: any }) 
     setErrorMessage("");
 
     try {
-      await updateAppearanceAction(formData);
+      const res = await updateAppearanceAction(formData);
+      if (res && !res.success) throw new Error(res.error || "Failed to save appearance settings.");
       setSuccessMessage("Design tokens updated successfully.");
       router.refresh();
     } catch (err: any) {

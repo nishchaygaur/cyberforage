@@ -25,10 +25,21 @@ export async function getNavigationItems(location: "navbar" | "footer" = "navbar
       return NAV_ITEMS;
     }
 
-    return items.map((item) => ({
-      label: item.label,
-      href: item.url,
-    }));
+    return items.map((item) => {
+      let url = item.url;
+      if (url === "#home") url = "/";
+      else if (url === "#projects") url = "/projects";
+      else if (url === "#labs") url = "/labs";
+      else if (url === "#research") url = "/research";
+      else if (url === "#technologies") url = "/tools";
+      else if (url === "#ecosystem") url = "/about";
+      else if (url === "#contact") url = "/contact";
+
+      return {
+        label: item.label,
+        href: url,
+      };
+    });
   } catch {
     return NAV_ITEMS;
   }
@@ -69,6 +80,7 @@ export async function createNavigationItem(item: NavigationInsert) {
   });
 
   revalidatePath("/");
+  revalidatePath("/", "layout");
   return data;
 }
 
@@ -89,6 +101,7 @@ export async function updateNavigationItem(id: string, updates: NavigationUpdate
   });
 
   revalidatePath("/");
+  revalidatePath("/", "layout");
   return data;
 }
 
@@ -109,5 +122,6 @@ export async function deleteNavigationItem(id: string) {
   });
 
   revalidatePath("/");
+  revalidatePath("/", "layout");
   return { success: true };
 }

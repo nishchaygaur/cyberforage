@@ -1,4 +1,6 @@
 import React from "react";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { TECHNOLOGIES } from "@/lib/constants/siteData";
 
 export const Technologies: React.FC = () => {
@@ -110,6 +112,13 @@ export const Technologies: React.FC = () => {
               <h2 className="text-2xl font-bold text-white tracking-tight">
                 Powered by Modern Tools.
               </h2>
+              <Link
+                href="/tools"
+                className="mt-3 inline-flex items-center gap-1.5 text-xs font-mono text-[#00E5BE] hover:text-[#00F0C0] transition-colors"
+              >
+                <span>Explore Tools & Stack</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
 
             {/* Glowing Equalizer Bar Visual */}

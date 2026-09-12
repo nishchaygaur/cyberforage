@@ -20,20 +20,67 @@ export async function getPublishedProjects(): Promise<ProjectData[]> {
       .eq("published", true)
       .order("display_order", { ascending: true });
 
-    if (error || !projects || projects.length === 0) {
+    if (error) {
+      console.error("Error fetching published projects:", error);
       return FEATURED_PROJECTS;
     }
 
-    return projects.map((p) => ({
-      id: p.slug || p.id,
-      title: p.title,
-      subtitle: p.short_description,
-      description: p.full_description || p.short_description,
-      accent: (p.accent_color as "cyan" | "purple" | "rose") || "cyan",
-      tags: p.project_tags ? p.project_tags.map((t: { tag: string }) => t.tag) : [],
-    }));
-  } catch {
+    if (!projects || projects.length === 0) {
+      return [];
+    }
+
+    return projects.map((p) => {
+      let projectUrl = p.project_url;
+      if (!projectUrl) {
+        if (p.title?.toLowerCase().includes("cyberforage") || p.title?.toLowerCase().includes("cyberforge") || p.slug === "cyberforge") {
+          projectUrl = "https://cyberforage.space";
+        } else if (p.title?.toLowerCase().includes("pdf malware") || p.slug?.includes("audit.cyberforage.space")) {
+          projectUrl = "https://audit.cyberforage.space";
+        }
+      }
+
+      return {
+        id: p.slug || p.id,
+        slug: p.slug,
+        title: p.title,
+        subtitle: p.short_description,
+        description: p.full_description || p.short_description,
+        accent: (p.accent_color as "cyan" | "purple" | "rose") || "cyan",
+        tags: p.project_tags ? p.project_tags.map((t: { tag: string }) => t.tag) : [],
+        project_url: projectUrl,
+        demo_url: p.demo_url,
+        github_url: p.github_url,
+        documentation_url: p.documentation_url,
+        featured: p.featured,
+        published: p.published,
+        category: p.category,
+        status: p.status,
+        icon: p.icon,
+        year: p.year,
+      };
+    });
+  } catch (err) {
+    console.error("Failed to get published projects:", err);
     return FEATURED_PROJECTS;
+  }
+}
+
+export async function getPublishedProjectRows(): Promise<ProjectRow[]> {
+  try {
+    const supabase = await createClient();
+    if (!supabase) return [];
+
+    const { data, error } = await supabase
+      .from("projects")
+      .select("*, project_tags(tag)")
+      .eq("published", true)
+      .order("display_order", { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.error("getPublishedProjectRows error:", err);
+    return [];
   }
 }
 
@@ -106,6 +153,7 @@ export async function createProject(project: ProjectInsert, tags: string[] = [])
   });
 
   revalidatePath("/");
+  revalidatePath("/projects");
   return data;
 }
 
@@ -140,6 +188,7 @@ export async function updateProject(id: string, updates: ProjectUpdate, tags?: s
   });
 
   revalidatePath("/");
+  revalidatePath("/projects");
   return data;
 }
 
@@ -161,6 +210,7 @@ export async function deleteProject(id: string) {
   });
 
   revalidatePath("/");
+  revalidatePath("/projects");
   return { success: true };
 }
 

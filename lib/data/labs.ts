@@ -35,6 +35,25 @@ export async function getPublishedLabs(): Promise<LabItem[]> {
   }
 }
 
+export async function getPublishedLabRows(): Promise<LabRow[]> {
+  try {
+    const supabase = await createClient();
+    if (!supabase) return [];
+
+    const { data, error } = await supabase
+      .from("labs")
+      .select("*")
+      .eq("published", true)
+      .order("display_order", { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.error("getPublishedLabRows error:", err);
+    return [];
+  }
+}
+
 export async function getAllLabs(filters?: { search?: string; status?: string; published?: boolean }) {
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
@@ -85,6 +104,7 @@ export async function createLab(lab: LabInsert) {
   });
 
   revalidatePath("/");
+  revalidatePath("/labs");
   return data;
 }
 
@@ -105,6 +125,7 @@ export async function updateLab(id: string, updates: LabUpdate) {
   });
 
   revalidatePath("/");
+  revalidatePath("/labs");
   return data;
 }
 
@@ -125,5 +146,6 @@ export async function deleteLab(id: string) {
   });
 
   revalidatePath("/");
+  revalidatePath("/labs");
   return { success: true };
 }

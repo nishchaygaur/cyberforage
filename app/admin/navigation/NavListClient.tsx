@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useTransition } from "react";
 import { Plus, Edit, Trash2, Menu, Save } from "lucide-react";
@@ -76,7 +76,8 @@ export function NavListClient({ initialItems }: { initialItems: any[] }) {
     );
     startTransition(async () => {
       try {
-        await updateNavAction(item.id, { enabled: newEnabled });
+        const res = await updateNavAction(item.id, { enabled: newEnabled });
+        if (res && !res.success) throw new Error(res.error || "Failed to update item.");
         router.refresh();
       } catch (err: any) {
         setErrorMessage(err.message || "Failed to update item.");
@@ -96,12 +97,15 @@ export function NavListClient({ initialItems }: { initialItems: any[] }) {
 
     try {
       if (editingItem) {
-        await updateNavAction(editingItem.id, formState);
+        const res = await updateNavAction(editingItem.id, formState);
+        if (res && !res.success) throw new Error(res.error || "Failed to update item.");
         setItems((prev) =>
           prev.map((i) => (i.id === editingItem.id ? { ...i, ...formState } : i))
         );
       } else {
-        const created = await createNavAction(formState);
+        const res = await createNavAction(formState);
+        if (res && !res.success) throw new Error(res.error || "Failed to create item.");
+        const created = res?.data;
         if (created) setItems((prev) => [...prev, created]);
       }
       setEditingItem(null);
@@ -118,7 +122,8 @@ export function NavListClient({ initialItems }: { initialItems: any[] }) {
     if (!deleteTarget) return;
     setIsDeleting(true);
     try {
-      await deleteNavAction(deleteTarget.id);
+      const res = await deleteNavAction(deleteTarget.id);
+      if (res && !res.success) throw new Error(res.error || "Failed to delete item.");
       setItems((prev) => prev.filter((i) => i.id !== deleteTarget.id));
       setDeleteTarget(null);
       router.refresh();

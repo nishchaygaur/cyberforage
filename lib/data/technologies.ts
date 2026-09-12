@@ -33,6 +33,25 @@ export async function getEnabledTechnologies(): Promise<TechItem[]> {
   }
 }
 
+export async function getPublishedTechRows(): Promise<TechRow[]> {
+  try {
+    const supabase = await createClient();
+    if (!supabase) return [];
+
+    const { data, error } = await supabase
+      .from("technologies")
+      .select("*")
+      .eq("enabled", true)
+      .order("display_order", { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.error("getPublishedTechRows error:", err);
+    return [];
+  }
+}
+
 export async function getAllTechnologies(filters?: { search?: string; enabled?: boolean }) {
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
@@ -79,6 +98,7 @@ export async function createTechnology(tech: TechInsert) {
   });
 
   revalidatePath("/");
+  revalidatePath("/tools");
   return data;
 }
 
@@ -99,6 +119,7 @@ export async function updateTechnology(id: string, updates: TechUpdate) {
   });
 
   revalidatePath("/");
+  revalidatePath("/tools");
   return data;
 }
 
@@ -119,5 +140,6 @@ export async function deleteTechnology(id: string) {
   });
 
   revalidatePath("/");
+  revalidatePath("/tools");
   return { success: true };
 }

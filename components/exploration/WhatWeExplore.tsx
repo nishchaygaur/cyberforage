@@ -1,8 +1,16 @@
 import React from "react";
+import Link from "next/link";
 import { ArrowRight, Shield, Crosshair, FlaskConical, Cpu, Cloud, Settings } from "lucide-react";
-import { EXPLORATION_DOMAINS } from "@/lib/constants/siteData";
+import { EXPLORATION_DOMAINS, ExplorationDomain } from "@/lib/constants/siteData";
 
-export const WhatWeExplore: React.FC = () => {
+interface WhatWeExploreProps {
+  items?: ExplorationDomain[];
+}
+
+export const WhatWeExplore: React.FC<WhatWeExploreProps> = ({
+  items = EXPLORATION_DOMAINS,
+}) => {
+  const explorationItems = items && items.length > 0 ? items : EXPLORATION_DOMAINS;
   const getDomainIcon = (iconName: string) => {
     switch (iconName) {
       case "shield":
@@ -58,18 +66,18 @@ export const WhatWeExplore: React.FC = () => {
               Research. Build. Innovate.
             </h2>
           </div>
-          <a
-            href="#research"
+          <Link
+            href="/research"
             className="mt-3 sm:mt-0 inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-slate-400 hover:text-[#00F0C0] transition-colors self-start sm:self-auto"
           >
             <span>Explore All</span>
             <ArrowRight className="w-3.5 h-3.5" />
-          </a>
+          </Link>
         </div>
 
         {/* 6 Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 sm:gap-5">
-          {EXPLORATION_DOMAINS.map((domain) => (
+          {explorationItems.map((domain) => (
             <div
               key={domain.title}
               className={`p-5 rounded-xl bg-[#071220]/75 border border-white/[0.06] backdrop-blur-sm transition-all duration-300 ${getBorderHover(

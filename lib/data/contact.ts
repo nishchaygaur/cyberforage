@@ -116,6 +116,8 @@ export async function updateContactInfo(updates: ContactInfoUpdate) {
   });
 
   revalidatePath("/");
+  revalidatePath("/about");
+  revalidatePath("/contact");
   revalidatePath("/admin/contact");
   return result;
 }

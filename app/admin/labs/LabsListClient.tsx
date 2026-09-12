@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
@@ -40,7 +40,8 @@ export function LabsListClient({ initialLabs }: { initialLabs: Lab[] }) {
     );
     startTransition(async () => {
       try {
-        await updateLabAction(lab.id, { published: newPublished });
+        const res = await updateLabAction(lab.id, { published: newPublished });
+        if (res && !res.success) throw new Error(res.error || "Failed to update lab status.");
         router.refresh();
       } catch (err: any) {
         setErrorMessage(err.message || "Failed to update lab status.");
@@ -56,7 +57,8 @@ export function LabsListClient({ initialLabs }: { initialLabs: Lab[] }) {
     setIsDeleting(true);
     setErrorMessage("");
     try {
-      await deleteLabAction(deleteTarget.id);
+      const res = await deleteLabAction(deleteTarget.id);
+      if (res && !res.success) throw new Error(res.error || "Failed to delete lab.");
       setLabs((prev) => prev.filter((l) => l.id !== deleteTarget.id));
       setDeleteTarget(null);
       router.refresh();

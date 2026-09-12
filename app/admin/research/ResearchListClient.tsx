@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
@@ -48,7 +48,8 @@ export function ResearchListClient({ initialArticles }: { initialArticles: Artic
     );
     startTransition(async () => {
       try {
-        await togglePublishResearchAction(article.id, newPublished);
+        const res = await togglePublishResearchAction(article.id, newPublished);
+        if (res && !res.success) throw new Error(res.error || "Failed to update article status.");
         router.refresh();
       } catch (err: any) {
         setErrorMessage(err.message || "Failed to update article status.");
@@ -66,7 +67,8 @@ export function ResearchListClient({ initialArticles }: { initialArticles: Artic
     );
     startTransition(async () => {
       try {
-        await updateResearchAction(article.id, { featured: newFeatured });
+        const res = await updateResearchAction(article.id, { featured: newFeatured });
+        if (res && !res.success) throw new Error(res.error || "Failed to update featured flag.");
         router.refresh();
       } catch (err: any) {
         setErrorMessage(err.message || "Failed to update featured flag.");
@@ -82,7 +84,8 @@ export function ResearchListClient({ initialArticles }: { initialArticles: Artic
     setIsDeleting(true);
     setErrorMessage("");
     try {
-      await deleteResearchAction(deleteTarget.id);
+      const res = await deleteResearchAction(deleteTarget.id);
+      if (res && !res.success) throw new Error(res.error || "Failed to delete article.");
       setArticles((prev) => prev.filter((a) => a.id !== deleteTarget.id));
       setDeleteTarget(null);
       router.refresh();

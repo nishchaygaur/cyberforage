@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useTransition } from "react";
 import { Search, Filter, Mail, Trash2, Eye, Calendar, Building, CheckCircle, Clock } from "lucide-react";
@@ -51,7 +51,8 @@ export function SubmissionsClient({ initialSubmissions }: { initialSubmissions: 
     }
     startTransition(async () => {
       try {
-        await updateSubmissionStatusAction(sub.id, newStatus);
+        const res = await updateSubmissionStatusAction(sub.id, newStatus);
+        if (res && !res.success) throw new Error(res.error || "Failed to update submission status.");
         router.refresh();
       } catch (err: any) {
         setErrorMessage(err.message || "Failed to update submission status.");
@@ -72,7 +73,8 @@ export function SubmissionsClient({ initialSubmissions }: { initialSubmissions: 
     setIsDeleting(true);
     setErrorMessage("");
     try {
-      await deleteSubmissionAction(deleteTarget.id);
+      const res = await deleteSubmissionAction(deleteTarget.id);
+      if (res && !res.success) throw new Error(res.error || "Failed to delete submission.");
       setSubmissions((prev) => prev.filter((s) => s.id !== deleteTarget.id));
       if (activeMessage?.id === deleteTarget.id) {
         setActiveMessage(null);

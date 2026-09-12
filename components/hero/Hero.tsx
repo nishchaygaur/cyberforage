@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { CyberGlobe } from "./CyberGlobe";
 import { SiteSettingsRow } from "@/lib/data/site";
@@ -54,20 +55,20 @@ export const Hero: React.FC<HeroProps> = ({ siteSettings }) => {
 
             {/* Call to Actions */}
             <div className="flex flex-wrap items-center gap-4 mb-8">
-              <a
-                href="#projects"
+              <Link
+                href="/projects"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#00E5BE] text-[#04131E] font-semibold text-sm sm:text-base transition-all duration-200 hover:bg-[#00F0C0] shadow-[0_0_25px_rgba(0,229,190,0.35)] hover:shadow-[0_0_35px_rgba(0,240,192,0.5)] cursor-pointer"
               >
                 <span>Explore Projects</span>
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-              </a>
+              </Link>
 
-              <a
-                href="#labs"
+              <Link
+                href="/labs"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#06101E]/80 hover:bg-[#09172B] text-slate-200 hover:text-white border border-slate-700/80 hover:border-[#00E5BE]/60 text-sm sm:text-base font-medium transition-all duration-200 cursor-pointer"
               >
                 <span>Explore Labs</span>
-              </a>
+              </Link>
             </div>
 
             {/* Metadata Line */}

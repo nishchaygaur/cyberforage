@@ -10,13 +10,15 @@ import { Technologies } from "@/components/technologies/Technologies";
 import { ResearchInsights } from "@/components/research/ResearchInsights";
 import { OpenSourceBanner } from "@/components/open-source/OpenSourceBanner";
 import { Footer } from "@/components/footer/Footer";
+import { getPublishedProjects } from "@/lib/data/projects";
+import { getExplorationItems } from "@/lib/data/exploration";
 import { getPublishedLabs } from "@/lib/data/labs";
 import { getPublishedArticles } from "@/lib/data/research";
 import { getSiteSettings } from "@/lib/data/site";
 import { getContactInfo } from "@/lib/data/contact";
 import { getPublicSocialLinks } from "@/lib/data/social";
 
-export const revalidate = 60; // ISR revalidation every 60s or on-demand via revalidatePath
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteSettings = await getSiteSettings();
@@ -41,7 +43,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const [labs, articles, siteSettings, contactInfo, socialLinks] = await Promise.all([
+  const [projects, exploration, labs, articles, siteSettings, contactInfo, socialLinks] = await Promise.all([
+    getPublishedProjects(),
+    getExplorationItems(),
     getPublishedLabs(),
     getPublishedArticles(),
     getSiteSettings(),
@@ -61,10 +65,10 @@ export default async function HomePage() {
       <Ecosystem siteSettings={siteSettings} />
 
       {/* 4. Featured Projects */}
-      <FeaturedProjects />
+      <FeaturedProjects projects={projects} />
 
       {/* 5. What We Explore */}
-      <WhatWeExplore />
+      <WhatWeExplore items={exploration} />
 
       {/* 6. Cyberforage Labs */}
       <CyberforageLabs labs={labs} />

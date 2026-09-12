@@ -100,7 +100,8 @@ export function ContactInfoClient({ initialInfo }: { initialInfo: any }) {
         contact_modal_description: formData.contact_modal_description.trim() || null,
       };
 
-      await updateContactInfoAction(payload);
+      const res = await updateContactInfoAction(payload);
+      if (res && !res.success) throw new Error(res.error || "Failed to update contact information.");
       setSuccessMessage("Contact information updated successfully.");
       router.refresh();
     } catch (err: any) {

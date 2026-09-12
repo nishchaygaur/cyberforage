@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
@@ -46,7 +46,8 @@ export function ProjectListClient({ initialProjects }: { initialProjects: Projec
     );
     startTransition(async () => {
       try {
-        await togglePublishProjectAction(project.id, newPublished);
+        const res = await togglePublishProjectAction(project.id, newPublished);
+        if (res && !res.success) throw new Error(res.error || "Failed to update project publish status.");
         router.refresh();
       } catch (err: any) {
         setErrorMessage(err.message || "Failed to update project publish status.");
@@ -64,7 +65,8 @@ export function ProjectListClient({ initialProjects }: { initialProjects: Projec
     );
     startTransition(async () => {
       try {
-        await updateProjectAction(project.id, { featured: newFeatured });
+        const res = await updateProjectAction(project.id, { featured: newFeatured });
+        if (res && !res.success) throw new Error(res.error || "Failed to update featured status.");
         router.refresh();
       } catch (err: any) {
         setErrorMessage(err.message || "Failed to update featured status.");
@@ -80,7 +82,8 @@ export function ProjectListClient({ initialProjects }: { initialProjects: Projec
     setIsDeleting(true);
     setErrorMessage("");
     try {
-      await deleteProjectAction(deleteTarget.id);
+      const res = await deleteProjectAction(deleteTarget.id);
+      if (res && !res.success) throw new Error(res.error || "Failed to delete project.");
       setProjects((prev) => prev.filter((p) => p.id !== deleteTarget.id));
       setDeleteTarget(null);
       router.refresh();

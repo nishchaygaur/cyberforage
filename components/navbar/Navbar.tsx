@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { BrandLogo } from "@/components/ui/BrandLogo";
-import { NAV_ITEMS, SOCIAL_LINKS } from "@/lib/constants/siteData";
+import { NAV_ITEMS } from "@/lib/constants/siteData";
 import { SocialIcon } from "@/components/ui/SocialIcon";
 import { SocialRow } from "@/lib/data/social";
 import { useTheme, ThemeMode } from "@/components/theme/ThemeProvider";
@@ -24,7 +25,7 @@ const THEME_OPTIONS: Array<{
 ];
 
 export const Navbar: React.FC<NavbarProps> = ({ socialLinks }) => {
-  const [activeItem, setActiveItem] = useState("Home");
+  const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
@@ -63,37 +64,12 @@ export const Navbar: React.FC<NavbarProps> = ({ socialLinks }) => {
 
   // Pick top enabled link for the nav bar action icon (favoring GitHub if available)
   const primarySocial =
-    socialLinks?.find((l) => l.platform.toLowerCase() === "github") ||
-    socialLinks?.[0] || {
-      platform: "github",
-      icon: "github",
-      label: "GitHub",
-      url: SOCIAL_LINKS.github,
-    };
+    socialLinks?.find((l) => l.platform.toLowerCase() === "github" && l.enabled !== false) ||
+    socialLinks?.find((l) => l.enabled !== false);
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
-
-      // Simple section detection on scroll
-      const sections = NAV_ITEMS.map((item) => item.href.replace("#", "")).filter(
-        (id) => id && id !== "home"
-      );
-
-      const scrollPos = window.scrollY + 200;
-      for (let i = sections.length - 1; i >= 0; i--) {
-        const el = document.getElementById(sections[i]);
-        if (el && el.offsetTop <= scrollPos) {
-          const matched = NAV_ITEMS.find((item) => item.href === `#${sections[i]}`);
-          if (matched) {
-            setActiveItem(matched.label);
-            return;
-          }
-        }
-      }
-      if (window.scrollY < 300) {
-        setActiveItem("Home");
-      }
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -110,19 +86,21 @@ export const Navbar: React.FC<NavbarProps> = ({ socialLinks }) => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Brand Logo */}
-        <Link href="#home" className="group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00F0C0] rounded">
+        <Link href="/" className="group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00F0C0] rounded">
           <BrandLogo />
         </Link>
 
         {/* Desktop Navigation Links */}
         <nav className="hidden md:flex items-center space-x-1 lg:space-x-2" aria-label="Main Navigation">
           {NAV_ITEMS.map((item) => {
-            const isActive = activeItem === item.label;
+            const isActive =
+              item.href === "/"
+                ? pathname === "/"
+                : pathname === item.href || pathname?.startsWith(item.href + "/");
             return (
-              <a
+              <Link
                 key={item.label}
                 href={item.href}
-                onClick={() => setActiveItem(item.label)}
                 className={`relative px-3 py-1.5 text-sm font-medium transition-colors ${
                   isActive
                     ? "text-[#00F0C0]"
@@ -136,23 +114,25 @@ export const Navbar: React.FC<NavbarProps> = ({ socialLinks }) => {
                     aria-hidden="true"
                   />
                 )}
-              </a>
+              </Link>
             );
           })}
         </nav>
 
         {/* Right Action Icons */}
         <div className="hidden md:flex items-center space-x-4">
-          <a
-            href={primarySocial.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={primarySocial.label || "Cyberforage Social"}
-            title={primarySocial.label}
-            className="p-1.5 text-slate-400 hover:text-[#00F0C0] hover:bg-white/5 rounded-lg transition-colors"
-          >
-            <SocialIcon platform={primarySocial.platform} icon={primarySocial.icon} className="w-4 h-4" />
-          </a>
+          {primarySocial && (
+            <a
+              href={primarySocial.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={primarySocial.label || "Cyberforage Social"}
+              title={primarySocial.label}
+              className="p-1.5 text-slate-400 hover:text-[#00F0C0] hover:bg-white/5 rounded-lg transition-colors"
+            >
+              <SocialIcon platform={primarySocial.platform} icon={primarySocial.icon} className="w-4 h-4" />
+            </a>
+          )}
 
           {/* Theme Switcher */}
           <div className="relative" ref={dropdownRef}>
@@ -213,15 +193,17 @@ export const Navbar: React.FC<NavbarProps> = ({ socialLinks }) => {
 
         {/* Mobile Action Icons & Hamburger Button */}
         <div className="flex md:hidden items-center space-x-1.5">
-          <a
-            href={primarySocial.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={primarySocial.label || "Social"}
-            className="p-1.5 text-slate-400 hover:text-white"
-          >
-            <SocialIcon platform={primarySocial.platform} icon={primarySocial.icon} className="w-4 h-4" />
-          </a>
+          {primarySocial && (
+            <a
+              href={primarySocial.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={primarySocial.label || "Social"}
+              className="p-1.5 text-slate-400 hover:text-white"
+            >
+              <SocialIcon platform={primarySocial.platform} icon={primarySocial.icon} className="w-4 h-4" />
+            </a>
+          )}
           <button
             type="button"
             aria-label="Display Settings"
@@ -256,23 +238,26 @@ export const Navbar: React.FC<NavbarProps> = ({ socialLinks }) => {
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="md:hidden border-b border-white/[0.08] bg-[#050B14]/98 backdrop-blur-xl px-4 pt-3 pb-6 space-y-1">
-          {NAV_ITEMS.map((item) => (
-            <a
-              key={item.label}
-              href={item.href}
-              onClick={() => {
-                setActiveItem(item.label);
-                setMobileMenuOpen(false);
-              }}
-              className={`block px-3 py-2.5 rounded-lg text-base font-medium transition-colors ${
-                activeItem === item.label
-                  ? "text-[#00F0C0] bg-[#00F0C0]/10 border-l-2 border-[#00F0C0]"
-                  : "text-slate-300 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              {item.label}
-            </a>
-          ))}
+          {NAV_ITEMS.map((item) => {
+            const isActive =
+              item.href === "/"
+                ? pathname === "/"
+                : pathname === item.href || pathname?.startsWith(item.href + "/");
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block px-3 py-2.5 rounded-lg text-base font-medium transition-colors ${
+                  isActive
+                    ? "text-[#00F0C0] bg-[#00F0C0]/10 border-l-2 border-[#00F0C0]"
+                    : "text-slate-300 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
 
           {/* Mobile Theme Selector */}
           <div className="pt-4 mt-3 border-t border-white/[0.08]">

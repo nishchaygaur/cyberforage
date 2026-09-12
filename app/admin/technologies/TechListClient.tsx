@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
@@ -38,7 +38,8 @@ export function TechListClient({ initialTechs }: { initialTechs: Tech[] }) {
     );
     startTransition(async () => {
       try {
-        await updateTechAction(tech.id, { enabled: newEnabled });
+        const res = await updateTechAction(tech.id, { enabled: newEnabled });
+        if (res && !res.success) throw new Error(res.error || "Failed to update technology status.");
         router.refresh();
       } catch (err: any) {
         setErrorMessage(err.message || "Failed to update technology status.");
@@ -54,7 +55,8 @@ export function TechListClient({ initialTechs }: { initialTechs: Tech[] }) {
     setIsDeleting(true);
     setErrorMessage("");
     try {
-      await deleteTechAction(deleteTarget.id);
+      const res = await deleteTechAction(deleteTarget.id);
+      if (res && !res.success) throw new Error(res.error || "Failed to delete technology.");
       setTechs((prev) => prev.filter((t) => t.id !== deleteTarget.id));
       setDeleteTarget(null);
       router.refresh();

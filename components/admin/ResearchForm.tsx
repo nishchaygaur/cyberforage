@@ -86,13 +86,17 @@ export function ResearchForm({ initialData, isEdit = false }: ResearchFormProps)
     };
 
     try {
-      if (isEdit) {
-        await updateResearchAction(initialData.id, payload, tagsArray);
-      } else {
-        await createResearchAction(payload, tagsArray);
+      const res = isEdit
+        ? await updateResearchAction(initialData.id, payload, tagsArray)
+        : await createResearchAction(payload, tagsArray);
+
+      if (!res.success) {
+        setErrorMessage(res.error || "Failed to save article.");
+        setIsSubmitting(false);
+        return;
       }
+
       router.push("/admin/research");
-      router.refresh();
     } catch (err: any) {
       setErrorMessage(err.message || "Failed to save article.");
       setIsSubmitting(false);

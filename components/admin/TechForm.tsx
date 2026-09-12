@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -49,13 +49,17 @@ export function TechForm({ initialData, isEdit = false }: TechFormProps) {
     };
 
     try {
-      if (isEdit) {
-        await updateTechAction(initialData.id, payload);
-      } else {
-        await createTechAction(payload);
+      const res = isEdit
+        ? await updateTechAction(initialData.id, payload)
+        : await createTechAction(payload);
+
+      if (!res.success) {
+        setErrorMessage(res.error || "Failed to save technology.");
+        setIsSubmitting(false);
+        return;
       }
+
       router.push("/admin/technologies");
-      router.refresh();
     } catch (err: any) {
       setErrorMessage(err.message || "Failed to save technology.");
       setIsSubmitting(false);
