@@ -79,6 +79,10 @@ export const CyberGlobe: React.FC = () => {
       const centerX = width * 0.5;
       const centerY = height * 0.5;
 
+      const isLight =
+        typeof document !== "undefined" &&
+        document.documentElement.getAttribute("data-theme") === "light";
+
       if (!prefersReducedMotion) {
         rotationY += 0.0035;
       }
@@ -97,9 +101,15 @@ export const CyberGlobe: React.FC = () => {
         centerY,
         sphereRadius * 1.2
       );
-      glowGrad.addColorStop(0, "rgba(0, 240, 192, 0.18)");
-      glowGrad.addColorStop(0.5, "rgba(0, 240, 192, 0.06)");
-      glowGrad.addColorStop(1, "rgba(4, 8, 18, 0)");
+      if (isLight) {
+        glowGrad.addColorStop(0, "rgba(13, 148, 136, 0.15)");
+        glowGrad.addColorStop(0.5, "rgba(13, 148, 136, 0.05)");
+        glowGrad.addColorStop(1, "rgba(248, 250, 252, 0)");
+      } else {
+        glowGrad.addColorStop(0, "rgba(0, 240, 192, 0.18)");
+        glowGrad.addColorStop(0.5, "rgba(0, 240, 192, 0.06)");
+        glowGrad.addColorStop(1, "rgba(4, 8, 18, 0)");
+      }
       ctx.fillStyle = glowGrad;
       ctx.beginPath();
       ctx.arc(centerX, centerY, sphereRadius * 1.2, 0, Math.PI * 2);
@@ -152,8 +162,10 @@ export const CyberGlobe: React.FC = () => {
           const distSq = dx * dx + dy * dy;
 
           if (distSq < 1600) {
-            const lineAlpha = (1 - Math.sqrt(distSq) / 40) * 0.25;
-            ctx.strokeStyle = `rgba(0, 240, 192, ${lineAlpha})`;
+            const lineAlpha = (1 - Math.sqrt(distSq) / 40) * (isLight ? 0.35 : 0.25);
+            ctx.strokeStyle = isLight
+              ? `rgba(13, 148, 136, ${lineAlpha})`
+              : `rgba(0, 240, 192, ${lineAlpha})`;
             ctx.beginPath();
             ctx.moveTo(p1.sx, p1.sy);
             ctx.lineTo(p2.sx, p2.sy);
@@ -166,22 +178,28 @@ export const CyberGlobe: React.FC = () => {
       for (let i = 0; i < projectedPoints.length; i++) {
         const p = projectedPoints[i];
         if (p.z > 0) {
-          // Front hemisphere - bright cyan/teal
-          ctx.fillStyle = `rgba(0, 240, 192, ${p.alpha})`;
+          // Front hemisphere - high-contrast teal in light mode, cyan in dark mode
+          ctx.fillStyle = isLight
+            ? `rgba(13, 148, 136, ${Math.min(1, p.alpha * 1.15)})`
+            : `rgba(0, 240, 192, ${p.alpha})`;
           ctx.beginPath();
           ctx.arc(p.sx, p.sy, p.size, 0, Math.PI * 2);
           ctx.fill();
 
           // Extra glow on larger nodes
           if (p.size > 2.0) {
-            ctx.fillStyle = `rgba(0, 240, 192, 0.3)`;
+            ctx.fillStyle = isLight
+              ? `rgba(13, 148, 136, 0.25)`
+              : `rgba(0, 240, 192, 0.3)`;
             ctx.beginPath();
             ctx.arc(p.sx, p.sy, p.size * 2, 0, Math.PI * 2);
             ctx.fill();
           }
         } else {
-          // Back hemisphere - dimmer dark cyan
-          ctx.fillStyle = `rgba(0, 180, 150, ${p.alpha * 0.35})`;
+          // Back hemisphere - slate in light mode, dimmer dark cyan in dark mode
+          ctx.fillStyle = isLight
+            ? `rgba(100, 116, 139, ${p.alpha * 0.4})`
+            : `rgba(0, 180, 150, ${p.alpha * 0.35})`;
           ctx.beginPath();
           ctx.arc(p.sx, p.sy, Math.max(0.7, p.size * 0.8), 0, Math.PI * 2);
           ctx.fill();
@@ -194,7 +212,7 @@ export const CyberGlobe: React.FC = () => {
       ctx.translate(centerX, centerY);
       ctx.rotate(-0.35);
       ctx.scale(1, 0.35);
-      ctx.strokeStyle = "rgba(0, 240, 192, 0.22)";
+      ctx.strokeStyle = isLight ? "rgba(13, 148, 136, 0.35)" : "rgba(0, 240, 192, 0.22)";
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.arc(0, 0, ring1Radius, 0, Math.PI * 2);
@@ -204,7 +222,7 @@ export const CyberGlobe: React.FC = () => {
       const ring1Angle = rotationY * 1.5;
       const r1x = Math.cos(ring1Angle) * ring1Radius;
       const r1y = Math.sin(ring1Angle) * ring1Radius;
-      ctx.fillStyle = "#00F0C0";
+      ctx.fillStyle = isLight ? "#0D9488" : "#00F0C0";
       ctx.beginPath();
       ctx.arc(r1x, r1y, 3, 0, Math.PI * 2);
       ctx.fill();
@@ -215,7 +233,7 @@ export const CyberGlobe: React.FC = () => {
       ctx.translate(centerX, centerY);
       ctx.rotate(0.45);
       ctx.scale(1, 0.28);
-      ctx.strokeStyle = "rgba(0, 240, 192, 0.15)";
+      ctx.strokeStyle = isLight ? "rgba(2, 132, 199, 0.3)" : "rgba(0, 240, 192, 0.15)";
       ctx.lineWidth = 0.8;
       ctx.beginPath();
       ctx.arc(0, 0, ring2Radius, 0, Math.PI * 2);
@@ -224,7 +242,7 @@ export const CyberGlobe: React.FC = () => {
       const ring2Angle = -rotationY * 1.2 + Math.PI;
       const r2x = Math.cos(ring2Angle) * ring2Radius;
       const r2y = Math.sin(ring2Angle) * ring2Radius;
-      ctx.fillStyle = "#38BDF8";
+      ctx.fillStyle = isLight ? "#0284C7" : "#38BDF8";
       ctx.beginPath();
       ctx.arc(r2x, r2y, 2.5, 0, Math.PI * 2);
       ctx.fill();

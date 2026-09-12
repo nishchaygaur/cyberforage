@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -62,11 +62,15 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   };
 
   if (isAuthPage) {
-    return <div className="min-h-screen bg-[#040812] text-white">{children}</div>;
+    return (
+      <div className="min-h-screen bg-[#040812] text-white" data-theme="dark">
+        {children}
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-[#040812] text-slate-100 flex">
+    <div className="min-h-screen bg-[#040812] text-slate-100 flex" data-theme="dark">
       {/* Sidebar */}
       <AdminSidebar
         userRole={userRole}
