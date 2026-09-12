@@ -1,4 +1,5 @@
-﻿import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
+import { verifyAdmin } from "@/lib/supabase/security";
 import { Database } from "@/types/database";
 import { logAuditEvent } from "./audit";
 import { revalidatePath } from "next/cache";
@@ -10,16 +11,21 @@ export type AppearanceUpdate = Database["public"]["Tables"]["appearance_settings
 
 export const DEFAULT_SITE_SETTINGS: SiteSettingsRow = {
   id: "default",
-  site_name: "Cyberforage",
+  site_name: "CYBERFORAGE",
   tagline: "Explore. Build. Defend.",
-  short_description: "A technology ecosystem for cybersecurity, security research, intelligent automation and defensive engineering.",
-  long_description: "Cyberforage is an independent technology and security platform bringing together security research, defensive engineering, AI automation, and hands-on laboratory environments into a unified ecosystem.",
+  short_description:
+    "A technology ecosystem for cybersecurity, security research, intelligent automation and defensive engineering.",
+  long_description:
+    "Cyberforage is an independent technology and security platform bringing together security research, defensive engineering, AI automation, and hands-on laboratory environments into a unified ecosystem.",
   logo_url: "/favicon.svg",
   favicon_url: "/favicon.svg",
   footer_text: "Explore. Build. Defend.",
   copyright_text: "© 2026 Cyberforage. All rights reserved.",
   primary_accent: "#00F0C0",
   secondary_accent: "#A855F7",
+  owner_name: null,
+  owner_title: null,
+  owner_description: null,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
   updated_by: null,
@@ -38,16 +44,23 @@ export async function getSiteSettings(): Promise<SiteSettingsRow> {
 }
 
 export async function updateSiteSettings(updates: SiteSettingsUpdate) {
+  const admin = await verifyAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 
   const current = await getSiteSettings();
-  let result;
+  let result: SiteSettingsRow;
+
+  const payload: SiteSettingsUpdate = {
+    ...updates,
+    updated_at: new Date().toISOString(),
+    updated_by: admin.user.id,
+  };
 
   if (current.id !== "default") {
     const { data, error } = await supabase
       .from("site_settings")
-      .update(updates)
+      .update(payload)
       .eq("id", current.id)
       .select()
       .single();
@@ -56,7 +69,7 @@ export async function updateSiteSettings(updates: SiteSettingsUpdate) {
   } else {
     const { data, error } = await supabase
       .from("site_settings")
-      .insert(updates)
+      .insert(payload)
       .select()
       .single();
     if (error) throw error;
@@ -69,9 +82,11 @@ export async function updateSiteSettings(updates: SiteSettingsUpdate) {
     entityId: result.id,
     entityName: "Site Settings",
     metadata: updates as Record<string, unknown>,
+    userId: admin.user.id,
   });
 
   revalidatePath("/");
+  revalidatePath("/admin/settings");
   return result;
 }
 
@@ -88,16 +103,23 @@ export async function getAppearanceSettings(): Promise<AppearanceRow | null> {
 }
 
 export async function updateAppearanceSettings(updates: AppearanceUpdate) {
+  const admin = await verifyAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 
   const current = await getAppearanceSettings();
-  let result;
+  let result: AppearanceRow;
+
+  const payload: AppearanceUpdate = {
+    ...updates,
+    updated_at: new Date().toISOString(),
+    updated_by: admin.user.id,
+  };
 
   if (current) {
     const { data, error } = await supabase
       .from("appearance_settings")
-      .update(updates)
+      .update(payload)
       .eq("id", current.id)
       .select()
       .single();
@@ -106,7 +128,7 @@ export async function updateAppearanceSettings(updates: AppearanceUpdate) {
   } else {
     const { data, error } = await supabase
       .from("appearance_settings")
-      .insert(updates)
+      .insert(payload)
       .select()
       .single();
     if (error) throw error;
@@ -119,8 +141,10 @@ export async function updateAppearanceSettings(updates: AppearanceUpdate) {
     entityId: result.id,
     entityName: "Appearance Tokens",
     metadata: updates as Record<string, unknown>,
+    userId: admin.user.id,
   });
 
   revalidatePath("/");
+  revalidatePath("/admin/appearance");
   return result;
 }

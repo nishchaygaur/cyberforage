@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import * as projectsData from "@/lib/data/projects";
 import * as researchData from "@/lib/data/research";
@@ -98,6 +98,9 @@ export async function updateSocialAction(id: string, updates: any) {
 }
 export async function deleteSocialAction(id: string) {
   return await socialData.deleteSocialLink(id);
+}
+export async function reorderSocialAction(orderedIds: string[]) {
+  return await socialData.reorderSocialLinks(orderedIds);
 }
 
 // Navigation

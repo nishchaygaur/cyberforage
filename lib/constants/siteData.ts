@@ -14,8 +14,7 @@ export const NAV_ITEMS: NavItem[] = [
 ];
 
 export const SOCIAL_LINKS = {
-  github: "https://github.com/nishchaygaur",
-  linkedin: "https://linkedin.com",
+  github: "https://github.com/nishchaygaur/cyberforage",
 };
 
 export interface EcosystemCardData {

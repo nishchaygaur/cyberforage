@@ -4,9 +4,23 @@ import React, { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { SOCIAL_LINKS } from "@/lib/constants/siteData";
 import { ContactModal } from "@/components/contact/ContactModal";
+import { SocialRow } from "@/lib/data/social";
+import { ContactInfoRow } from "@/lib/data/contact";
 
-export const OpenSourceBanner: React.FC = () => {
+interface OpenSourceBannerProps {
+  socialLinks?: SocialRow[];
+  contactInfo?: ContactInfoRow | null;
+}
+
+export const OpenSourceBanner: React.FC<OpenSourceBannerProps> = ({
+  socialLinks,
+  contactInfo,
+}) => {
   const [modalOpen, setModalOpen] = useState(false);
+
+  const githubUrl =
+    socialLinks?.find((l) => l.platform.toLowerCase() === "github")?.url ||
+    SOCIAL_LINKS.github;
 
   return (
     <section
@@ -48,7 +62,7 @@ export const OpenSourceBanner: React.FC = () => {
                   </p>
 
                   <a
-                    href={SOCIAL_LINKS.github}
+                    href={githubUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#050E1A] hover:bg-[#00F0C0]/10 border border-[#00F0C0]/40 hover:border-[#00F0C0] text-xs font-medium text-white transition-all group"
@@ -133,7 +147,11 @@ export const OpenSourceBanner: React.FC = () => {
         </div>
       </div>
 
-      <ContactModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
+      <ContactModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        contactInfo={contactInfo}
+      />
     </section>
   );
 };

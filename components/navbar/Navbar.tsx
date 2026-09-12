@@ -4,12 +4,28 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { NAV_ITEMS, SOCIAL_LINKS } from "@/lib/constants/siteData";
-import { Github, Sun, Menu, X } from "lucide-react";
+import { SocialIcon } from "@/components/ui/SocialIcon";
+import { SocialRow } from "@/lib/data/social";
+import { Sun, Menu, X } from "lucide-react";
 
-export const Navbar: React.FC = () => {
+interface NavbarProps {
+  socialLinks?: SocialRow[];
+}
+
+export const Navbar: React.FC<NavbarProps> = ({ socialLinks }) => {
   const [activeItem, setActiveItem] = useState("Home");
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Pick top enabled link for the nav bar action icon (favoring GitHub if available)
+  const primarySocial =
+    socialLinks?.find((l) => l.platform.toLowerCase() === "github") ||
+    socialLinks?.[0] || {
+      platform: "github",
+      icon: "github",
+      label: "GitHub",
+      url: SOCIAL_LINKS.github,
+    };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -84,13 +100,14 @@ export const Navbar: React.FC = () => {
         {/* Right Action Icons */}
         <div className="hidden md:flex items-center space-x-4">
           <a
-            href={SOCIAL_LINKS.github}
+            href={primarySocial.url}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Cyberforage GitHub Profile"
+            aria-label={primarySocial.label || "Cyberforage Social"}
+            title={primarySocial.label}
             className="p-1.5 text-slate-400 hover:text-[#00F0C0] hover:bg-white/5 rounded-lg transition-colors"
           >
-            <Github className="w-4 h-4" />
+            <SocialIcon platform={primarySocial.platform} icon={primarySocial.icon} className="w-4 h-4" />
           </a>
           <button
             type="button"
@@ -105,13 +122,13 @@ export const Navbar: React.FC = () => {
         {/* Mobile Hamburger Button */}
         <div className="flex md:hidden items-center space-x-2">
           <a
-            href={SOCIAL_LINKS.github}
+            href={primarySocial.url}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="GitHub"
+            aria-label={primarySocial.label || "Social"}
             className="p-1.5 text-slate-400 hover:text-white"
           >
-            <Github className="w-4 h-4" />
+            <SocialIcon platform={primarySocial.platform} icon={primarySocial.icon} className="w-4 h-4" />
           </a>
           <button
             type="button"

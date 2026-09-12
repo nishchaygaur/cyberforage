@@ -1,8 +1,13 @@
 import React from "react";
 import { Shield, Brain, Cog, ArrowRight } from "lucide-react";
 import { ECOSYSTEM_CARDS } from "@/lib/constants/siteData";
+import { SiteSettingsRow } from "@/lib/data/site";
 
-export const Ecosystem: React.FC = () => {
+interface EcosystemProps {
+  siteSettings?: SiteSettingsRow | null;
+}
+
+export const Ecosystem: React.FC<EcosystemProps> = ({ siteSettings }) => {
   const getCardIcon = (icon: string) => {
     switch (icon) {
       case "security":
@@ -45,7 +50,7 @@ export const Ecosystem: React.FC = () => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-          {/* Left Intro Column */}
+          {/* Left Intro Column (About) */}
           <div className="lg:col-span-4 flex flex-col justify-center">
             <span className="text-xs font-mono tracking-[0.2em] text-[#00E5BE] font-medium uppercase mb-3">
               THE CYBERFORAGE ECOSYSTEM
@@ -53,11 +58,25 @@ export const Ecosystem: React.FC = () => {
             <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-4">
               More Than Just Projects
             </h2>
-            <p className="text-slate-300 text-sm sm:text-base leading-relaxed mb-8">
+            <p className="text-slate-300 text-sm sm:text-base leading-relaxed mb-6">
               Cyberforage brings together security, AI and automation into a
               unified ecosystem — building tools, labs and research for a safer
               digital world.
             </p>
+
+            {/* Configured Owner/Creator Secondary Attribution (Only if configured) */}
+            {siteSettings?.owner_name && (
+              <div className="mb-6 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.07] w-fit">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#00F0C0]" />
+                <span className="text-xs font-mono text-slate-300">
+                  Directed by <span className="text-white font-medium">{siteSettings.owner_name}</span>
+                  {siteSettings.owner_title && (
+                    <span className="text-slate-400"> • {siteSettings.owner_title}</span>
+                  )}
+                </span>
+              </div>
+            )}
+
             <div>
               <a
                 href="#projects"

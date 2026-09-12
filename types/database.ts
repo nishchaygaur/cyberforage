@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -68,6 +68,9 @@ export interface Database {
           copyright_text: string | null;
           primary_accent: string;
           secondary_accent: string;
+          owner_name: string | null;
+          owner_title: string | null;
+          owner_description: string | null;
           created_at: string;
           updated_at: string;
           updated_by: string | null;
@@ -84,6 +87,9 @@ export interface Database {
           copyright_text?: string | null;
           primary_accent?: string;
           secondary_accent?: string;
+          owner_name?: string | null;
+          owner_title?: string | null;
+          owner_description?: string | null;
           created_at?: string;
           updated_at?: string;
           updated_by?: string | null;
@@ -100,6 +106,9 @@ export interface Database {
           copyright_text?: string | null;
           primary_accent?: string;
           secondary_accent?: string;
+          owner_name?: string | null;
+          owner_title?: string | null;
+          owner_description?: string | null;
           created_at?: string;
           updated_at?: string;
           updated_by?: string | null;
@@ -112,9 +121,11 @@ export interface Database {
           display_name: string | null;
           email: string | null;
           phone: string | null;
+          whatsapp: string | null;
           location: string | null;
           website: string | null;
           description: string | null;
+          contact_modal_description: string | null;
           created_at: string;
           updated_at: string;
           updated_by: string | null;
@@ -124,9 +135,11 @@ export interface Database {
           display_name?: string | null;
           email?: string | null;
           phone?: string | null;
+          whatsapp?: string | null;
           location?: string | null;
           website?: string | null;
           description?: string | null;
+          contact_modal_description?: string | null;
           created_at?: string;
           updated_at?: string;
           updated_by?: string | null;
@@ -136,9 +149,11 @@ export interface Database {
           display_name?: string | null;
           email?: string | null;
           phone?: string | null;
+          whatsapp?: string | null;
           location?: string | null;
           website?: string | null;
           description?: string | null;
+          contact_modal_description?: string | null;
           created_at?: string;
           updated_at?: string;
           updated_by?: string | null;
@@ -182,6 +197,7 @@ export interface Database {
           label: string;
           url: string;
           icon: string | null;
+          description: string | null;
           enabled: boolean;
           display_order: number;
           created_at: string;
@@ -193,6 +209,7 @@ export interface Database {
           label: string;
           url: string;
           icon?: string | null;
+          description?: string | null;
           enabled?: boolean;
           display_order?: number;
           created_at?: string;
@@ -204,6 +221,7 @@ export interface Database {
           label?: string;
           url?: string;
           icon?: string | null;
+          description?: string | null;
           enabled?: boolean;
           display_order?: number;
           created_at?: string;

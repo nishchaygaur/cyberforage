@@ -1,9 +1,18 @@
 import React from "react";
-import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { CyberGlobe } from "./CyberGlobe";
+import { SiteSettingsRow } from "@/lib/data/site";
 
-export const Hero: React.FC = () => {
+interface HeroProps {
+  siteSettings?: SiteSettingsRow | null;
+}
+
+export const Hero: React.FC<HeroProps> = ({ siteSettings }) => {
+  const tagline = siteSettings?.tagline || "Explore. Build. Defend.";
+  const description =
+    siteSettings?.short_description ||
+    "A technology ecosystem for cybersecurity, security research, intelligent automation and defensive engineering.";
+
   return (
     <section
       id="home"
@@ -35,13 +44,12 @@ export const Hero: React.FC = () => {
 
             {/* Subtitle */}
             <p className="text-2xl sm:text-3xl font-semibold text-slate-100 mb-5 tracking-tight">
-              Explore. Build. Defend.
+              {tagline}
             </p>
 
             {/* Description */}
             <p className="text-base sm:text-lg text-slate-300 max-w-xl mb-8 leading-relaxed font-normal">
-              A technology ecosystem for cybersecurity, security research,
-              intelligent automation and defensive engineering.
+              {description}
             </p>
 
             {/* Call to Actions */}

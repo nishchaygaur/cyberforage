@@ -1,22 +1,32 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Send, Mail, CheckCircle2 } from "lucide-react";
-
+import { X, Send, Mail, Phone, CheckCircle2 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/ui/SocialIcon";
+import { ContactInfoRow } from "@/lib/data/contact";
 import { submitContactAction } from "@/app/admin/actions";
 
 interface ContactModalProps {
   isOpen: boolean;
   onClose: () => void;
+  contactInfo?: ContactInfoRow | null;
 }
 
-export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
+export const ContactModal: React.FC<ContactModalProps> = ({
+  isOpen,
+  onClose,
+  contactInfo,
+}) => {
   const [submitted, setSubmitted] = useState(false);
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
+
+  const modalDescription =
+    contactInfo?.contact_modal_description ||
+    "Have an idea, research collaboration, or security project? Connect with the Cyberforage ecosystem.";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,8 +91,8 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
             <h3 id="modal-title" className="text-2xl font-bold text-white mb-2">
               Build Something Secure.
             </h3>
-            <p className="text-xs sm:text-sm text-slate-300 mb-6">
-              Have an idea, research collaboration, or security project? Connect with the Cyberforage ecosystem.
+            <p className="text-xs sm:text-sm text-slate-300 mb-6 leading-relaxed">
+              {modalDescription}
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -126,6 +136,46 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
                   <span>{isSubmitting ? "Transmitting..." : "Transmit Inquiry"}</span>
                 </button>
               </div>
+
+              {/* Direct channels (rendered only when real configured values exist) */}
+              {(contactInfo?.email || contactInfo?.whatsapp || contactInfo?.phone) && (
+                <div className="pt-3 border-t border-white/[0.08] flex flex-wrap items-center gap-2">
+                  <span className="text-[11px] font-mono text-white/40">Direct channels:</span>
+                  {contactInfo.email && (
+                    <a
+                      href={`mailto:${contactInfo.email}`}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white/[0.04] hover:bg-white/10 text-cyan-300 hover:text-white text-xs font-mono transition-colors"
+                    >
+                      <Mail className="w-3 h-3" />
+                      <span>{contactInfo.email}</span>
+                    </a>
+                  )}
+                  {contactInfo.whatsapp && (
+                    <a
+                      href={contactInfo.whatsapp}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#00F0C0]/10 hover:bg-[#00F0C0]/20 text-[#00F0C0] text-xs font-mono transition-colors"
+                    >
+                      <WhatsAppIcon className="w-3 h-3" />
+                      <span>WhatsApp</span>
+                    </a>
+                  )}
+                  {contactInfo.phone && (
+                    <a
+                      href={
+                        contactInfo.phone.startsWith("tel:")
+                          ? contactInfo.phone
+                          : `tel:${contactInfo.phone.replace(/\s+/g, "")}`
+                      }
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white/[0.04] hover:bg-white/10 text-slate-300 hover:text-white text-xs font-mono transition-colors"
+                    >
+                      <Phone className="w-3 h-3" />
+                      <span>{contactInfo.phone}</span>
+                    </a>
+                  )}
+                </div>
+              )}
 
               <p className="text-[10px] font-mono text-slate-500 text-center pt-1">
                 Encrypted communication channel • Response within 24-48 hours

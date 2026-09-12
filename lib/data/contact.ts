@@ -1,35 +1,96 @@
-﻿import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
+import { verifyAdmin } from "@/lib/supabase/security";
 import { Database, ContactSubmissionStatus } from "@/types/database";
 import { logAuditEvent } from "./audit";
 import { revalidatePath } from "next/cache";
+import { validatePlatformUrl } from "@/components/ui/SocialIcon";
 
 export type ContactInfoRow = Database["public"]["Tables"]["contact_information"]["Row"];
 export type ContactInfoUpdate = Database["public"]["Tables"]["contact_information"]["Update"];
 export type ContactSubmissionRow = Database["public"]["Tables"]["contact_submissions"]["Row"];
 
+export const DEFAULT_CONTACT_INFO: ContactInfoRow = {
+  id: "default",
+  display_name: "Cyberforage",
+  email: null,
+  phone: null,
+  whatsapp: null,
+  location: null,
+  website: "https://cyberforage.space",
+  description: "Communication channel for research collaborations, security projects, and ecosystem inquiries.",
+  contact_modal_description: "Have an idea, research collaboration, or security project? Connect with the Cyberforage ecosystem.",
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+  updated_by: null,
+};
+
 export async function getContactInfo(): Promise<ContactInfoRow | null> {
   try {
     const supabase = await createClient();
-    if (!supabase) return null;
+    if (!supabase) return DEFAULT_CONTACT_INFO;
 
-    const { data } = await supabase.from("contact_information").select("*").limit(1).maybeSingle();
+    const { data, error } = await supabase
+      .from("contact_information")
+      .select("*")
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !data) return DEFAULT_CONTACT_INFO;
     return data;
   } catch {
-    return null;
+    return DEFAULT_CONTACT_INFO;
   }
 }
 
 export async function updateContactInfo(updates: ContactInfoUpdate) {
+  const admin = await verifyAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 
-  const current = await getContactInfo();
-  let result;
+  // Validation
+  if (updates.email && updates.email.trim()) {
+    const emailVal = validatePlatformUrl("email", updates.email.trim());
+    if (!emailVal.valid) {
+      throw new Error(emailVal.error || "Invalid email address format.");
+    }
+  }
 
-  if (current) {
+  if (updates.phone && updates.phone.trim()) {
+    const phoneVal = validatePlatformUrl("phone", updates.phone.trim());
+    if (!phoneVal.valid) {
+      throw new Error(phoneVal.error || "Invalid phone number format.");
+    }
+  }
+
+  if (updates.whatsapp && updates.whatsapp.trim()) {
+    const waVal = validatePlatformUrl("whatsapp", updates.whatsapp.trim());
+    if (!waVal.valid) {
+      throw new Error(waVal.error || "Invalid WhatsApp URL or number.");
+    }
+    updates.whatsapp = waVal.formattedUrl;
+  }
+
+  if (updates.website && updates.website.trim()) {
+    const webVal = validatePlatformUrl("website", updates.website.trim());
+    if (!webVal.valid) {
+      throw new Error(webVal.error || "Invalid website URL format.");
+    }
+    updates.website = webVal.formattedUrl;
+  }
+
+  const payload = {
+    ...updates,
+    updated_at: new Date().toISOString(),
+    updated_by: admin.user.id,
+  };
+
+  const current = await getContactInfo();
+  let result: ContactInfoRow;
+
+  if (current && current.id !== "default") {
     const { data, error } = await supabase
       .from("contact_information")
-      .update(updates)
+      .update(payload)
       .eq("id", current.id)
       .select()
       .single();
@@ -38,7 +99,7 @@ export async function updateContactInfo(updates: ContactInfoUpdate) {
   } else {
     const { data, error } = await supabase
       .from("contact_information")
-      .insert(updates)
+      .insert(payload)
       .select()
       .single();
     if (error) throw error;
@@ -49,11 +110,13 @@ export async function updateContactInfo(updates: ContactInfoUpdate) {
     action: "update",
     entityType: "contact_information",
     entityId: result.id,
-    entityName: "Contact Details",
+    entityName: result.display_name || "Contact Details",
     metadata: updates as Record<string, unknown>,
+    userId: admin.user.id,
   });
 
   revalidatePath("/");
+  revalidatePath("/admin/contact");
   return result;
 }
 
@@ -100,6 +163,7 @@ export async function getContactSubmissions(filters?: {
   limit?: number;
   offset?: number;
 }) {
+  await verifyAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 
@@ -125,6 +189,7 @@ export async function getContactSubmissions(filters?: {
 }
 
 export async function updateSubmissionStatus(id: string, status: ContactSubmissionStatus) {
+  const admin = await verifyAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 
@@ -136,14 +201,40 @@ export async function updateSubmissionStatus(id: string, status: ContactSubmissi
     .single();
 
   if (error) throw error;
+
+  await logAuditEvent({
+    action: "update",
+    entityType: "contact_submission",
+    entityId: id,
+    entityName: `Submission from ${data.email}`,
+    metadata: { status },
+    userId: admin.user.id,
+  });
+
   return data;
 }
 
 export async function deleteSubmission(id: string) {
+  const admin = await verifyAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 
+  const { data: item } = await supabase
+    .from("contact_submissions")
+    .select("email")
+    .eq("id", id)
+    .maybeSingle();
+
   const { error } = await supabase.from("contact_submissions").delete().eq("id", id);
   if (error) throw error;
+
+  await logAuditEvent({
+    action: "delete",
+    entityType: "contact_submission",
+    entityId: id,
+    entityName: item?.email ? `Submission from ${item.email}` : id,
+    userId: admin.user.id,
+  });
+
   return { success: true };
 }
