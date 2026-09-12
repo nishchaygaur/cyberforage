@@ -1,24 +1,29 @@
 import { createClient } from "@/lib/supabase/server";
-import { UserRole } from "@/types/database";
 
-export interface AdminSession {
+export interface AdminUser {
+  id: string;
+  email?: string;
+  full_name?: string | null;
   user: {
     id: string;
     email?: string;
   };
-  profile: {
-    role: UserRole;
+  profile?: {
     full_name: string | null;
     is_active: boolean;
   };
 }
 
+export type AdminSession = AdminUser;
+
 /**
- * Server-side authorization check.
- * Verifies that the active session belongs to an authenticated user with
- * active status and 'admin' or 'super_admin' role.
+ * Server-side administrator verification helper.
+ * 1. Verifies that the active session belongs to an authenticated Supabase user.
+ * 2. If ADMIN_USER_ID is configured in the environment, verifies that the user's UUID matches.
+ * 3. Returns the authenticated administrator user.
+ * 4. Throws 401 Unauthorized or 403 Forbidden otherwise.
  */
-export async function verifyAdmin(): Promise<AdminSession> {
+export async function requireAdmin(): Promise<AdminUser> {
   const supabase = await createClient();
   if (!supabase) {
     throw new Error("Supabase is not configured.");
@@ -29,27 +34,36 @@ export async function verifyAdmin(): Promise<AdminSession> {
     throw new Error("Unauthorized: Authentication required to perform administrative action.");
   }
 
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("role, is_active, full_name")
-    .eq("id", authData.user.id)
-    .maybeSingle();
+  const user = authData.user;
+  const configuredAdminId = process.env.ADMIN_USER_ID?.trim();
 
-  if (profileError || !profile) {
-    throw new Error("Forbidden: Profile record not found or inaccessible.");
+  if (configuredAdminId && user.id !== configuredAdminId) {
+    throw new Error("Forbidden: Access restricted to configured administrator.");
   }
 
-  if (!profile.is_active) {
-    throw new Error("Forbidden: Account has been deactivated.");
-  }
-
-  const allowedRoles: UserRole[] = ["admin", "super_admin"];
-  if (!allowedRoles.includes(profile.role)) {
-    throw new Error("Forbidden: Insufficient privileges. Administrator access required.");
-  }
+  const fullName =
+    user.user_metadata?.full_name ||
+    user.user_metadata?.name ||
+    user.email?.split("@")[0] ||
+    "Administrator";
 
   return {
-    user: authData.user,
-    profile,
+    id: user.id,
+    email: user.email,
+    full_name: fullName,
+    user: {
+      id: user.id,
+      email: user.email,
+    },
+    profile: {
+      full_name: fullName,
+      is_active: true,
+    },
   };
 }
+
+/**
+ * Alias for backward compatibility with existing callers.
+ */
+export const verifyAdmin = requireAdmin;
+

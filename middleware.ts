@@ -1,4 +1,4 @@
-﻿import { createServerClient } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { Database } from "@/types/database";
 
@@ -77,32 +77,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // If authenticated, verify role from database
+  // If authenticated, verify against ADMIN_USER_ID allowlist if configured
   if (user && !isPublicAuthRoute) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role, is_active")
-      .eq("id", user.id)
-      .single();
-
-    if (!profile || !profile.is_active) {
+    const configuredAdminId = process.env.ADMIN_USER_ID?.trim();
+    if (configuredAdminId && user.id !== configuredAdminId) {
       const loginUrl = new URL("/admin/login", request.url);
-      loginUrl.searchParams.set("error", "deactivated");
+      loginUrl.searchParams.set("error", "forbidden");
       return NextResponse.redirect(loginUrl);
-    }
-
-    const allowedRoles = ["super_admin", "admin", "editor"];
-    if (!allowedRoles.includes(profile.role)) {
-      return new NextResponse("403 Forbidden: Insufficient administrative privileges.", {
-        status: 403,
-      });
-    }
-
-    // Protect super_admin only routes
-    if (pathname.startsWith("/admin/users") && profile.role !== "super_admin") {
-      return new NextResponse("403 Forbidden: Only Super Admins can manage users.", {
-        status: 403,
-      });
     }
   }
 

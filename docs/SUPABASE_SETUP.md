@@ -1,4 +1,4 @@
-﻿# Supabase Setup Guide for Cyberforage
+# Supabase Setup Guide for Cyberforage
 
 This document provides complete instructions for setting up the PostgreSQL database, Authentication, Row Level Security (RLS), and Storage bucket for Cyberforage using Supabase.
 
@@ -51,7 +51,15 @@ The migrations are located in the repository under `supabase/migrations/`. Execu
 
 ### Migration 4: Canonical Seed Data
 - **File**: `supabase/migrations/004_seed_data.sql`
-- **What it does**: Populates initial database rows with the exact canonical data matching the live public Cyberforage website (SentinelX, CyberForge, PDF Malware Analyzer, labs, research papers, technologies, exploration domains, social links, navigation menus).
+- **What it does**: Populates initial database rows with canonical data matching the live public Cyberforage website.
+
+### Migration 5: Contact & Social Management
+- **File**: `supabase/migrations/005_contact_social_schema.sql`
+- **What it does**: Extends contact information, social links, and owner branding fields.
+
+### Migration 6: Single Administrator Architecture
+- **File**: `supabase/migrations/006_remove_rbac_single_admin.sql`
+- **What it does**: Removes the multi-role RBAC system, drops obsolete lockout triggers, simplifies security functions, and refreshes RLS policies to grant full CRUD to the authenticated administrator.
 
 ---
 
@@ -92,6 +100,9 @@ Create a file named `.env.local` in your project root:
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+# Single Administrator User UUID (Optional but recommended)
+ADMIN_USER_ID=your-admin-user-uuid
 
 # Optional Site URL
 NEXT_PUBLIC_SITE_URL=https://cyberforage.space

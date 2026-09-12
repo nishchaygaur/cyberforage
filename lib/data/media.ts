@@ -1,4 +1,5 @@
-﻿import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/supabase/security";
 import { Database } from "@/types/database";
 import { logAuditEvent } from "./audit";
 
@@ -32,6 +33,7 @@ export async function getAllMedia(filters?: { search?: string }) {
 }
 
 export async function uploadMediaFile(formData: FormData) {
+  const admin = await requireAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 
@@ -112,6 +114,7 @@ export async function uploadMediaFile(formData: FormData) {
 }
 
 export async function deleteMediaFile(id: string) {
+  const admin = await requireAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 

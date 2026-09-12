@@ -1,4 +1,4 @@
-﻿# Cyberforage Production Deployment Guide
+# Cyberforage Production Deployment Guide
 
 This guide describes how to deploy Cyberforage to production on Vercel, connect the Supabase backend, and bind the custom domain `https://cyberforage.space`.
 
@@ -7,9 +7,9 @@ This guide describes how to deploy Cyberforage to production on Vercel, connect 
 ## 1. Prerequisites Checklist
 
 Before deploying, ensure you have:
-1. Created a Supabase project and executed the 4 migration scripts in `supabase/migrations/`.
+1. Created a Supabase project and executed all migration scripts in `supabase/migrations/` (001 through 006).
 2. Created the `cyberforage-media` storage bucket in Supabase.
-3. Created your initial `super_admin` account.
+3. Created your administrator account in Supabase Auth.
 4. Access to your Vercel project (`cyberforage`).
 
 ---
@@ -25,6 +25,7 @@ In your Vercel Project Dashboard:
 | `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase Project URL (`https://...supabase.co`) | Client & Server |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase Anon Public Key | Client & Server |
 | `SUPABASE_SERVICE_ROLE_KEY` | Your Supabase Service Role Secret Key | Server Only |
+| `ADMIN_USER_ID` | (Optional) Administrator User UUID from Supabase Auth | Server Only |
 | `NEXT_PUBLIC_SITE_URL` | `https://cyberforage.space` | Client & Server |
 
 ---

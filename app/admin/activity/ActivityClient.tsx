@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { Search, Filter, History, Code, Shield, User, Clock } from "lucide-react";
@@ -15,7 +15,6 @@ interface AuditLog {
   user_id: string | null;
   profiles?: {
     full_name: string | null;
-    role: string;
   } | null;
 }
 
@@ -138,13 +137,11 @@ export function ActivityClient({ initialLogs }: { initialLogs: AuditLog[] }) {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-xs text-white/90">
-                        {log.profiles?.full_name || "System / Operator"}
+                        {log.profiles?.full_name || "Administrator"}
                       </div>
-                      {log.profiles?.role && (
-                        <div className="text-[10px] text-cyan-400 font-mono capitalize">
-                          {log.profiles.role}
-                        </div>
-                      )}
+                      <div className="text-[10px] text-cyan-400 font-mono">
+                        Administrator
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-xs text-white/50 whitespace-nowrap">
                       {new Date(log.created_at).toLocaleString()}

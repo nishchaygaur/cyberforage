@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -49,7 +49,7 @@ function LoginForm() {
         // Verify profile
         const { data: profile } = await supabase
           .from("profiles")
-          .select("role, is_active")
+          .select("is_active")
           .eq("id", data.user.id)
           .single();
 

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import Link from "next/link";
@@ -7,13 +7,11 @@ import { Menu, Shield, User } from "lucide-react";
 
 interface AdminHeaderProps {
   userName?: string;
-  userRole?: string;
   onOpenMobileSidebar: () => void;
 }
 
 export const AdminHeader: React.FC<AdminHeaderProps> = ({
-  userName = "Admin User",
-  userRole = "editor",
+  userName = "Administrator",
   onOpenMobileSidebar,
 }) => {
   const pathname = usePathname();
@@ -25,17 +23,6 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
     const label = seg.charAt(0).toUpperCase() + seg.slice(1).replace(/-/g, " ");
     return { label, href, isLast: idx === segments.length - 1 };
   });
-
-  const getRoleBadgeStyle = (role: string) => {
-    switch (role) {
-      case "super_admin":
-        return "bg-rose-500/15 text-rose-300 border-rose-500/30";
-      case "admin":
-        return "bg-[#00F0C0]/15 text-[#00F0C0] border-[#00F0C0]/30";
-      default:
-        return "bg-blue-500/15 text-blue-300 border-blue-500/30";
-    }
-  };
 
   return (
     <header className="h-16 bg-[#050B14]/80 backdrop-blur-md border-b border-white/[0.08] px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30">
@@ -78,12 +65,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
             <span className="text-xs font-medium text-slate-200 leading-tight">
               {userName}
             </span>
-            <span
-              className={`text-[9px] font-mono uppercase px-1.5 py-0.2 rounded border self-start mt-0.5 ${getRoleBadgeStyle(
-                userRole
-              )}`}
-            >
-              {userRole.replace("_", " ")}
+            <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded border self-start mt-0.5 bg-[#00F0C0]/15 text-[#00F0C0] border-[#00F0C0]/30">
+              Administrator
             </span>
           </div>
         </div>

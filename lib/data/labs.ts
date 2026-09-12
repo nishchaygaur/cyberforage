@@ -1,4 +1,5 @@
-﻿import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/supabase/security";
 import { AVAILABLE_LABS, LabItem } from "@/lib/constants/siteData";
 import { Database, LabStatus } from "@/types/database";
 import { logAuditEvent } from "./audit";
@@ -68,6 +69,7 @@ export async function getLabById(id: string) {
 }
 
 export async function createLab(lab: LabInsert) {
+  await requireAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 
@@ -87,6 +89,7 @@ export async function createLab(lab: LabInsert) {
 }
 
 export async function updateLab(id: string, updates: LabUpdate) {
+  await requireAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 
@@ -106,6 +109,7 @@ export async function updateLab(id: string, updates: LabUpdate) {
 }
 
 export async function deleteLab(id: string) {
+  await requireAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 

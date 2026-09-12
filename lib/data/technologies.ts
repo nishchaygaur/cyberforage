@@ -1,4 +1,5 @@
-﻿import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/supabase/security";
 import { TECHNOLOGIES, TechItem } from "@/lib/constants/siteData";
 import { Database } from "@/types/database";
 import { logAuditEvent } from "./audit";
@@ -63,6 +64,7 @@ export async function getTechnologyById(id: string) {
 }
 
 export async function createTechnology(tech: TechInsert) {
+  await requireAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 
@@ -81,6 +83,7 @@ export async function createTechnology(tech: TechInsert) {
 }
 
 export async function updateTechnology(id: string, updates: TechUpdate) {
+  await requireAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 
@@ -100,6 +103,7 @@ export async function updateTechnology(id: string, updates: TechUpdate) {
 }
 
 export async function deleteTechnology(id: string) {
+  await requireAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 

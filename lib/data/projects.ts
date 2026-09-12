@@ -1,4 +1,5 @@
-﻿import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/supabase/security";
 import { FEATURED_PROJECTS, ProjectData } from "@/lib/constants/siteData";
 import { Database, ProjectStatus } from "@/types/database";
 import { logAuditEvent } from "./audit";
@@ -79,6 +80,7 @@ export async function getProjectById(id: string) {
 }
 
 export async function createProject(project: ProjectInsert, tags: string[] = []) {
+  await requireAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 
@@ -108,6 +110,7 @@ export async function createProject(project: ProjectInsert, tags: string[] = [])
 }
 
 export async function updateProject(id: string, updates: ProjectUpdate, tags?: string[]) {
+  await requireAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 
@@ -141,6 +144,7 @@ export async function updateProject(id: string, updates: ProjectUpdate, tags?: s
 }
 
 export async function deleteProject(id: string) {
+  await requireAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 

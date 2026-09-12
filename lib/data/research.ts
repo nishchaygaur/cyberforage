@@ -1,4 +1,5 @@
-﻿import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/supabase/security";
 import { ARTICLE_PREVIEWS, ArticlePreview } from "@/lib/constants/siteData";
 import { Database } from "@/types/database";
 import { logAuditEvent } from "./audit";
@@ -77,6 +78,7 @@ export async function getArticleById(id: string) {
 }
 
 export async function createArticle(article: ResearchInsert, tags: string[] = []) {
+  await requireAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 
@@ -106,6 +108,7 @@ export async function createArticle(article: ResearchInsert, tags: string[] = []
 }
 
 export async function updateArticle(id: string, updates: ResearchUpdate, tags?: string[]) {
+  await requireAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 
@@ -139,6 +142,7 @@ export async function updateArticle(id: string, updates: ResearchUpdate, tags?: 
 }
 
 export async function deleteArticle(id: string) {
+  await requireAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 

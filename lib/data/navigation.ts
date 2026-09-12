@@ -1,4 +1,5 @@
-﻿import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/supabase/security";
 import { NAV_ITEMS, NavItem } from "@/lib/constants/siteData";
 import { Database } from "@/types/database";
 import { logAuditEvent } from "./audit";
@@ -53,6 +54,7 @@ export async function getAllNavigationItems(location?: "navbar" | "footer") {
 }
 
 export async function createNavigationItem(item: NavigationInsert) {
+  await requireAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 
@@ -71,6 +73,7 @@ export async function createNavigationItem(item: NavigationInsert) {
 }
 
 export async function updateNavigationItem(id: string, updates: NavigationUpdate) {
+  await requireAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 
@@ -90,6 +93,7 @@ export async function updateNavigationItem(id: string, updates: NavigationUpdate
 }
 
 export async function deleteNavigationItem(id: string) {
+  await requireAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 

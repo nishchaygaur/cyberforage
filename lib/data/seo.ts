@@ -1,4 +1,5 @@
-﻿import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/supabase/security";
 import { Database } from "@/types/database";
 import { logAuditEvent } from "./audit";
 import { revalidatePath } from "next/cache";
@@ -50,16 +51,23 @@ export async function getSeoSettings(): Promise<SeoSettingsRow> {
 }
 
 export async function updateSeoSettings(updates: SeoSettingsUpdate) {
+  const admin = await requireAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 
   const current = await getSeoSettings();
   let result;
 
+  const payload: SeoSettingsUpdate = {
+    ...updates,
+    updated_at: new Date().toISOString(),
+    updated_by: admin.id,
+  };
+
   if (current.id !== "default") {
     const { data, error } = await supabase
       .from("seo_settings")
-      .update(updates)
+      .update(payload)
       .eq("id", current.id)
       .select()
       .single();
@@ -68,7 +76,7 @@ export async function updateSeoSettings(updates: SeoSettingsUpdate) {
   } else {
     const { data, error } = await supabase
       .from("seo_settings")
-      .insert(updates)
+      .insert(payload)
       .select()
       .single();
     if (error) throw error;
@@ -81,6 +89,7 @@ export async function updateSeoSettings(updates: SeoSettingsUpdate) {
     entityId: result.id,
     entityName: "SEO Settings",
     metadata: updates as Record<string, unknown>,
+    userId: admin.id,
   });
 
   revalidatePath("/");

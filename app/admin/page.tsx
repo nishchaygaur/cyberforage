@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import Link from "next/link";
 import {
   FolderGit2,
@@ -8,7 +8,7 @@ import {
   CheckCircle2,
   FileEdit,
   Image as ImageIcon,
-  Users,
+  Inbox,
   Plus,
   ArrowRight,
   ShieldAlert,
@@ -34,7 +34,7 @@ export default async function AdminDashboardPage() {
     labs: 0,
     technologies: 0,
     media: 0,
-    users: 0,
+    inquiries: 0,
   };
 
   let recentLogs: Array<{
@@ -60,7 +60,7 @@ export default async function AdminDashboardPage() {
         { count: labCount },
         { count: techCount },
         { count: mediaCount },
-        { count: userCount },
+        { count: inqCount },
         { data: logs },
       ] = await Promise.all([
         supabase.from("projects").select("id", { count: "exact", head: true }),
@@ -70,7 +70,7 @@ export default async function AdminDashboardPage() {
         supabase.from("labs").select("id", { count: "exact", head: true }),
         supabase.from("technologies").select("id", { count: "exact", head: true }),
         supabase.from("media").select("id", { count: "exact", head: true }),
-        supabase.from("profiles").select("id", { count: "exact", head: true }),
+        supabase.from("contact_submissions").select("id", { count: "exact", head: true }),
         supabase.from("audit_logs").select("*").order("created_at", { ascending: false }).limit(6),
       ]);
 
@@ -84,7 +84,7 @@ export default async function AdminDashboardPage() {
         labs: labCount || 0,
         technologies: techCount || 0,
         media: mediaCount || 0,
-        users: userCount || 0,
+        inquiries: inqCount || 0,
       };
 
       recentLogs = (logs as typeof recentLogs) || [];
@@ -151,12 +151,12 @@ export default async function AdminDashboardPage() {
       href: "/admin/media",
     },
     {
-      title: "Users",
-      value: counts.users,
-      subtitle: "Console Operators",
-      icon: Users,
+      title: "Inquiries",
+      value: counts.inquiries,
+      subtitle: "Contact Submissions",
+      icon: Inbox,
       color: "text-indigo-400",
-      href: "/admin/users",
+      href: "/admin/contact-submissions",
     },
   ];
 

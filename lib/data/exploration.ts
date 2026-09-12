@@ -1,4 +1,5 @@
-﻿import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/supabase/security";
 import { EXPLORATION_DOMAINS, ExplorationDomain } from "@/lib/constants/siteData";
 import { Database } from "@/types/database";
 import { logAuditEvent } from "./audit";
@@ -65,6 +66,7 @@ export async function getExplorationItemById(id: string) {
 }
 
 export async function createExplorationItem(item: ExplorationInsert) {
+  await requireAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 
@@ -83,6 +85,7 @@ export async function createExplorationItem(item: ExplorationInsert) {
 }
 
 export async function updateExplorationItem(id: string, updates: ExplorationUpdate) {
+  await requireAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 
@@ -102,6 +105,7 @@ export async function updateExplorationItem(id: string, updates: ExplorationUpda
 }
 
 export async function deleteExplorationItem(id: string) {
+  await requireAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 

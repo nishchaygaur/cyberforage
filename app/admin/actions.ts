@@ -10,9 +10,8 @@ import * as socialData from "@/lib/data/social";
 import * as navData from "@/lib/data/navigation";
 import * as siteData from "@/lib/data/site";
 import * as seoData from "@/lib/data/seo";
-import * as usersData from "@/lib/data/users";
 import * as mediaData from "@/lib/data/media";
-import { UserRole, ContactSubmissionStatus } from "@/types/database";
+import { ContactSubmissionStatus } from "@/types/database";
 
 // Projects
 export async function createProjectAction(data: any, tags: string[] = []) {
@@ -127,14 +126,6 @@ export async function updateAppearanceAction(updates: any) {
 // SEO
 export async function updateSeoAction(updates: any) {
   return await seoData.updateSeoSettings(updates);
-}
-
-// Users
-export async function updateUserRoleAction(userId: string, newRole: UserRole) {
-  return await usersData.updateUserRole(userId, newRole);
-}
-export async function toggleUserStatusAction(userId: string, isActive: boolean) {
-  return await usersData.toggleUserActive(userId, isActive);
 }
 
 // Media

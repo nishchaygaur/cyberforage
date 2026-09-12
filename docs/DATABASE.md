@@ -1,4 +1,4 @@
-﻿# Cyberforage Database Schema & Architecture
+# Cyberforage Database Schema & Architecture
 
 The Cyberforage database is a PostgreSQL 15+ database managed via Supabase, with comprehensive Row Level Security (RLS) and cryptographic integrity controls.
 
@@ -25,8 +25,8 @@ auth.users (Supabase Auth)
 ## 2. Table Directory
 
 ### 1. `profiles`
-- **Purpose**: Extends `auth.users` with application-specific RBAC attributes.
-- **Key Columns**: `id` (UUID, references `auth.users`), `full_name`, `avatar_url`, `role` (`super_admin`, `admin`, `editor`), `is_active` (boolean).
+- **Purpose**: Extends `auth.users` with administrator profile metadata.
+- **Key Columns**: `id` (UUID, references `auth.users`), `full_name`, `avatar_url`, `is_active` (boolean).
 
 ### 2. `site_settings`
 - **Purpose**: Global site settings, broadcast announcement banners, and emergency maintenance guard.

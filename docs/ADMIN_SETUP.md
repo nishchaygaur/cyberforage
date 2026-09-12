@@ -1,71 +1,53 @@
-﻿# Cyberforage Admin Setup & Operator Guide
+# Cyberforage Admin Setup & Operator Guide
 
-This guide describes how to provision the initial Super Admin account, manage team access, and use the administrative features of the Cyberforage CMS.
+This guide describes how to provision and configure the single Administrator account for the Cyberforage CMS.
 
 ---
 
-## 1. Creating Your First Super Admin Account
+## 1. Single Administrator Model
 
-### Method A: Via Supabase Dashboard (Recommended)
+Cyberforage uses a single-administrator architecture:
+- There is exactly **one** administrator.
+- There is no role hierarchy (`super_admin`, `admin`, `editor`), no user management UI, and no public registration.
+- The authenticated administrator has complete CRUD control across all CMS sections (Projects, Research, Labs, Technologies, Exploration, Site Settings, Contact Info, Social Links, Inquiries, Navigation, Appearance, SEO, Media Library, and Audit Logs).
 
+---
+
+## 2. Provisioning the Administrator Account
+
+### Step 1: Create Account in Supabase Dashboard
 1. Open your project in the [Supabase Dashboard](https://supabase.com).
-2. Go to **Authentication** > **Users**.
+2. Navigate to **Authentication** > **Users**.
 3. Click **Add User** > **Create User**.
-4. Enter your email and a strong password (minimum 12 characters).
+4. Enter your email and a secure password.
 5. Check **Auto Confirm User?** so the account is immediately verified.
 6. Click **Create User**.
-7. Now promote this account to `super_admin`. Open the **SQL Editor** and run:
-   ```sql
-   UPDATE public.profiles
-   SET role = 'super_admin', is_active = true
-   WHERE id = (SELECT id FROM auth.users WHERE email = 'your-email@example.com');
-   ```
+7. Copy the generated User ID (UUID).
 
-### Method B: Self-Registration & Promotion
-
-1. Navigate to your deployed site: `https://cyberforage.space/admin/login` (or `http://localhost:3000/admin/login`).
-2. New users created through the Supabase Auth system automatically receive a default `editor` profile row via the `handle_new_user()` trigger.
-3. An existing Super Admin can navigate to `/admin/users` and elevate the user to `admin` or `super_admin`.
+### Step 2: (Recommended) Configure `ADMIN_USER_ID`
+To cryptographically lock the CMS to this specific user ID, add the UUID to your environment variables (e.g. in `.env.local` or Vercel Environment Variables):
+```env
+ADMIN_USER_ID=your-admin-user-uuid
+```
+- If set: only this specific authenticated Supabase user is granted administrative access. Any other authenticated Supabase account will be rejected with `Forbidden`.
+- If unset (local development): any authenticated user session created through Supabase Auth has administrative access.
 
 ---
 
-## 2. Accessing the Admin Dashboard
+## 3. Accessing the Admin Dashboard
 
 1. Navigate to:
    ```
    https://cyberforage.space/admin/login
    ```
-2. Enter your credentials and click **Authenticate**.
-3. Upon successful validation, you are redirected to `/admin`.
-4. If an account is inactive (`is_active = false`), authentication is rejected with an explicit security notice.
+   *(or `http://localhost:3000/admin/login` in development)*
+2. Enter your administrator email and password, then click **Sign In**.
+3. Upon successful validation, you are redirected directly to the Command Center (`/admin`).
 
 ---
 
-## 3. Role-Based Access Control (RBAC) Matrix
+## 4. Emergency Recovery & Password Reset
 
-Cyberforage implements 3 distinct administrative roles:
+- **Password Reset**: If you forget your password, use the **Forgot Password?** link on `/admin/login` or trigger a password reset email directly from the Supabase Dashboard.
+- **Account Rotation**: To rotate your admin account, create a new user in the Supabase Dashboard and update the `ADMIN_USER_ID` environment variable with the new user UUID.
 
-| Module / Operation | Super Admin | Admin | Editor |
-|---|:---:|:---:|:---:|
-| View Dashboard & Analytics | ✅ | ✅ | ✅ |
-| Manage Projects (CRUD) | ✅ | ✅ | ✅ |
-| Manage Research (CRUD) | ✅ | ✅ | ✅ |
-| Manage Labs (CRUD) | ✅ | ✅ | ✅ |
-| Manage Technologies (CRUD) | ✅ | ✅ | ✅ |
-| Manage Exploration (CRUD) | ✅ | ✅ | ✅ |
-| Upload & Delete Media Assets | ✅ | ✅ | ✅ |
-| View & Triage Inquiries | ✅ | ✅ | ✅ |
-| Delete Inquiries | ✅ | ✅ | ❌ |
-| Update Site Brand & Settings | ✅ | ✅ | ❌ |
-| Update Appearance Tokens | ✅ | ✅ | ❌ |
-| Update SEO Metadata | ✅ | ✅ | ❌ |
-| View Immutable Audit Logs | ✅ | ✅ | ❌ |
-| User Role Promotion / Demotion | ✅ | ❌ | ❌ |
-| Activate / Deactivate Accounts | ✅ | ❌ | ❌ |
-
----
-
-## 4. Safety Guardrails & Emergency Recovery
-
-- **Last Super Admin Lockout Protection**: The database enforces a trigger `prevent_last_super_admin_removal` that blocks deletion, deactivation, or demotion of the final active Super Admin.
-- **Password Reset**: If an operator forgets their password, they can use `/admin/forgot-password` to receive a secure Supabase recovery link.

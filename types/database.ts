@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export type UserRole = "super_admin" | "admin" | "editor";
+export type UserRole = "admin";
 export type ProjectStatus = "planning" | "in_development" | "active" | "completed" | "archived";
 export type LabStatus = "coming_soon" | "available" | "in_development" | "archived";
 export type ContactSubmissionStatus = "new" | "read" | "replied" | "archived";
@@ -30,7 +30,7 @@ export interface Database {
           id: string;
           full_name: string | null;
           avatar_url: string | null;
-          role: UserRole;
+          role?: string | null;
           is_active: boolean;
           created_at: string;
           updated_at: string;
@@ -39,7 +39,7 @@ export interface Database {
           id: string;
           full_name?: string | null;
           avatar_url?: string | null;
-          role?: UserRole;
+          role?: string | null;
           is_active?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -48,7 +48,7 @@ export interface Database {
           id?: string;
           full_name?: string | null;
           avatar_url?: string | null;
-          role?: UserRole;
+          role?: string | null;
           is_active?: boolean;
           created_at?: string;
           updated_at?: string;

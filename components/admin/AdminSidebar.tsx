@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
@@ -17,7 +17,6 @@ import {
   Palette,
   Search,
   Image as ImageIcon,
-  Users,
   History,
   ExternalLink,
   LogOut,
@@ -33,7 +32,6 @@ interface NavGroup {
     label: string;
     href: string;
     icon: React.ElementType;
-    superAdminOnly?: boolean;
   }[];
 }
 
@@ -70,21 +68,18 @@ const NAV_GROUPS: NavGroup[] = [
   {
     title: "Administration",
     items: [
-      { label: "Users & Roles", href: "/admin/users", icon: Users, superAdminOnly: true },
       { label: "Audit Logs", href: "/admin/activity", icon: History },
     ],
   },
 ];
 
 interface AdminSidebarProps {
-  userRole?: string;
   isOpen: boolean;
   onClose: () => void;
   onLogout: () => void;
 }
 
 export const AdminSidebar: React.FC<AdminSidebarProps> = ({
-  userRole = "editor",
   isOpen,
   onClose,
   onLogout,
@@ -133,9 +128,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         {/* Navigation List */}
         <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
           {NAV_GROUPS.map((group) => {
-            const visibleItems = group.items.filter(
-              (item) => !item.superAdminOnly || userRole === "super_admin"
-            );
+            const visibleItems = group.items;
 
             if (visibleItems.length === 0) return null;
 
