@@ -88,18 +88,51 @@ export async function submitContactAction(submission: any) {
   return await contactData.submitContactForm(submission);
 }
 
+export interface ActionResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}
+
 // Social Links
-export async function createSocialAction(data: any) {
-  return await socialData.createSocialLink(data);
+export async function createSocialAction(data: any): Promise<ActionResponse<socialData.SocialRow>> {
+  try {
+    const result = await socialData.createSocialLink(data);
+    return { success: true, data: result };
+  } catch (err: any) {
+    console.error("createSocialAction failed:", err);
+    return { success: false, error: err.message || "Failed to create social link" };
+  }
 }
-export async function updateSocialAction(id: string, updates: any) {
-  return await socialData.updateSocialLink(id, updates);
+
+export async function updateSocialAction(id: string, updates: any): Promise<ActionResponse<socialData.SocialRow>> {
+  try {
+    const result = await socialData.updateSocialLink(id, updates);
+    return { success: true, data: result };
+  } catch (err: any) {
+    console.error("updateSocialAction failed:", err);
+    return { success: false, error: err.message || "Failed to update social link" };
+  }
 }
-export async function deleteSocialAction(id: string) {
-  return await socialData.deleteSocialLink(id);
+
+export async function deleteSocialAction(id: string): Promise<ActionResponse> {
+  try {
+    const result = await socialData.deleteSocialLink(id);
+    return { success: true, data: result };
+  } catch (err: any) {
+    console.error("deleteSocialAction failed:", err);
+    return { success: false, error: err.message || "Failed to delete social link" };
+  }
 }
-export async function reorderSocialAction(orderedIds: string[]) {
-  return await socialData.reorderSocialLinks(orderedIds);
+
+export async function reorderSocialAction(orderedIds: string[]): Promise<ActionResponse> {
+  try {
+    const result = await socialData.reorderSocialLinks(orderedIds);
+    return { success: true, data: result };
+  } catch (err: any) {
+    console.error("reorderSocialAction failed:", err);
+    return { success: false, error: err.message || "Failed to reorder social links" };
+  }
 }
 
 // Navigation

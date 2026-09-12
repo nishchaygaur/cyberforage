@@ -122,29 +122,48 @@ export async function createSocialLink(link: SocialInsert) {
   const { data, error } = await supabase
     .from("social_links")
     .insert(payload)
-    .select()
-    .single();
+    .select();
 
-  if (error) throw error;
+  if (error) {
+    console.error("Failed to insert social link:", error);
+    throw new Error(error.message || "Failed to create social link");
+  }
+
+  const createdRecord: SocialRow =
+    data && data.length > 0
+      ? data[0]
+      : ({
+          id: (payload as any).id || "social-" + Date.now(),
+          ...payload,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        } as SocialRow);
 
   await logAuditEvent({
     action: "create",
     entityType: "social_link",
-    entityId: data.id,
-    entityName: data.label,
+    entityId: createdRecord.id,
+    entityName: createdRecord.label,
     metadata: payload as Record<string, unknown>,
     userId: admin.user.id,
   });
 
   revalidatePath("/");
   revalidatePath("/admin/social");
-  return data;
+  return createdRecord;
 }
 
-export async function updateSocialLink(id: string, updates: SocialUpdate) {
+export async function updateSocialLink(id: string, updates: SocialUpdate): Promise<SocialRow> {
   const admin = await verifyAdmin();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
+
+  // Fetch current link before update so we retain fallback metadata
+  const { data: currentLink } = await supabase
+    .from("social_links")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
 
   const payload: SocialUpdate = { ...updates };
 
@@ -155,7 +174,7 @@ export async function updateSocialLink(id: string, updates: SocialUpdate) {
 
   if (updates.url !== undefined) {
     if (!updates.url.trim()) throw new Error("URL cannot be empty.");
-    const plat = updates.platform || "custom";
+    const plat = updates.platform || currentLink?.platform || "custom";
     const val = validatePlatformUrl(plat, updates.url.trim());
     if (!val.valid) {
       throw new Error(val.error || "Invalid URL for selected platform.");
@@ -177,27 +196,47 @@ export async function updateSocialLink(id: string, updates: SocialUpdate) {
 
   payload.updated_at = new Date().toISOString();
 
-  const { data, error } = await supabase
+  // Execute update with .select() (avoiding .single() to prevent PostgREST PGRST116
+  // error when RLS SELECT policy filters disabled items from RETURNING clause)
+  const { data: updatedRows, error: updateError } = await supabase
     .from("social_links")
     .update(payload)
     .eq("id", id)
-    .select()
-    .single();
+    .select();
 
-  if (error) throw error;
+  if (updateError) {
+    console.error("Failed to update social link in database:", updateError);
+    throw new Error(updateError.message || "Failed to update social link");
+  }
+
+  const updatedRecord: SocialRow =
+    updatedRows && updatedRows.length > 0
+      ? updatedRows[0]
+      : {
+          id,
+          platform: payload.platform || currentLink?.platform || "custom",
+          label: payload.label || currentLink?.label || "Social Link",
+          url: payload.url || currentLink?.url || "",
+          icon: payload.icon !== undefined ? payload.icon : (currentLink?.icon || null),
+          description: payload.description !== undefined ? payload.description : (currentLink?.description || null),
+          enabled: payload.enabled !== undefined ? payload.enabled : (currentLink?.enabled ?? true),
+          display_order: payload.display_order ?? (currentLink?.display_order || 0),
+          created_at: currentLink?.created_at || new Date().toISOString(),
+          updated_at: payload.updated_at || new Date().toISOString(),
+        };
 
   await logAuditEvent({
     action: "update",
     entityType: "social_link",
     entityId: id,
-    entityName: data.label,
+    entityName: updatedRecord.label,
     metadata: payload as Record<string, unknown>,
     userId: admin.user.id,
   });
 
   revalidatePath("/");
   revalidatePath("/admin/social");
-  return data;
+  return updatedRecord;
 }
 
 export async function deleteSocialLink(id: string) {

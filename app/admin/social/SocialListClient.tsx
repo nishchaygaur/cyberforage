@@ -152,7 +152,15 @@ export function SocialListClient({ initialLinks }: { initialLinks: SocialLinkIte
 
     startTransition(async () => {
       try {
-        await updateSocialAction(link.id, { enabled: newEnabled });
+        const res = await updateSocialAction(link.id, { enabled: newEnabled });
+        if (!res.success) {
+          setErrorMessage(res.error || "Failed to update link status.");
+          // Rollback on error
+          setLinks((prev) =>
+            prev.map((l) => (l.id === link.id ? { ...l, enabled: !newEnabled } : l))
+          );
+          return;
+        }
         setSuccessMessage(`Link "${link.label}" ${newEnabled ? "enabled" : "hidden"} successfully.`);
         router.refresh();
       } catch (err: any) {
@@ -191,7 +199,12 @@ export function SocialListClient({ initialLinks }: { initialLinks: SocialLinkIte
 
     try {
       const orderedIds = updated.map((item) => item.id);
-      await reorderSocialAction(orderedIds);
+      const res = await reorderSocialAction(orderedIds);
+      if (!res.success) {
+        setErrorMessage(res.error || "Failed to reorder links.");
+        setLinks(links);
+        return;
+      }
       setSuccessMessage("Social links order saved.");
       router.refresh();
     } catch (err: any) {
@@ -235,17 +248,23 @@ export function SocialListClient({ initialLinks }: { initialLinks: SocialLinkIte
 
     try {
       if (editingLink) {
-        const updated = await updateSocialAction(editingLink.id, payload);
+        const res = await updateSocialAction(editingLink.id, payload);
+        if (!res.success || !res.data) {
+          setErrorMessage(res.error || "Failed to update social link.");
+          return;
+        }
         setLinks((prev) =>
-          prev.map((l) => (l.id === editingLink.id ? { ...l, ...updated } : l))
+          prev.map((l) => (l.id === editingLink.id ? { ...l, ...res.data } : l))
         );
         setSuccessMessage(`Social link "${payload.label}" updated successfully.`);
       } else {
-        const created = await createSocialAction(payload);
-        if (created) {
-          setLinks((prev) => [...prev, created]);
-          setSuccessMessage(`Social link "${payload.label}" added successfully.`);
+        const res = await createSocialAction(payload);
+        if (!res.success || !res.data) {
+          setErrorMessage(res.error || "Failed to add social link.");
+          return;
         }
+        setLinks((prev) => [...prev, res.data!]);
+        setSuccessMessage(`Social link "${payload.label}" added successfully.`);
       }
       setEditingLink(null);
       setIsCreating(false);
@@ -264,7 +283,11 @@ export function SocialListClient({ initialLinks }: { initialLinks: SocialLinkIte
     setSuccessMessage("");
 
     try {
-      await deleteSocialAction(deleteTarget.id);
+      const res = await deleteSocialAction(deleteTarget.id);
+      if (!res.success) {
+        setErrorMessage(res.error || "Failed to delete link.");
+        return;
+      }
       setLinks((prev) => prev.filter((l) => l.id !== deleteTarget.id));
       setSuccessMessage(`Social link "${deleteTarget.label}" deleted.`);
       setDeleteTarget(null);
