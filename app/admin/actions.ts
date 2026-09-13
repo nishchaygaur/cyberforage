@@ -239,7 +239,13 @@ export async function deleteSubmissionAction(id: string): Promise<ActionResponse
 
 export async function submitContactAction(submission: any): Promise<ActionResponse> {
   try {
+    if (!submission || typeof submission !== "object") {
+      return { success: false, error: "Invalid submission data." };
+    }
     const result = await contactData.submitContactForm(submission);
+    if (!result.success) {
+      return { success: false, error: result.error || "Failed to submit contact inquiry." };
+    }
     return { success: true, data: result };
   } catch (err: any) {
     console.error("submitContactAction error:", err);

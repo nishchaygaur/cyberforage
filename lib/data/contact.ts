@@ -123,9 +123,9 @@ export async function updateContactInfo(updates: ContactInfoUpdate) {
 }
 
 export async function submitContactForm(submission: {
-  name?: string;
+  name?: string | null;
   email: string;
-  subject?: string;
+  subject?: string | null;
   message: string;
 }) {
   const supabase = await createClient();
@@ -140,7 +140,7 @@ export async function submitContactForm(submission: {
     return { success: false, error: "Message content cannot be empty." };
   }
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from("contact_submissions")
     .insert({
       name: submission.name?.trim() || null,
@@ -148,15 +148,22 @@ export async function submitContactForm(submission: {
       subject: submission.subject?.trim() || null,
       message: submission.message.trim(),
       status: "new",
-    })
-    .select()
-    .single();
+    });
 
   if (error) {
-    return { success: false, error: error.message };
+    console.error("Error inserting contact submission:", {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+    return { success: false, error: error.message || "Failed to submit contact message." };
   }
 
-  return { success: true, data };
+  revalidatePath("/admin/contact-submissions");
+  revalidatePath("/admin");
+
+  return { success: true };
 }
 
 export async function getContactSubmissions(filters?: {
@@ -182,11 +189,22 @@ export async function getContactSubmissions(filters?: {
     query = query.eq("status", filters.status as ContactSubmissionStatus);
   }
   if (filters?.search) {
-    query = query.or(`email.ilike.%${filters.search}%,name.ilike.%${filters.search}%,message.ilike.%${filters.search}%`);
+    const term = filters.search.trim();
+    if (term) {
+      query = query.or(`email.ilike.%${term}%,name.ilike.%${term}%,message.ilike.%${term}%`);
+    }
   }
 
   const { data, count, error } = await query;
-  if (error) throw error;
+  if (error) {
+    console.error("getContactSubmissions error:", {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+    throw error;
+  }
   return { submissions: data || [], total: count || 0 };
 }
 
@@ -202,7 +220,10 @@ export async function updateSubmissionStatus(id: string, status: ContactSubmissi
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.error("updateSubmissionStatus error:", error);
+    throw error;
+  }
 
   await logAuditEvent({
     action: "update",
@@ -212,6 +233,9 @@ export async function updateSubmissionStatus(id: string, status: ContactSubmissi
     metadata: { status },
     userId: admin.user.id,
   });
+
+  revalidatePath("/admin/contact-submissions");
+  revalidatePath("/admin");
 
   return data;
 }
@@ -228,7 +252,10 @@ export async function deleteSubmission(id: string) {
     .maybeSingle();
 
   const { error } = await supabase.from("contact_submissions").delete().eq("id", id);
-  if (error) throw error;
+  if (error) {
+    console.error("deleteSubmission error:", error);
+    throw error;
+  }
 
   await logAuditEvent({
     action: "delete",
@@ -237,6 +264,9 @@ export async function deleteSubmission(id: string) {
     entityName: item?.email ? `Submission from ${item.email}` : id,
     userId: admin.user.id,
   });
+
+  revalidatePath("/admin/contact-submissions");
+  revalidatePath("/admin");
 
   return { success: true };
 }

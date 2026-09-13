@@ -10,9 +10,9 @@ import { useRouter } from "next/navigation";
 
 interface Submission {
   id: string;
-  name: string;
+  name: string | null;
   email: string;
-  organization: string | null;
+  organization?: string | null;
   subject: string | null;
   message: string;
   status: ContactSubmissionStatus;
@@ -33,11 +33,13 @@ export function SubmissionsClient({ initialSubmissions }: { initialSubmissions: 
   const router = useRouter();
 
   const filtered = submissions.filter((s) => {
+    const q = searchTerm.toLowerCase();
     const matchesSearch =
-      s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (s.organization && s.organization.toLowerCase().includes(searchTerm.toLowerCase()));
+      (s.name ? s.name.toLowerCase().includes(q) : false) ||
+      (s.email ? s.email.toLowerCase().includes(q) : false) ||
+      (s.subject ? s.subject.toLowerCase().includes(q) : false) ||
+      (s.message ? s.message.toLowerCase().includes(q) : false) ||
+      (s.organization ? s.organization.toLowerCase().includes(q) : false);
     const matchesStatus = statusFilter === "all" || s.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -161,7 +163,7 @@ export function SubmissionsClient({ initialSubmissions }: { initialSubmissions: 
                   >
                     <td className="px-6 py-4">
                       <div className="font-medium text-white flex items-center gap-2">
-                        {sub.name}
+                        {sub.name || "Anonymous / Direct"}
                         {sub.status === "new" && (
                           <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
                         )}
@@ -257,7 +259,7 @@ export function SubmissionsClient({ initialSubmissions }: { initialSubmissions: 
             <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/5 text-xs">
               <div>
                 <span className="text-white/40 block">From</span>
-                <span className="text-white font-medium">{activeMessage.name}</span>
+                <span className="text-white font-medium">{activeMessage.name || "Anonymous / Direct"}</span>
                 <a
                   href={`mailto:${activeMessage.email}`}
                   className="text-cyan-400 block hover:underline mt-0.5"
@@ -322,7 +324,7 @@ export function SubmissionsClient({ initialSubmissions }: { initialSubmissions: 
       <AdminConfirmDialog
         isOpen={!!deleteTarget}
         title="Delete Inquiry"
-        message={`Delete inquiry from "${deleteTarget?.name}"? This record will be permanently purged.`}
+        message={`Delete inquiry from "${deleteTarget?.name || deleteTarget?.email || "this sender"}"? This record will be permanently purged.`}
         confirmText={isDeleting ? "Deleting..." : "Delete"}
         variant="danger"
         onConfirm={handleDelete}

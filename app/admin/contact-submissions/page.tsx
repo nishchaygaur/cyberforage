@@ -1,4 +1,4 @@
-﻿import { getContactSubmissions } from "@/lib/data/contact";
+import { getContactSubmissions } from "@/lib/data/contact";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { SubmissionsClient } from "./SubmissionsClient";
@@ -13,6 +13,7 @@ export default async function AdminContactSubmissionsPage() {
     const result = await getContactSubmissions();
     submissions = result.submissions;
   } catch (err: any) {
+    console.error("AdminContactSubmissionsPage load error:", err);
     errorNotice = err.message || "Could not load contact submissions.";
   }
 
@@ -28,13 +29,13 @@ export default async function AdminContactSubmissionsPage() {
         ]}
       />
 
-      {errorNotice && (
-        <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-sm">
-          <span>{errorNotice}</span>
+      {errorNotice ? (
+        <div className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm flex items-center justify-between">
+          <span>Failed to load contact submissions: {errorNotice}</span>
         </div>
+      ) : (
+        <SubmissionsClient initialSubmissions={submissions} />
       )}
-
-      <SubmissionsClient initialSubmissions={submissions} />
     </AdminLayout>
   );
 }

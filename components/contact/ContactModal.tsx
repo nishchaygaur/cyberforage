@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Send, Mail, Phone, CheckCircle2 } from "lucide-react";
+import { X, Send, Mail, Phone, CheckCircle2, AlertCircle } from "lucide-react";
 import { WhatsAppIcon } from "@/components/ui/SocialIcon";
 import { ContactInfoRow } from "@/lib/data/contact";
 import { submitContactAction } from "@/app/admin/actions";
@@ -21,6 +21,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -30,27 +31,37 @@ export const ContactModal: React.FC<ContactModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email || !message) {
+      setErrorMsg("Please provide both your email and message.");
+      return;
+    }
 
     setIsSubmitting(true);
+    setErrorMsg(null);
+
     try {
-      await submitContactAction({
+      const res = await submitContactAction({
         name: email.split("@")[0],
         email: email.trim(),
         subject: "General Inquiry / Collaboration",
         message: message.trim(),
       });
-    } catch {
-      // Graceful fallback for offline / mock mode
-    } finally {
-      setIsSubmitting(false);
-      setSubmitted(true);
-      setTimeout(() => {
-        setSubmitted(false);
+
+      if (res && res.success) {
+        setSubmitted(true);
         setEmail("");
         setMessage("");
-        onClose();
-      }, 2500);
+        setTimeout(() => {
+          setSubmitted(false);
+          onClose();
+        }, 2500);
+      } else {
+        setErrorMsg(res?.error || "Failed to transmit message. Please try again.");
+      }
+    } catch {
+      setErrorMsg("Network error transmitting message. Please try again or reach out directly.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -96,6 +107,13 @@ export const ContactModal: React.FC<ContactModalProps> = ({
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {errorMsg && (
+                <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 flex items-center gap-2 text-xs text-rose-300">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-400" />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
+
               <div>
                 <label htmlFor="contact-email" className="block text-xs font-mono text-slate-300 mb-1.5">
                   Email Address
