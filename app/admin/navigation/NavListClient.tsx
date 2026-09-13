@@ -36,7 +36,7 @@ export function NavListClient({ initialItems }: { initialItems: any[] }) {
     enabled: boolean;
   }>({
     label: "",
-    url: "#",
+    url: "/",
     location: "navbar",
     is_external: false,
     display_order: 0,
@@ -46,7 +46,7 @@ export function NavListClient({ initialItems }: { initialItems: any[] }) {
   const handleOpenCreate = () => {
     setFormState({
       label: "",
-      url: "#",
+      url: "/",
       location: "navbar",
       is_external: false,
       display_order: items.length + 1,
