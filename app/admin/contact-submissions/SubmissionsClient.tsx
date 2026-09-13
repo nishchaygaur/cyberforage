@@ -21,8 +21,8 @@ interface Submission {
   user_agent?: string | null;
 }
 
-export function SubmissionsClient({ initialSubmissions }: { initialSubmissions: Submission[] }) {
-  const [submissions, setSubmissions] = useState<Submission[]>(initialSubmissions);
+export function SubmissionsClient({ initialSubmissions = [] }: { initialSubmissions?: Submission[] }) {
+  const [submissions, setSubmissions] = useState<Submission[]>(initialSubmissions || []);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [activeMessage, setActiveMessage] = useState<Submission | null>(null);
@@ -33,8 +33,9 @@ export function SubmissionsClient({ initialSubmissions }: { initialSubmissions: 
   const router = useRouter();
 
   const filtered = submissions.filter((s) => {
-    const q = searchTerm.toLowerCase();
+    const q = searchTerm.trim().toLowerCase();
     const matchesSearch =
+      !q ||
       (s.name ? s.name.toLowerCase().includes(q) : false) ||
       (s.email ? s.email.toLowerCase().includes(q) : false) ||
       (s.subject ? s.subject.toLowerCase().includes(q) : false) ||

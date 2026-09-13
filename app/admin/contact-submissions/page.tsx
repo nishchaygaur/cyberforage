@@ -11,7 +11,7 @@ export default async function AdminContactSubmissionsPage() {
 
   try {
     const result = await getContactSubmissions();
-    submissions = result.submissions;
+    submissions = result?.submissions || [];
   } catch (err: any) {
     console.error("AdminContactSubmissionsPage load error:", err);
     errorNotice = err.message || "Could not load contact submissions.";
