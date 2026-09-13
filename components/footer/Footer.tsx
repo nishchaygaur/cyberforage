@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { BrandLogo } from "@/components/ui/BrandLogo";
-import { NAV_ITEMS } from "@/lib/constants/siteData";
+import { NAV_ITEMS, NavItem } from "@/lib/constants/siteData";
 import { SocialIcon } from "@/components/ui/SocialIcon";
 import { SiteSettingsRow } from "@/lib/data/site";
 import { SocialRow } from "@/lib/data/social";
@@ -9,10 +9,12 @@ import { SocialRow } from "@/lib/data/social";
 interface FooterProps {
   siteSettings?: SiteSettingsRow | null;
   socialLinks?: SocialRow[];
+  navItems?: NavItem[];
 }
 
-export const Footer: React.FC<FooterProps> = ({ siteSettings, socialLinks }) => {
-  const footerLinks = NAV_ITEMS.filter((item) => item.label !== "Home");
+export const Footer: React.FC<FooterProps> = ({ siteSettings, socialLinks, navItems }) => {
+  const items = navItems && navItems.length > 0 ? navItems : NAV_ITEMS;
+  const footerLinks = items.filter((item) => item.label !== "Home");
   const socials = socialLinks ?? [];
 
   return (

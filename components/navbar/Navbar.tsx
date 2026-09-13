@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandLogo } from "@/components/ui/BrandLogo";
-import { NAV_ITEMS } from "@/lib/constants/siteData";
+import { NAV_ITEMS, NavItem } from "@/lib/constants/siteData";
 import { SocialIcon } from "@/components/ui/SocialIcon";
 import { SocialRow } from "@/lib/data/social";
 import { useTheme, ThemeMode } from "@/components/theme/ThemeProvider";
@@ -12,6 +12,7 @@ import { Sun, Moon, Monitor, Check, Menu, X } from "lucide-react";
 
 interface NavbarProps {
   socialLinks?: SocialRow[];
+  navItems?: NavItem[];
 }
 
 const THEME_OPTIONS: Array<{
@@ -24,8 +25,9 @@ const THEME_OPTIONS: Array<{
   { mode: "system", label: "System", icon: Monitor },
 ];
 
-export const Navbar: React.FC<NavbarProps> = ({ socialLinks }) => {
+export const Navbar: React.FC<NavbarProps> = ({ socialLinks, navItems }) => {
   const pathname = usePathname();
+  const navList = navItems && navItems.length > 0 ? navItems : NAV_ITEMS;
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
@@ -92,7 +94,7 @@ export const Navbar: React.FC<NavbarProps> = ({ socialLinks }) => {
 
         {/* Desktop Navigation Links */}
         <nav className="hidden md:flex items-center space-x-1 lg:space-x-2" aria-label="Main Navigation">
-          {NAV_ITEMS.map((item) => {
+          {navList.map((item) => {
             const isActive =
               item.href === "/"
                 ? pathname === "/"
@@ -238,7 +240,7 @@ export const Navbar: React.FC<NavbarProps> = ({ socialLinks }) => {
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="md:hidden border-b border-white/[0.08] bg-[#050B14]/98 backdrop-blur-xl px-4 pt-3 pb-6 space-y-1">
-          {NAV_ITEMS.map((item) => {
+          {navList.map((item) => {
             const isActive =
               item.href === "/"
                 ? pathname === "/"
