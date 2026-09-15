@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, Save, Eye, Sparkles } from "lucide-react";
 import { createProjectAction, updateProjectAction } from "@/app/admin/actions";
 import { ProjectStatus } from "@/types/database";
+import { sanitizeWebUrl } from "@/lib/utils/url";
 
 interface ProjectFormProps {
   initialData?: any;
@@ -76,6 +77,35 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
       .map((t: string) => t.trim())
       .filter(Boolean);
 
+    const sanitizeOrFormatUrl = (urlStr: string, fieldName: string): string | null => {
+      const trimmed = urlStr.trim();
+      if (!trimmed) return null;
+      let sanitized = sanitizeWebUrl(trimmed);
+      if (!sanitized && !trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+        sanitized = sanitizeWebUrl(`https://${trimmed}`);
+      }
+      if (!sanitized) {
+        throw new Error(`Please enter a valid URL for ${fieldName} (must use https:// or http://).`);
+      }
+      return sanitized;
+    };
+
+    let projectUrl: string | null = null;
+    let githubUrl: string | null = null;
+    let docUrl: string | null = null;
+    let demoUrl: string | null = null;
+
+    try {
+      projectUrl = sanitizeOrFormatUrl(formData.project_url, "Project URL");
+      githubUrl = sanitizeOrFormatUrl(formData.github_url, "GitHub URL");
+      docUrl = sanitizeOrFormatUrl(formData.documentation_url, "Documentation URL");
+      demoUrl = sanitizeOrFormatUrl(formData.demo_url, "Demo URL");
+    } catch (err: any) {
+      setErrorMessage(err.message);
+      setIsSubmitting(false);
+      return;
+    }
+
     const payload = {
       title: formData.title.trim(),
       slug: formData.slug.trim(),
@@ -85,10 +115,10 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
       status: formData.status,
       featured: formData.featured,
       published: formData.published,
-      project_url: formData.project_url.trim() || null,
-      github_url: formData.github_url.trim() || null,
-      documentation_url: formData.documentation_url.trim() || null,
-      demo_url: formData.demo_url.trim() || null,
+      project_url: projectUrl,
+      github_url: githubUrl,
+      documentation_url: docUrl,
+      demo_url: demoUrl,
       image_url: formData.image_url.trim() || null,
       icon: formData.icon.trim() || null,
       accent_color: formData.accent_color,

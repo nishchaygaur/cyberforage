@@ -4,6 +4,7 @@ import { FEATURED_PROJECTS, ProjectData } from "@/lib/constants/siteData";
 import { Database, ProjectStatus } from "@/types/database";
 import { logAuditEvent } from "./audit";
 import { revalidatePath } from "next/cache";
+import { sanitizeWebUrl } from "@/lib/utils/url";
 
 export type ProjectRow = Database["public"]["Tables"]["projects"]["Row"];
 export type ProjectInsert = Database["public"]["Tables"]["projects"]["Insert"];
@@ -47,10 +48,10 @@ export async function getPublishedProjects(): Promise<ProjectData[]> {
         description: p.full_description || p.short_description,
         accent: (p.accent_color as "cyan" | "purple" | "rose") || "cyan",
         tags: p.project_tags ? p.project_tags.map((t: { tag: string }) => t.tag) : [],
-        project_url: projectUrl,
-        demo_url: p.demo_url,
-        github_url: p.github_url,
-        documentation_url: p.documentation_url,
+        project_url: sanitizeWebUrl(projectUrl),
+        demo_url: sanitizeWebUrl(p.demo_url),
+        github_url: sanitizeWebUrl(p.github_url),
+        documentation_url: sanitizeWebUrl(p.documentation_url),
         featured: p.featured,
         published: p.published,
         category: p.category,

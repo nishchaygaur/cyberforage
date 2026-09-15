@@ -1,7 +1,8 @@
 import React from "react";
 import Link from "next/link";
-import { ArrowRight, ShieldCheck, Box, FileSearch, Terminal, Cpu } from "lucide-react";
+import { ArrowRight, ShieldCheck, Box, FileSearch, Terminal, Cpu, BookOpen } from "lucide-react";
 import { FEATURED_PROJECTS, ProjectData } from "@/lib/constants/siteData";
+import { sanitizeWebUrl } from "@/lib/utils/url";
 
 interface FeaturedProjectsProps {
   projects?: ProjectData[];
@@ -106,8 +107,8 @@ export const FeaturedProjects: React.FC<FeaturedProjectsProps> = ({ projects }) 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {displayProjects.map((project, idx) => {
             const styles = getAccentConfig(project.accent);
-            const targetUrl =
-              project.project_url || project.demo_url || project.github_url || null;
+            const targetUrl = sanitizeWebUrl(project.project_url || project.demo_url || project.github_url);
+            const docUrl = sanitizeWebUrl(project.documentation_url);
 
             return (
               <div
@@ -180,18 +181,33 @@ export const FeaturedProjects: React.FC<FeaturedProjectsProps> = ({ projects }) 
                   ) : null}
                 </div>
 
-                {/* Bottom CTA Button: rendered only when valid URL exists */}
-                {targetUrl ? (
-                  <div className="pt-6 relative z-10 mt-auto">
-                    <a
-                      href={targetUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#050E1A] ${styles.btnHoverBg} border ${styles.btnBorder} text-xs font-medium text-slate-200 hover:text-white transition-all group/btn`}
-                    >
-                      <span>View Project</span>
-                      <ArrowRight className={`w-3.5 h-3.5 ${styles.arrowText} transition-transform group-hover/btn:translate-x-1`} />
-                    </a>
+                {/* Bottom CTA Actions: rendered only when valid destination exists */}
+                {targetUrl || docUrl ? (
+                  <div className="pt-6 relative z-10 mt-auto flex flex-wrap items-center gap-2.5">
+                    {targetUrl && (
+                      <a
+                        href={targetUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#050E1A] ${styles.btnHoverBg} border ${styles.btnBorder} text-xs font-medium text-slate-200 hover:text-white transition-all group/btn`}
+                      >
+                        <span>View Project</span>
+                        <ArrowRight className={`w-3.5 h-3.5 ${styles.arrowText} transition-transform group-hover/btn:translate-x-1`} />
+                      </a>
+                    )}
+
+                    {docUrl && (
+                      <a
+                        href={docUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#050E1A] hover:bg-white/5 border border-white/10 hover:border-[#00F0C0]/40 text-xs font-medium text-slate-300 hover:text-[#00F0C0] transition-all group/doc"
+                        title="View Documentation"
+                      >
+                        <BookOpen className="w-3.5 h-3.5 text-[#00E5BE] group-hover/doc:text-[#00F0C0] transition-colors" />
+                        <span>Documentation</span>
+                      </a>
+                    )}
                   </div>
                 ) : (
                   <div className="pt-6 relative z-10 mt-auto">

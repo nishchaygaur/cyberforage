@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Search, ExternalLink, Terminal } from "lucide-react";
+import { Search, ExternalLink, Terminal, BookOpen } from "lucide-react";
 import { ProjectData } from "@/lib/constants/siteData";
+import { sanitizeWebUrl } from "@/lib/utils/url";
 
 interface ProjectsDirectoryProps {
   projects: ProjectData[];
@@ -129,7 +130,9 @@ export const ProjectsDirectory: React.FC<ProjectsDirectoryProps> = ({ projects }
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProjects.map((project) => {
             const styles = getAccentStyles(project.accent);
-            const targetUrl = project.project_url || project.demo_url;
+            const targetUrl = sanitizeWebUrl(project.project_url || project.demo_url);
+            const docUrl = sanitizeWebUrl(project.documentation_url);
+            const githubUrl = sanitizeWebUrl(project.github_url);
 
             return (
               <div
@@ -182,7 +185,7 @@ export const ProjectsDirectory: React.FC<ProjectsDirectoryProps> = ({ projects }
                   )}
 
                   {/* Action Links */}
-                  <div className="flex items-center gap-3 pt-1">
+                  <div className="flex flex-wrap items-center gap-2.5 pt-1">
                     {targetUrl && (
                       <a
                         href={targetUrl}
@@ -195,9 +198,22 @@ export const ProjectsDirectory: React.FC<ProjectsDirectoryProps> = ({ projects }
                       </a>
                     )}
 
-                    {project.github_url && (
+                    {docUrl && (
                       <a
-                        href={project.github_url}
+                        href={docUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-[#00F0C0] bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 hover:border-[#00F0C0]/30 transition-colors group/doc"
+                        title="View Documentation"
+                      >
+                        <BookOpen className="w-3.5 h-3.5 text-[#00E5BE] group-hover/doc:text-[#00F0C0] transition-colors" />
+                        <span>Documentation</span>
+                      </a>
+                    )}
+
+                    {githubUrl && (
+                      <a
+                        href={githubUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 transition-colors"
