@@ -123,6 +123,17 @@ export const Navbar: React.FC<NavbarProps> = ({ socialLinks, navItems }) => {
 
         {/* Right Action Icons */}
         <div className="hidden md:flex items-center space-x-4">
+          
+{/* n8n Access Button */}
+<a
+  href="https://n8n.cyberforage.space"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="inline-flex items-center gap-2 rounded-lg border border-[#00F0C0]/30 bg-[#00F0C0]/5 px-3 py-2 text-xs font-semibold text-[#00F0C0] transition-colors hover:border-[#00F0C0] hover:bg-[#00F0C0]/10"
+>
+  <span className="h-1.5 w-1.5 rounded-full bg-[#00F0C0] shadow-[0_0_8px_#00F0C0]" />
+  Request n8n Access
+</a>
           {primarySocial && (
             <a
               href={primarySocial.url}
@@ -260,7 +271,17 @@ export const Navbar: React.FC<NavbarProps> = ({ socialLinks, navItems }) => {
               </Link>
             );
           })}
-
+          
+<a
+  href="https://n8n.cyberforage.space"
+  target="_blank"
+  rel="noopener noreferrer"
+  onClick={() => setMobileMenuOpen(false)}
+  className="block rounded-lg border border-[#00F0C0]/30 bg-[#00F0C0]/5 px-3 py-2.5 text-base font-medium text-[#00F0C0] transition-colors hover:bg-[#00F0C0]/10"
+>
+  <span className="mr-2">●</span>
+  Request n8n Access
+</a>
           {/* Mobile Theme Selector */}
           <div className="pt-4 mt-3 border-t border-white/[0.08]">
             <div className="text-[11px] font-mono uppercase tracking-wider text-slate-400 mb-2 px-3">
