@@ -126,7 +126,7 @@ export const Navbar: React.FC<NavbarProps> = ({ socialLinks, navItems }) => {
           
 {/* n8n Access Button */}
 <a
-  href="https://n8n.cyberforage.space"
+  href="https://n8nrequest.cyberforage.space/"
   target="_blank"
   rel="noopener noreferrer"
   className="inline-flex items-center gap-2 rounded-lg border border-[#00F0C0]/30 bg-[#00F0C0]/5 px-3 py-2 text-xs font-semibold text-[#00F0C0] transition-colors hover:border-[#00F0C0] hover:bg-[#00F0C0]/10"
@@ -273,7 +273,7 @@ export const Navbar: React.FC<NavbarProps> = ({ socialLinks, navItems }) => {
           })}
           
 <a
-  href="https://n8n.cyberforage.space"
+  href="https://n8nrequest.cyberforage.space/"
   target="_blank"
   rel="noopener noreferrer"
   onClick={() => setMobileMenuOpen(false)}
