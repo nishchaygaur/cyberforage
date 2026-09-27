@@ -39,8 +39,8 @@ export const CyberScene: React.FC<CyberSceneProps> = ({
   const isDragging = useRef(false);
   const previousMousePosition = useRef({ x: 0, y: 0 });
   const cameraRotation = useRef({ x: 0.2, y: 0 });
-  const cameraTargetDistance = useRef(mode === 'server' ? 8.5 : 7.2);
-  const currentCameraDistance = useRef(7.2);
+  const cameraTargetDistance = useRef(mode === 'server' ? 8.5 : 7.6);
+  const currentCameraDistance = useRef(7.6);
 
   // Animation Frame
   const animationFrameId = useRef<number | null>(null);
@@ -68,10 +68,9 @@ export const CyberScene: React.FC<CyberSceneProps> = ({
 
     // Three.js Core
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x040812, 0.05);
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.set(0, 1.2, 7.2);
+    camera.position.set(0, 1.2, 7.6);
 
     const renderer = new THREE.WebGLRenderer({
       canvas,
@@ -79,6 +78,7 @@ export const CyberScene: React.FC<CyberSceneProps> = ({
       alpha: true,
       powerPreference: 'high-performance'
     });
+    renderer.setClearColor(0x000000, 0);
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
@@ -317,7 +317,7 @@ export const CyberScene: React.FC<CyberSceneProps> = ({
       globeRef.current.group.visible = true;
       rackRef.current.group.visible = false;
       meshRef.current.group.visible = false;
-      cameraTargetDistance.current = 7.2;
+      cameraTargetDistance.current = 7.6;
     } else if (mode === 'server') {
       globeRef.current.group.visible = false;
       rackRef.current.group.visible = true;
@@ -336,7 +336,14 @@ export const CyberScene: React.FC<CyberSceneProps> = ({
   }, [mode]);
 
   return (
-    <div ref={mountRef} className={`relative w-full h-full overflow-hidden ${className}`}>
+    <div
+      ref={mountRef}
+      className={`relative w-full h-full ${className}`}
+      style={{
+        maskImage: 'radial-gradient(circle at 50% 50%, black 72%, transparent 100%)',
+        WebkitMaskImage: 'radial-gradient(circle at 50% 50%, black 72%, transparent 100%)',
+      }}
+    >
       <canvas
         ref={canvasRef}
         className="w-full h-full block cursor-grab active:cursor-grabbing touch-none select-none"

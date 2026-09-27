@@ -255,64 +255,75 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
           {/* Right Column: 3D Interactive Canvas & Orbital Badges */}
           <div className="lg:col-span-5 relative flex flex-col items-center justify-center">
-            {/* 3D Canvas Box */}
-            <div className="relative w-full aspect-square max-w-[480px] lg:max-w-[560px] mx-auto flex items-center justify-center rounded-2xl bg-[#030914]/70 border border-white/[0.06] backdrop-blur-sm shadow-[0_0_50px_rgba(0,240,192,0.06)] overflow-hidden">
+            {/* Free-Floating 3D Globe Wrapper - Zero square bounding box */}
+            <div className="relative w-full aspect-square max-w-[500px] lg:max-w-[580px] mx-auto flex items-center justify-center select-none">
+              {/* Soft Ambient Holographic Energy Halo (Diffused, zero hard edges) */}
               <div
-                className="absolute inset-0 pointer-events-none opacity-60"
+                className="absolute inset-0 pointer-events-none -z-10"
                 style={{
-                  background: 'radial-gradient(circle at center, rgba(0, 240, 192, 0.15) 0%, rgba(56, 189, 248, 0.05) 45%, transparent 75%)'
+                  background: 'radial-gradient(circle at 50% 50%, rgba(0, 240, 192, 0.18) 0%, rgba(56, 189, 248, 0.08) 35%, transparent 68%)',
+                  filter: 'blur(35px)',
                 }}
                 aria-hidden="true"
               />
 
-              {/* Master 3D WebGL Canvas */}
-              <CyberScene
-                mode={sceneMode}
-                onSelectNode={(node) => setSelectedNode(node)}
-                attackTrigger={attackTrigger}
-                className="relative z-10"
+              {/* Zero-G Anti-Gravity Levitation Shadow / Energy Field */}
+              <div
+                className="absolute -bottom-3 left-1/2 w-[70%] h-8 bg-gradient-to-r from-transparent via-[#00F0C0]/35 to-transparent blur-xl rounded-full pointer-events-none transform -translate-x-1/2 scale-y-50 animate-float-shadow"
+                aria-hidden="true"
               />
 
-              {/* Floating Holographic Cyber Badges */}
-              <div className="absolute top-[10%] left-[28%] z-20 pointer-events-none transform -translate-x-1/2">
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#071322]/90 border border-white/10 backdrop-blur-md shadow-[0_0_15px_rgba(0,0,0,0.8)]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#00F0C0] shadow-[0_0_6px_#00F0C0]" />
-                  <span className="text-[11px] font-mono font-semibold tracking-wider text-slate-200">
-                    SECURITY
-                  </span>
-                </div>
-              </div>
+              {/* Floating Globe Body (Zero-G Levitation Animation) */}
+              <div className="relative w-full h-full flex items-center justify-center animate-float-levitate">
+                {/* Master 3D WebGL Canvas */}
+                <CyberScene
+                  mode={sceneMode}
+                  onSelectNode={(node) => setSelectedNode(node)}
+                  attackTrigger={attackTrigger}
+                  className="relative z-10 w-full h-full"
+                />
 
-              <div className="absolute top-[22%] right-[8%] z-20 pointer-events-none">
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#071322]/90 border border-white/10 backdrop-blur-md shadow-[0_0_15px_rgba(0,0,0,0.8)]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#A855F7] shadow-[0_0_6px_#A855F7]" />
-                  <span className="text-[11px] font-mono font-semibold tracking-wider text-slate-200">
-                    AI
-                  </span>
+                {/* Floating Holographic Cyber Badges with Individual Floating Offsets */}
+                <div className="absolute top-[10%] left-[24%] z-20 pointer-events-none transform -translate-x-1/2 animate-badge-float-1">
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#071322]/85 border border-[#00F0C0]/35 backdrop-blur-md shadow-[0_0_18px_rgba(0,240,192,0.25)]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#00F0C0] shadow-[0_0_6px_#00F0C0]" />
+                    <span className="text-[11px] font-mono font-semibold tracking-wider text-slate-200">
+                      SECURITY
+                    </span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="absolute bottom-[30%] left-[10%] z-20 pointer-events-none">
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#071322]/90 border border-white/10 backdrop-blur-md shadow-[0_0_15px_rgba(0,0,0,0.8)]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#00F0C0] shadow-[0_0_6px_#00F0C0]" />
-                  <span className="text-[11px] font-mono font-semibold tracking-wider text-slate-200">
-                    RESEARCH
-                  </span>
+                <div className="absolute top-[22%] right-[5%] z-20 pointer-events-none animate-badge-float-2">
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#071322]/85 border border-[#A855F7]/35 backdrop-blur-md shadow-[0_0_18px_rgba(168,85,247,0.25)]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#A855F7] shadow-[0_0_6px_#A855F7]" />
+                    <span className="text-[11px] font-mono font-semibold tracking-wider text-slate-200">
+                      AI
+                    </span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="absolute bottom-[16%] right-[5%] z-20 pointer-events-none">
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#071322]/90 border border-white/10 backdrop-blur-md shadow-[0_0_15px_rgba(0,0,0,0.8)]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#00E5BE] shadow-[0_0_6px_#00E5BE]" />
-                  <span className="text-[11px] font-mono font-semibold tracking-wider text-slate-200">
-                    AUTOMATION
-                  </span>
+                <div className="absolute bottom-[30%] left-[8%] z-20 pointer-events-none animate-badge-float-3">
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#071322]/85 border border-[#38BDF8]/35 backdrop-blur-md shadow-[0_0_18px_rgba(56,189,248,0.25)]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#38BDF8] shadow-[0_0_6px_#38BDF8]" />
+                    <span className="text-[11px] font-mono font-semibold tracking-wider text-slate-200">
+                      RESEARCH
+                    </span>
+                  </div>
+                </div>
+
+                <div className="absolute bottom-[16%] right-[3%] z-20 pointer-events-none animate-badge-float-4">
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#071322]/85 border border-[#00E5BE]/35 backdrop-blur-md shadow-[0_0_18px_rgba(0,229,190,0.25)]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#00E5BE] shadow-[0_0_6px_#00E5BE]" />
+                    <span className="text-[11px] font-mono font-semibold tracking-wider text-slate-200">
+                      AUTOMATION
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* Node Inspection Holographic Drawer */}
               {selectedNode && (
-                <div className="absolute bottom-4 left-4 right-4 z-30 p-3 rounded-xl bg-[#040E1C]/95 border border-[#00F0C0]/50 backdrop-blur-xl shadow-2xl flex items-center justify-between animate-fadeIn">
+                <div className="absolute -bottom-2 left-2 right-2 sm:left-4 sm:right-4 z-30 p-3 rounded-xl bg-[#040E1C]/95 border border-[#00F0C0]/50 backdrop-blur-xl shadow-[0_0_25px_rgba(0,240,192,0.2)] flex items-center justify-between animate-fadeIn">
                   <div>
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="w-2 h-2 rounded-full" style={{ backgroundColor: selectedNode.hex }} />

@@ -162,3 +162,68 @@
   background-size: 100% 3px, 6px 100%;
   pointer-events: none;
 }
+
+/* Zero-Gravity Floating Levitation Animations */
+@keyframes float-levitate {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-16px);
+  }
+}
+
+@keyframes float-shadow {
+  0%, 100% {
+    transform: translateX(-50%) scaleX(1) scaleY(0.5);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateX(-50%) scaleX(0.85) scaleY(0.45);
+    opacity: 0.35;
+  }
+}
+
+@keyframes badge-float-1 {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes badge-float-2 {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes badge-float-3 {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(8px); }
+}
+
+@keyframes badge-float-4 {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(10px); }
+}
+
+.animate-float-levitate {
+  animation: float-levitate 6s ease-in-out infinite;
+}
+
+.animate-float-shadow {
+  animation: float-shadow 6s ease-in-out infinite;
+}
+
+.animate-badge-float-1 {
+  animation: badge-float-1 5s ease-in-out infinite;
+}
+
+.animate-badge-float-2 {
+  animation: badge-float-2 6.5s ease-in-out infinite 0.5s;
+}
+
+.animate-badge-float-3 {
+  animation: badge-float-3 5.5s ease-in-out infinite 1s;
+}
+
+.animate-badge-float-4 {
+  animation: badge-float-4 7s ease-in-out infinite 1.5s;
+}
