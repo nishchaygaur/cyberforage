@@ -1,7 +1,7 @@
 export interface NmapPort {
   port: number;
   protocol: 'tcp' | 'udp';
-  state: 'open' | 'filtered' | 'closed';
+  state: 'open' | 'filtered' | 'closed' | 'open|filtered';
   service: string;
   version: string;
   banner?: string;
@@ -30,7 +30,7 @@ export interface NmapTargetPreset {
   ip: string;
   hostname: string;
   description: string;
-  category: 'Gateway' | 'Database' | 'SCADA / ICS' | 'Cloud Edge' | 'Hostile Node';
+  category: 'Gateway' | 'Database' | 'SCADA / ICS' | 'Cloud Edge' | 'Hostile Node' | 'Subnet CIDR';
   os: {
     deviceType: string;
     running: string;
@@ -41,7 +41,10 @@ export interface NmapTargetPreset {
   };
   latencyMs: number;
   ports: NmapPort[];
+  udpPorts: NmapPort[];
   traceroute: NmapTracerouteHop[];
+  isSubnet?: boolean;
+  discoveredHosts?: { ip: string; hostname: string; latency: number; openPortsCount: number }[];
 }
 
 export const NMAP_PRESETS: NmapTargetPreset[] = [
@@ -148,6 +151,44 @@ export const NMAP_PRESETS: NmapTargetPreset[] = [
         version: 'Babel / BGP Border Gateway',
       },
     ],
+    udpPorts: [
+      {
+        port: 53,
+        protocol: 'udp',
+        state: 'open',
+        service: 'domain',
+        version: 'dnsmasq 2.89',
+        banner: 'Recursive DNS resolver active',
+      },
+      {
+        port: 67,
+        protocol: 'udp',
+        state: 'open|filtered',
+        service: 'dhcps',
+        version: 'ISC DHCP Server 4.4.3',
+      },
+      {
+        port: 123,
+        protocol: 'udp',
+        state: 'open',
+        service: 'ntp',
+        version: 'Chrony NTP v4.3',
+      },
+      {
+        port: 161,
+        protocol: 'udp',
+        state: 'open',
+        service: 'snmp',
+        version: 'SNMPv2c (community: public)',
+      },
+      {
+        port: 51820,
+        protocol: 'udp',
+        state: 'open',
+        service: 'wireguard',
+        version: 'WireGuard VPN Kernel Interface',
+      },
+    ],
     traceroute: [
       { hop: 1, rtt: '0.41 ms', address: '192.168.1.254', host: 'switch-agg-01.local' },
       { hop: 2, rtt: '0.82 ms', address: '192.168.1.1', host: 'gateway.cyberforage.internal' },
@@ -238,6 +279,22 @@ export const NMAP_PRESETS: NmapTargetPreset[] = [
         state: 'filtered',
         service: 'mongodb',
         version: 'MongoDB Enterprise Database',
+      },
+    ],
+    udpPorts: [
+      {
+        port: 123,
+        protocol: 'udp',
+        state: 'open',
+        service: 'ntp',
+        version: 'Systemd-timesyncd NTP',
+      },
+      {
+        port: 161,
+        protocol: 'udp',
+        state: 'filtered',
+        service: 'snmp',
+        version: 'Restricted by iptables',
       },
     ],
     traceroute: [
@@ -333,6 +390,29 @@ export const NMAP_PRESETS: NmapTargetPreset[] = [
         version: 'Embedded FTP diagnostics',
       },
     ],
+    udpPorts: [
+      {
+        port: 502,
+        protocol: 'udp',
+        state: 'open',
+        service: 'modbus',
+        version: 'Modbus UDP Daemon',
+      },
+      {
+        port: 2222,
+        protocol: 'udp',
+        state: 'open',
+        service: 'ethernet-ip',
+        version: 'CIP I/O Messaging Port',
+      },
+      {
+        port: 47808,
+        protocol: 'udp',
+        state: 'open',
+        service: 'bacnet',
+        version: 'BACnet Building Automation Protocol',
+      },
+    ],
     traceroute: [
       { hop: 1, rtt: '0.85 ms', address: '172.16.1.1', host: 'it-ot-firewall-dmz.local' },
       { hop: 2, rtt: '3.40 ms', address: '172.16.42.1', host: 'scada-zone-gateway.ot' },
@@ -405,6 +485,22 @@ export const NMAP_PRESETS: NmapTargetPreset[] = [
         state: 'filtered',
         service: 'https-alt',
         version: 'Cloudflare Admin Socket',
+      },
+    ],
+    udpPorts: [
+      {
+        port: 443,
+        protocol: 'udp',
+        state: 'open',
+        service: 'quic',
+        version: 'HTTP/3 Cloudflare Edge QUIC Protocol',
+      },
+      {
+        port: 53,
+        protocol: 'udp',
+        state: 'open',
+        service: 'domain',
+        version: 'Cloudflare Anycast DNS (1.1.1.1 backend)',
       },
     ],
     traceroute: [
@@ -511,6 +607,29 @@ export const NMAP_PRESETS: NmapTargetPreset[] = [
         ],
       },
     ],
+    udpPorts: [
+      {
+        port: 69,
+        protocol: 'udp',
+        state: 'open',
+        service: 'tftp',
+        version: 'TFTP Server (unauthenticated download)',
+      },
+      {
+        port: 514,
+        protocol: 'udp',
+        state: 'open',
+        service: 'syslog',
+        version: 'Syslog daemon tap',
+      },
+      {
+        port: 1900,
+        protocol: 'udp',
+        state: 'open',
+        service: 'upnp',
+        version: 'SSDP / MiniUPnPd reflection agent',
+      },
+    ],
     traceroute: [
       { hop: 1, rtt: '0.92 ms', address: '192.168.1.1', host: 'gateway.local' },
       { hop: 2, rtt: '11.4 ms', address: '198.51.100.1', host: 'darknet-transit-as99.net' },
@@ -520,10 +639,177 @@ export const NMAP_PRESETS: NmapTargetPreset[] = [
 ];
 
 /**
+ * Filter ports based on port range preset and protocol
+ */
+export function filterPortsForScan(
+  target: NmapTargetPreset,
+  scanType: '-sS' | '-sT' | '-sU',
+  portPreset: 'top20' | 'top100' | 'web' | 'database' | 'all'
+): NmapPort[] {
+  const isUdp = scanType === '-sU';
+  const basePorts = isUdp ? target.udpPorts : target.ports;
+
+  if (portPreset === 'web') {
+    const webPortNumbers = [80, 443, 8000, 8080, 8443, 8888];
+    const filtered = basePorts.filter((p) => webPortNumbers.includes(p.port));
+    if (filtered.length === 0) {
+      return [
+        {
+          port: 80,
+          protocol: isUdp ? 'udp' : 'tcp',
+          state: 'closed',
+          service: 'http',
+          version: 'Connection refused (No HTTP server on this host)',
+        },
+      ];
+    }
+    return filtered;
+  }
+
+  if (portPreset === 'database') {
+    const dbPortNumbers = [1433, 1521, 3306, 5432, 6379, 9100, 27017];
+    const filtered = basePorts.filter((p) => dbPortNumbers.includes(p.port));
+    if (filtered.length === 0) {
+      return [
+        {
+          port: 3306,
+          protocol: isUdp ? 'udp' : 'tcp',
+          state: 'closed',
+          service: 'mysql',
+          version: 'Connection refused (No database listener on this host)',
+        },
+      ];
+    }
+    return filtered;
+  }
+
+  if (portPreset === 'top20') {
+    const top20Numbers = [21, 22, 23, 25, 53, 80, 110, 111, 135, 139, 143, 443, 445, 993, 995, 1723, 3306, 3389, 5900, 8080];
+    const filtered = basePorts.filter((p) => top20Numbers.includes(p.port));
+    return filtered.length > 0 ? filtered : basePorts.slice(0, 2);
+  }
+
+  if (portPreset === 'all') {
+    // If all ports selected, include standard ports plus high ephemeral ports
+    const extraHighPorts: NmapPort[] = isUdp
+      ? []
+      : [
+          {
+            port: 31337,
+            protocol: 'tcp',
+            state: 'open',
+            service: 'elite-daemon',
+            version: 'Cyberforage Telemetry Socket v2.4',
+            banner: 'Cyberforage Node Mesh Listener',
+          },
+        ];
+    return [...basePorts, ...extraHighPorts];
+  }
+
+  return basePorts;
+}
+
+/**
+ * Synthesizes a realistic CIDR Subnet Scan (e.g. 192.168.1.0/24 or 10.0.0.0/24)
+ */
+export function synthesizeSubnetTarget(cidrInput: string): NmapTargetPreset {
+  const baseSubnet = cidrInput.split('/')[0].split('.').slice(0, 3).join('.');
+
+  const hosts = [
+    { ip: `${baseSubnet}.1`, hostname: 'gateway.lan', latency: 0.82, openPortsCount: 4 },
+    { ip: `${baseSubnet}.12`, hostname: 'storage-nas.lan', latency: 1.45, openPortsCount: 3 },
+    { ip: `${baseSubnet}.45`, hostname: 'db-cluster.lan', latency: 2.15, openPortsCount: 5 },
+    { ip: `${baseSubnet}.105`, hostname: 'workstation-dev.lan', latency: 3.84, openPortsCount: 2 },
+  ];
+
+  return {
+    id: `subnet-${cidrInput.replace(/[^a-zA-Z0-9]/g, '_')}`,
+    name: `Subnet: ${cidrInput}`,
+    ip: cidrInput,
+    hostname: `${cidrInput} (4 Hosts Active)`,
+    description: `Multi-host ARP/ICMP ping sweep discovering active nodes across ${cidrInput}.`,
+    category: 'Subnet CIDR',
+    isSubnet: true,
+    discoveredHosts: hosts,
+    latencyMs: 1.84,
+    os: {
+      deviceType: 'Multi-host Subnet Segment',
+      running: 'Mixed OS Environment (Linux, BSD, Embedded)',
+      osCpe: 'cpe:/o:mixed:multi_os',
+      osDetails: 'Mixed network segment (4 alive hosts responding to ARP probes)',
+      uptime: 'Variable per node',
+      tcpSequence: 'Multiple distinct IP ID stacks',
+    },
+    ports: [
+      {
+        port: 22,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'ssh',
+        version: 'OpenSSH 9.3p1 (Discovered on .1 and .45)',
+      },
+      {
+        port: 80,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'http',
+        version: 'nginx 1.24.0 (Discovered on .1 Gateway)',
+      },
+      {
+        port: 443,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'ssl/https',
+        version: 'nginx 1.24.0 (TLS 1.3)',
+      },
+      {
+        port: 445,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'microsoft-ds',
+        version: 'Samba 4.17 (Discovered on .12 storage-nas)',
+      },
+      {
+        port: 3306,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'mysql',
+        version: 'MySQL 8.0.35 (Discovered on .45 db-cluster)',
+      },
+    ],
+    udpPorts: [
+      {
+        port: 53,
+        protocol: 'udp',
+        state: 'open',
+        service: 'domain',
+        version: 'dnsmasq 2.89 (.1)',
+      },
+      {
+        port: 123,
+        protocol: 'udp',
+        state: 'open',
+        service: 'ntp',
+        version: 'NTP v4 across subnet',
+      },
+    ],
+    traceroute: [
+      { hop: 1, rtt: '0.45 ms', address: `${baseSubnet}.254`, host: 'switch-vlan.local' },
+      { hop: 2, rtt: '1.25 ms', address: `${baseSubnet}.1`, host: 'gateway.lan' },
+    ],
+  };
+}
+
+/**
  * Dynamically synthesizes a realistic Nmap target preset for any arbitrary custom IP or domain.
  */
 export function synthesizeCustomTarget(targetInput: string): NmapTargetPreset {
   const cleanInput = targetInput.trim() || '192.168.1.100';
+
+  if (cleanInput.includes('/')) {
+    return synthesizeSubnetTarget(cleanInput);
+  }
+
   let hash = 0;
   for (let i = 0; i < cleanInput.length; i++) {
     hash = (hash << 5) - hash + cleanInput.charCodeAt(i);
@@ -531,25 +817,41 @@ export function synthesizeCustomTarget(targetInput: string): NmapTargetPreset {
   }
   const absHash = Math.abs(hash);
 
-  const portPool = [
-    { port: 22, service: 'ssh', version: 'OpenSSH 9.0p1' },
-    { port: 80, service: 'http', version: 'nginx 1.22.1' },
-    { port: 443, service: 'ssl/https', version: 'nginx 1.22.1 (TLS 1.3)' },
-    { port: 3306, service: 'mysql', version: 'MySQL 8.0.32' },
-    { port: 5432, service: 'postgresql', version: 'PostgreSQL 14.6' },
-    { port: 6379, service: 'redis', version: 'Redis 6.2.7' },
+  const tcpPool: { port: number; service: string; version: string; cve?: { id: string; severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'; title: string; cvss: number } }[] = [
+    { port: 22, service: 'ssh', version: 'OpenSSH 9.2p1 Debian' },
+    { port: 80, service: 'http', version: 'Apache/2.4.57 (Unix)' },
+    { port: 443, service: 'ssl/https', version: 'nginx/1.22.1 (TLS 1.3)' },
+    { port: 3306, service: 'mysql', version: 'MySQL 8.0.33 Community' },
+    { port: 5432, service: 'postgresql', version: 'PostgreSQL DB 14.8' },
+    { port: 6379, service: 'redis', version: 'Redis standalone 7.0.12' },
     { port: 8080, service: 'http-proxy', version: 'Node.js Express / Envoy' },
-    { port: 9000, service: 'cslistener', version: 'Custom Golang Daemon' },
+    { port: 8443, service: 'https-alt', version: 'Tomcat/9.0.75' },
+    {
+      port: 21,
+      service: 'ftp',
+      version: 'ProFTPD 1.3.5',
+      cve: {
+        id: 'CVE-2015-3306',
+        severity: 'HIGH',
+        title: 'ProFTPD mod_copy Command Execution Vulnerability',
+        cvss: 8.5,
+      },
+    },
+    {
+      port: 9000,
+      service: 'cslistener',
+      version: 'Golang Microservice Agent v1.4',
+    },
   ];
 
   // Pick 3-5 open ports deterministically based on input hash
-  const numPorts = 3 + (absHash % 3);
-  const selectedPorts: NmapPort[] = [];
+  const numPorts = 3 + (absHash % 4);
+  const selectedTcpPorts: NmapPort[] = [];
 
   for (let i = 0; i < numPorts; i++) {
-    const item = portPool[(absHash + i) % portPool.length];
-    if (!selectedPorts.some((p) => p.port === item.port)) {
-      selectedPorts.push({
+    const item = tcpPool[(absHash + i * 3) % tcpPool.length];
+    if (!selectedTcpPorts.some((p) => p.port === item.port)) {
+      selectedTcpPorts.push({
         port: item.port,
         protocol: 'tcp',
         state: 'open',
@@ -559,43 +861,75 @@ export function synthesizeCustomTarget(targetInput: string): NmapTargetPreset {
         scripts: [
           {
             name: `${item.service}-banner`,
-            output: `Probe response verified: 200 OK from port ${item.port}`,
+            output: `TCP Handshake ACK received on port ${item.port}. TLS/Plaintext banner verified.`,
           },
         ],
+        cveList: item.cve ? [item.cve] : undefined,
       });
     }
   }
 
-  // Add 1 filtered port
-  selectedPorts.push({
-    port: 21,
-    protocol: 'tcp',
-    state: 'filtered',
-    service: 'ftp',
-    version: 'Filtered by host firewall (iptables)',
-  });
+  // Ensure port order
+  selectedTcpPorts.sort((a, b) => a.port - b.port);
+
+  // UDP pool
+  const udpPool: NmapPort[] = [
+    { port: 53, protocol: 'udp', state: 'open', service: 'domain', version: 'Unbound DNS 1.17' },
+    { port: 123, protocol: 'udp', state: 'open', service: 'ntp', version: 'ntpd 4.2.8' },
+    { port: 161, protocol: 'udp', state: 'open', service: 'snmp', version: 'NET-SNMP 5.9' },
+  ];
 
   return {
     id: `custom-${absHash}`,
-    name: `Target: ${cleanInput}`,
+    name: `Host: ${cleanInput}`,
     ip: cleanInput.includes('.') ? cleanInput : `192.168.${(absHash % 250) + 1}.50`,
     hostname: cleanInput.includes('.') ? cleanInput : `${cleanInput}.local`,
-    description: `User-specified scan target resolved on local / remote segment.`,
+    description: `Custom target resolved and fingerprinted via heuristic SYN analysis.`,
     category: 'Gateway',
-    latencyMs: +(5 + (absHash % 25) + 0.35).toFixed(2),
+    latencyMs: +(4 + (absHash % 28) + 0.35).toFixed(2),
     os: {
-      deviceType: 'General Purpose Linux',
+      deviceType: 'General Purpose Linux Server',
       running: 'Linux 5.X | 6.X',
       osCpe: 'cpe:/o:linux:linux_kernel:5.15',
-      osDetails: 'Linux 5.15.0-x86_64-generic (Heuristic Stack Fingerprint)',
-      uptime: `${12 + (absHash % 80)} days, 08:14:02`,
-      tcpSequence: 'Difficulty=258 (Good luck!)',
+      osDetails: `Linux 5.15.0-x86_64-generic (Heuristic Stack Fingerprint for ${cleanInput})`,
+      uptime: `${14 + (absHash % 90)} days, 08:14:02`,
+      tcpSequence: `Difficulty=${240 + (absHash % 20)} (Good luck!)`,
     },
-    ports: selectedPorts,
+    ports: selectedTcpPorts,
+    udpPorts: udpPool,
     traceroute: [
       { hop: 1, rtt: '0.45 ms', address: '192.168.1.1', host: 'gateway.local' },
-      { hop: 2, rtt: `${(4 + (absHash % 10)).toFixed(2)} ms`, address: '10.200.0.1', host: 'isp-hop.net' },
-      { hop: 3, rtt: `${(12 + (absHash % 15)).toFixed(2)} ms`, address: cleanInput, host: cleanInput },
+      { hop: 2, rtt: `${(3 + (absHash % 8)).toFixed(2)} ms`, address: '10.200.0.1', host: 'isp-transit.net' },
+      { hop: 3, rtt: `${(10 + (absHash % 20)).toFixed(2)} ms`, address: cleanInput, host: cleanInput },
     ],
   };
+}
+
+/**
+ * Universal Target Resolver
+ */
+export function resolveTarget(input: string): NmapTargetPreset {
+  const trimmed = input.trim();
+  if (!trimmed) return NMAP_PRESETS[0];
+
+  // Match preset ID directly
+  const byId = NMAP_PRESETS.find((p) => p.id === trimmed.toLowerCase());
+  if (byId) return byId;
+
+  // Match preset IP or Hostname
+  const byIpOrHost = NMAP_PRESETS.find(
+    (p) =>
+      p.ip.toLowerCase() === trimmed.toLowerCase() ||
+      p.hostname.toLowerCase() === trimmed.toLowerCase() ||
+      p.name.toLowerCase() === trimmed.toLowerCase()
+  );
+  if (byIpOrHost) return byIpOrHost;
+
+  // Subnet CIDR check
+  if (trimmed.includes('/')) {
+    return synthesizeSubnetTarget(trimmed);
+  }
+
+  // Synthesize for custom host
+  return synthesizeCustomTarget(trimmed);
 }

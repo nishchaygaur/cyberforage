@@ -1,13 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Network,
   X,
   Maximize2,
   Minimize2,
   Play,
-  RotateCcw,
   ShieldAlert,
-  ShieldCheck,
   Cpu,
   Terminal,
   Server,
@@ -20,10 +18,16 @@ import {
   AlertTriangle,
   Radio,
   Activity,
-  Zap,
+  Filter,
 } from 'lucide-react';
 import { cyberSound } from '../../audio/cyberSoundEngine';
-import { NMAP_PRESETS, NmapTargetPreset, NmapPort, synthesizeCustomTarget } from '../../data/nmapData';
+import {
+  NMAP_PRESETS,
+  NmapTargetPreset,
+  NmapPort,
+  resolveTarget,
+  filterPortsForScan,
+} from '../../data/nmapData';
 
 interface LiveNmapModalProps {
   isOpen: boolean;
@@ -62,16 +66,38 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
   const terminalEndRef = useRef<HTMLDivElement>(null);
   const scanTimerRef = useRef<number[]>([]);
 
-  // Current Target Object
-  const currentTarget: NmapTargetPreset = React.useMemo(() => {
+  // Synchronize when initialTarget or modal opens
+  useEffect(() => {
+    if (isOpen && initialTarget) {
+      const resolved = resolveTarget(initialTarget);
+      const isPreset = NMAP_PRESETS.some((p) => p.id === resolved.id);
+      if (isPreset) {
+        setSelectedPresetId(resolved.id);
+        setCustomInput(resolved.ip);
+        setIsCustom(false);
+      } else {
+        setIsCustom(true);
+        setCustomInput(initialTarget);
+      }
+      setSelectedPort(null);
+    }
+  }, [isOpen, initialTarget]);
+
+  // Current Target Object (Dynamic based on selected preset or custom input)
+  const currentTarget: NmapTargetPreset = useMemo(() => {
     if (isCustom && customInput.trim()) {
-      return synthesizeCustomTarget(customInput);
+      return resolveTarget(customInput);
     }
     return NMAP_PRESETS.find((p) => p.id === selectedPresetId) || NMAP_PRESETS[0];
   }, [selectedPresetId, isCustom, customInput]);
 
+  // Dynamically Filtered Ports based on Scan Type (-sU vs TCP) and Port Preset (web, db, top20, etc.)
+  const activePorts: NmapPort[] = useMemo(() => {
+    return filterPortsForScan(currentTarget, scanType, portPreset);
+  }, [currentTarget, scanType, portPreset]);
+
   // Compute live command string
-  const commandString = React.useMemo(() => {
+  const commandString = useMemo(() => {
     const parts = ['nmap', scanType];
     if (flagVersion) parts.push('-sV');
     if (flagScripts) parts.push('-sC');
@@ -81,7 +107,7 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
     if (portPreset === 'top20') parts.push('--top-ports 20');
     else if (portPreset === 'top100') parts.push('-F');
     else if (portPreset === 'web') parts.push('-p 80,443,8080,8443');
-    else if (portPreset === 'database') parts.push('-p 3306,5432,6379,27017');
+    else if (portPreset === 'database') parts.push('-p 1433,3306,5432,6379');
     else if (portPreset === 'all') parts.push('-p-');
 
     parts.push('-T4');
@@ -94,8 +120,8 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
     if (isOpen && terminalLines.length === 0) {
       setTerminalLines([
         { id: '1', text: 'NMAP NETWORK EXPLORATION ENGINE v7.94 ( https://nmap.org )', color: '#10B981' },
-        { id: '2', text: 'Ready to dispatch stealth SYN probes, banner grabs, and NSE vulnerability scripts.', color: '#94A3B8' },
-        { id: '3', text: 'Select target preset or enter custom host IP, then click "START NMAP SCAN".', color: '#38BDF8' },
+        { id: '2', text: 'Stealth SYN half-open scanner, service version probing, and NSE script triage.', color: '#94A3B8' },
+        { id: '3', text: 'Select target or customize IP/CIDR, toggle flags (-sV, -sC, -O, --traceroute), then click "START NMAP SCAN".', color: '#38BDF8' },
       ]);
     }
   }, [isOpen, terminalLines.length]);
@@ -125,31 +151,68 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
     setScanProgress(5);
     cyberSound.playClick();
 
+    // Calculate dynamic jitter for this specific execution
+    const dynamicLatency = +(currentTarget.latencyMs * (0.88 + Math.random() * 0.24)).toFixed(2);
     const startTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const scanMethodText =
+      scanType === '-sU'
+        ? 'UDP Scan'
+        : scanType === '-sT'
+        ? 'TCP Connect() Scan'
+        : 'SYN Stealth Scan';
+
+    const closedPortsCount =
+      portPreset === 'all'
+        ? 65535 - activePorts.length
+        : portPreset === 'top20'
+        ? 20 - activePorts.length
+        : 1000 - activePorts.length;
+
     const newLines = [
       { id: `start-${Date.now()}`, text: `$ ${commandString}`, color: '#00F0C0' },
       { id: `init-${Date.now()}`, text: `Starting Nmap 7.94 ( https://nmap.org ) at ${startTime} UTC`, color: '#E2E8F0' },
-      { id: `nse-${Date.now()}`, text: 'NSE: Loaded 48 scripts for scanning.', color: '#94A3B8' },
-      { id: `ping-${Date.now()}`, text: `Initiating ARP / ICMP Ping Scan at ${new Date().toLocaleTimeString()}...`, color: '#64748B' },
-      { id: `hostup-${Date.now()}`, text: `Host is up (${currentTarget.latencyMs}ms latency). Hostname: ${currentTarget.hostname}`, color: '#10B981' },
+      {
+        id: `nse-${Date.now()}`,
+        text: flagScripts
+          ? 'NSE: Loaded 48 scripts for scanning.'
+          : 'NSE: Script engine disabled (-sC not set).',
+        color: '#94A3B8',
+      },
+      {
+        id: `ping-${Date.now()}`,
+        text: `Initiating ARP / ICMP Echo Discovery at ${new Date().toLocaleTimeString()}...`,
+        color: '#64748B',
+      },
+      {
+        id: `hostup-${Date.now()}`,
+        text: currentTarget.isSubnet
+          ? `Subnet sweep completed: 4 responsive hosts discovered across ${currentTarget.ip}`
+          : `Host is up (${dynamicLatency}ms latency). Hostname: ${currentTarget.hostname}`,
+        color: '#10B981',
+      },
     ];
     setTerminalLines(newLines);
 
-    // Step 1: SYN Port Sweep (at 800ms)
+    // Step 1: Port Sweep (at 700ms)
     const t1 = window.setTimeout(() => {
       setScanProgress(25);
       cyberSound.playBlip();
       setTerminalLines((prev) => [
         ...prev,
-        { id: `syn-${Date.now()}`, text: `Initiating SYN Stealth Scan on ${currentTarget.ip}...`, color: '#38BDF8' },
+        {
+          id: `syn-${Date.now()}`,
+          text: `Initiating ${scanMethodText} on ${currentTarget.ip}...`,
+          color: '#38BDF8',
+        },
       ]);
-    }, 800);
+    }, 700);
 
-    // Step 2: Discovered Ports (at 1800ms)
+    // Step 2: Discovered Ports (at 1700ms)
     const t2 = window.setTimeout(() => {
       setScanProgress(55);
       cyberSound.playBlip();
-      const discoveredMsgs = currentTarget.ports.map((p, idx) => ({
+
+      const discoveredMsgs = activePorts.map((p, idx) => ({
         id: `port-${idx}-${Date.now()}`,
         text: `Discovered open port ${p.port}/${p.protocol} on ${currentTarget.ip} [${p.service}]`,
         color: p.state === 'open' ? '#00F0C0' : '#F59E0B',
@@ -158,46 +221,65 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
       setTerminalLines((prev) => [
         ...prev,
         ...discoveredMsgs,
-        { id: `syn-done-${Date.now()}`, text: `Completed SYN Stealth Scan in ${(currentTarget.latencyMs * 1.8).toFixed(2)}s (${currentTarget.ports.length * 200} total ports)`, color: '#94A3B8' },
+        {
+          id: `not-shown-${Date.now()}`,
+          text: `Not shown: ${closedPortsCount} closed ${scanType === '-sU' ? 'udp' : 'tcp'} ports (reset)`,
+          color: '#64748B',
+        },
+        {
+          id: `syn-done-${Date.now()}`,
+          text: `Completed ${scanMethodText} in ${(dynamicLatency * 1.5).toFixed(2)}s`,
+          color: '#94A3B8',
+        },
       ]);
-    }, 1800);
+    }, 1700);
 
-    // Step 3: Service Version Detection & NSE Scripts (at 3000ms)
+    // Step 3: Service Version Detection & NSE Scripts (at 2800ms)
     const t3 = window.setTimeout(() => {
       setScanProgress(75);
       cyberSound.playLaser();
+
       const portReportHeader = [
-        { id: `hdr-${Date.now()}`, text: '\nPORT      STATE    SERVICE        VERSION', color: '#38BDF8' },
+        {
+          id: `hdr-${Date.now()}`,
+          text: `\nPORT      STATE    SERVICE        ${flagVersion ? 'VERSION' : ''}`,
+          color: '#38BDF8',
+        },
       ];
 
-      const portReportRows = currentTarget.ports.map((p, idx) => ({
-        id: `row-${idx}-${Date.now()}`,
-        text: `${(p.port + '/' + p.protocol).padEnd(9)} ${(p.state).padEnd(8)} ${(p.service).padEnd(14)} ${p.version}`,
-        color: p.state === 'open' ? '#34D399' : '#FBBF24',
-      }));
-
-      // NSE vulnerability alerts if present
-      const vulnReports: { id: string; text: string; color: string }[] = [];
-      currentTarget.ports.forEach((p) => {
-        if (p.cveList && p.cveList.length > 0) {
-          p.cveList.forEach((cve, cveIdx) => {
-            vulnReports.push({
-              id: `vuln-${p.port}-${cveIdx}-${Date.now()}`,
-              text: `| [!] VULNERABILITY ALERT on port ${p.port}: ${cve.id} (${cve.severity} - CVSS ${cve.cvss})\n|_   ${cve.title}`,
-              color: '#F43F5E',
-            });
-          });
-        }
-        if (p.scripts && p.scripts.length > 0) {
-          p.scripts.forEach((scr, sIdx) => {
-            vulnReports.push({
-              id: `scr-${p.port}-${sIdx}-${Date.now()}`,
-              text: `|_ ${scr.name}: ${scr.output.replace(/\n/g, '\n|_   ')}`,
-              color: '#93C5FD',
-            });
-          });
-        }
+      const portReportRows = activePorts.map((p, idx) => {
+        const versionString = flagVersion ? p.version : '';
+        return {
+          id: `row-${idx}-${Date.now()}`,
+          text: `${(p.port + '/' + p.protocol).padEnd(9)} ${(p.state).padEnd(8)} ${(p.service).padEnd(14)} ${versionString}`,
+          color: p.state === 'open' ? '#34D399' : '#FBBF24',
+        };
       });
+
+      // NSE scripts and vulnerability alerts ONLY IF flagScripts is TRUE
+      const vulnReports: { id: string; text: string; color: string }[] = [];
+      if (flagScripts) {
+        activePorts.forEach((p) => {
+          if (p.cveList && p.cveList.length > 0) {
+            p.cveList.forEach((cve, cveIdx) => {
+              vulnReports.push({
+                id: `vuln-${p.port}-${cveIdx}-${Date.now()}`,
+                text: `| [!] VULNERABILITY ALERT on port ${p.port}: ${cve.id} (${cve.severity} - CVSS ${cve.cvss})\n|_   ${cve.title}`,
+                color: '#F43F5E',
+              });
+            });
+          }
+          if (p.scripts && p.scripts.length > 0) {
+            p.scripts.forEach((scr, sIdx) => {
+              vulnReports.push({
+                id: `scr-${p.port}-${sIdx}-${Date.now()}`,
+                text: `|_ ${scr.name}: ${scr.output.replace(/\n/g, '\n|_   ')}`,
+                color: '#93C5FD',
+              });
+            });
+          }
+        });
+      }
 
       setTerminalLines((prev) => [
         ...prev,
@@ -205,57 +287,73 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
         ...portReportRows,
         ...vulnReports,
       ]);
-    }, 3000);
+    }, 2800);
 
-    // Step 4: OS Detection & Traceroute (at 4200ms)
+    // Step 4: OS Detection & Traceroute (at 3900ms)
     const t4 = window.setTimeout(() => {
       setScanProgress(90);
       cyberSound.playBlip();
 
-      const osAndTraceLines = [
-        { id: `os-hdr-${Date.now()}`, text: '\nDevice type: ' + currentTarget.os.deviceType, color: '#E2E8F0' },
-        { id: `os-run-${Date.now()}`, text: 'Running: ' + currentTarget.os.running, color: '#E2E8F0' },
-        { id: `os-cpe-${Date.now()}`, text: 'OS CPE: ' + currentTarget.os.osCpe, color: '#94A3B8' },
-        { id: `os-det-${Date.now()}`, text: 'OS details: ' + currentTarget.os.osDetails, color: '#38BDF8' },
-        { id: `os-seq-${Date.now()}`, text: 'TCP Sequence Prediction: ' + currentTarget.os.tcpSequence, color: '#94A3B8' },
-        { id: `os-up-${Date.now()}`, text: 'Uptime guess: ' + currentTarget.os.uptime, color: '#94A3B8' },
-        { id: `tr-hdr-${Date.now()}`, text: '\nTRACEROUTE (using port ' + currentTarget.ports[0].port + '/tcp)', color: '#38BDF8' },
-        { id: `tr-sub-${Date.now()}`, text: 'HOP RTT      ADDRESS', color: '#64748B' },
-      ];
+      const additionalLines: { id: string; text: string; color: string }[] = [];
 
-      currentTarget.traceroute.forEach((hop, idx) => {
-        osAndTraceLines.push({
-          id: `tr-hop-${idx}-${Date.now()}`,
-          text: `${hop.hop.toString().padEnd(3)} ${(hop.rtt).padEnd(8)} ${hop.address} (${hop.host || 'unknown'})`,
-          color: '#CBD5E1',
+      // OS Detection ONLY IF flagOs is TRUE
+      if (flagOs) {
+        additionalLines.push(
+          { id: `os-hdr-${Date.now()}`, text: '\nDevice type: ' + currentTarget.os.deviceType, color: '#E2E8F0' },
+          { id: `os-run-${Date.now()}`, text: 'Running: ' + currentTarget.os.running, color: '#E2E8F0' },
+          { id: `os-cpe-${Date.now()}`, text: 'OS CPE: ' + currentTarget.os.osCpe, color: '#94A3B8' },
+          { id: `os-det-${Date.now()}`, text: 'OS details: ' + currentTarget.os.osDetails, color: '#38BDF8' },
+          { id: `os-seq-${Date.now()}`, text: 'TCP Sequence Prediction: ' + currentTarget.os.tcpSequence, color: '#94A3B8' },
+          { id: `os-up-${Date.now()}`, text: 'Uptime guess: ' + currentTarget.os.uptime, color: '#94A3B8' }
+        );
+      }
+
+      // Traceroute ONLY IF flagTraceroute is TRUE
+      if (flagTraceroute && currentTarget.traceroute.length > 0) {
+        additionalLines.push(
+          { id: `tr-hdr-${Date.now()}`, text: `\nTRACEROUTE (using port ${activePorts[0]?.port || 80}/${scanType === '-sU' ? 'udp' : 'tcp'})`, color: '#38BDF8' },
+          { id: `tr-sub-${Date.now()}`, text: 'HOP RTT      ADDRESS', color: '#64748B' }
+        );
+
+        currentTarget.traceroute.forEach((hop, idx) => {
+          const jitterRtt = (parseFloat(hop.rtt) * (0.92 + Math.random() * 0.16)).toFixed(2) + ' ms';
+          additionalLines.push({
+            id: `tr-hop-${idx}-${Date.now()}`,
+            text: `${hop.hop.toString().padEnd(3)} ${jitterRtt.padEnd(8)} ${hop.address} (${hop.host || 'unknown'})`,
+            color: '#CBD5E1',
+          });
         });
-      });
+      }
 
-      setTerminalLines((prev) => [...prev, ...osAndTraceLines]);
-    }, 4200);
+      setTerminalLines((prev) => [...prev, ...additionalLines]);
+    }, 3900);
 
-    // Step 5: Scan Complete (at 5200ms)
+    // Step 5: Scan Complete (at 4900ms)
     const t5 = window.setTimeout(() => {
       setScanProgress(100);
       setIsScanning(false);
       cyberSound.playPulse();
 
-      const hasCriticalVuln = currentTarget.ports.some((p) => p.cveList && p.cveList.some((c) => c.severity === 'CRITICAL'));
+      const hasCriticalVuln =
+        flagScripts &&
+        activePorts.some((p) => p.cveList && p.cveList.some((c) => c.severity === 'CRITICAL'));
+
       if (hasCriticalVuln) {
         cyberSound.speak('Warning. Critical service vulnerability detected in target.');
       } else {
         cyberSound.speak('Scan complete. Network topology and services mapped.');
       }
 
+      const totalScanTime = (3.6 + dynamicLatency * 0.08).toFixed(2);
       setTerminalLines((prev) => [
         ...prev,
         {
           id: `done-${Date.now()}`,
-          text: `\nNmap done: 1 IP address (1 host up) scanned in ${(4.8 + currentTarget.latencyMs * 0.1).toFixed(2)} seconds`,
+          text: `\nNmap done: ${currentTarget.isSubnet ? '4 hosts up' : '1 IP address (1 host up)'} scanned in ${totalScanTime} seconds`,
           color: '#10B981',
         },
       ]);
-    }, 5200);
+    }, 4900);
 
     scanTimerRef.current = [t1, t2, t3, t4, t5];
   };
@@ -308,11 +406,11 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
                   NMAP NETWORK SCANNER <span className="text-[#10B981]">v7.94</span>
                 </h2>
                 <span className="hidden sm:inline-block px-2 py-0.5 rounded text-[10px] font-mono bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30">
-                  {isScanning ? 'PROBING...' : 'STEALTH ENGINE'}
+                  {isScanning ? 'PROBING SOCKETS...' : 'STEALTH ENGINE READY'}
                 </span>
               </div>
               <p className="text-[11px] font-mono text-slate-400 hidden md:block">
-                Port Discovery, Banner Extraction, OS Fingerprinting & NSE Script Triage
+                Dynamic Port Filtering, Service Banners, OS Fingerprinting & Script Exploits
               </p>
             </div>
           </div>
@@ -354,6 +452,7 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
                       setIsCustom(false);
                       setSelectedPresetId(preset.id);
                       setCustomInput(preset.ip);
+                      setSelectedPort(null);
                       cyberSound.playClick();
                     }}
                     className={`px-2.5 py-1 rounded-md text-xs font-mono transition-all cursor-pointer ${
@@ -370,7 +469,7 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
 
             {/* Custom Input Field */}
             <div className="flex items-center gap-2">
-              <div className="relative flex-1 sm:w-56">
+              <div className="relative flex-1 sm:w-64">
                 <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
@@ -378,8 +477,9 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
                   onChange={(e) => {
                     setCustomInput(e.target.value);
                     setIsCustom(true);
+                    setSelectedPort(null);
                   }}
-                  placeholder="Target IP (e.g. 192.168.1.50)"
+                  placeholder="Target IP / CIDR (e.g. 192.168.1.0/24)"
                   className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-[#07172C] border border-white/10 focus:border-[#10B981] text-xs font-mono text-white placeholder-slate-500 focus:outline-none transition-colors"
                 />
               </div>
@@ -400,14 +500,21 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
                     key={t}
                     onClick={() => {
                       setScanType(t);
+                      setSelectedPort(null);
                       cyberSound.playBlip();
                     }}
-                    className={`px-2 py-0.5 rounded text-[11px] transition-colors cursor-pointer ${
+                    className={`px-2.5 py-0.5 rounded text-[11px] transition-colors cursor-pointer ${
                       scanType === t
                         ? 'bg-[#10B981] text-black font-bold shadow-sm'
                         : 'text-slate-400 hover:text-white'
                     }`}
-                    title={t === '-sS' ? 'TCP SYN Stealth' : t === '-sT' ? 'TCP Connect' : 'UDP Scan'}
+                    title={
+                      t === '-sS'
+                        ? 'TCP SYN Stealth Scan (Half-open)'
+                        : t === '-sT'
+                        ? 'TCP Connect Scan (Full handshake)'
+                        : 'UDP Protocol Scan'
+                    }
                   >
                     {t}
                   </button>
@@ -423,8 +530,9 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
                 className={`px-2 py-1 rounded border text-[11px] transition-all cursor-pointer ${
                   flagVersion
                     ? 'bg-[#00F0C0]/15 border-[#00F0C0]/50 text-[#00F0C0]'
-                    : 'bg-white/5 border-white/10 text-slate-400'
+                    : 'bg-white/5 border-white/10 text-slate-500 line-through'
                 }`}
+                title="Toggle Service Version Detection (-sV)"
               >
                 -sV (Version)
               </button>
@@ -437,8 +545,9 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
                 className={`px-2 py-1 rounded border text-[11px] transition-all cursor-pointer ${
                   flagScripts
                     ? 'bg-[#38BDF8]/15 border-[#38BDF8]/50 text-[#38BDF8]'
-                    : 'bg-white/5 border-white/10 text-slate-400'
+                    : 'bg-white/5 border-white/10 text-slate-500 line-through'
                 }`}
+                title="Toggle Default NSE Script Engine (-sC)"
               >
                 -sC (NSE Scripts)
               </button>
@@ -451,8 +560,9 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
                 className={`px-2 py-1 rounded border text-[11px] transition-all cursor-pointer ${
                   flagOs
                     ? 'bg-[#A855F7]/15 border-[#A855F7]/50 text-[#A855F7]'
-                    : 'bg-white/5 border-white/10 text-slate-400'
+                    : 'bg-white/5 border-white/10 text-slate-500 line-through'
                 }`}
+                title="Toggle OS Fingerprint Detection (-O)"
               >
                 -O (OS Detect)
               </button>
@@ -465,8 +575,9 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
                 className={`px-2 py-1 rounded border text-[11px] transition-all cursor-pointer ${
                   flagTraceroute
                     ? 'bg-amber-400/15 border-amber-400/50 text-amber-300'
-                    : 'bg-white/5 border-white/10 text-slate-400'
+                    : 'bg-white/5 border-white/10 text-slate-500 line-through'
                 }`}
+                title="Toggle Hop Route (--traceroute)"
               >
                 --traceroute
               </button>
@@ -474,19 +585,21 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
 
             {/* Port Presets */}
             <div className="flex items-center gap-1.5 text-xs font-mono">
-              <span className="text-slate-400 text-[11px] hidden sm:inline">Ports:</span>
+              <Filter className="w-3.5 h-3.5 text-slate-400" />
+              <span className="text-slate-400 text-[11px] hidden sm:inline">Port Range:</span>
               <select
                 value={portPreset}
                 onChange={(e) => {
                   setPortPreset(e.target.value as any);
+                  setSelectedPort(null);
                   cyberSound.playBlip();
                 }}
                 className="px-2.5 py-1 rounded-md bg-[#07172C] border border-white/10 text-white text-xs font-mono focus:outline-none focus:border-[#10B981] cursor-pointer"
               >
                 <option value="top20">Top 20 Ports (Fast)</option>
                 <option value="top100">Top 100 Ports (-F)</option>
-                <option value="web">Web (80, 443, 8080)</option>
-                <option value="database">Database (3306, 5432, 6379)</option>
+                <option value="web">Web Focus (80, 443, 8080)</option>
+                <option value="database">Database Focus (3306, 5432, 6379)</option>
                 <option value="all">Full 65,535 Ports (-p-)</option>
               </select>
             </div>
@@ -565,7 +678,7 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
               <Layers className="w-3.5 h-3.5 text-[#00F0C0]" />
               <span>Visual Port Matrix</span>
               <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40">
-                {currentTarget.ports.filter((p) => p.state === 'open').length} Open
+                {activePorts.filter((p) => p.state === 'open').length} Open ({scanType === '-sU' ? 'UDP' : 'TCP'})
               </span>
             </button>
 
@@ -626,14 +739,23 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
         {/* Tab 2: Visual Port Matrix & Service Deep Dive */}
         {activeTab === 'ports' && (
           <div className="flex-1 p-4 sm:p-6 bg-[#02060F] overflow-y-auto">
+            <div className="mb-4 flex items-center justify-between text-xs font-mono text-slate-400">
+              <span>
+                Active Target: <span className="text-white font-bold">{currentTarget.name}</span> ({currentTarget.ip})
+              </span>
+              <span>
+                Filter: <span className="text-[#00F0C0] uppercase">{portPreset}</span> | Protocol: <span className="text-[#10B981]">{scanType === '-sU' ? 'UDP' : 'TCP'}</span>
+              </span>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-              {currentTarget.ports.map((port) => {
+              {activePorts.map((port) => {
                 const isSelected = selectedPort?.port === port.port;
-                const hasVuln = port.cveList && port.cveList.length > 0;
+                const hasVuln = flagScripts && port.cveList && port.cveList.length > 0;
 
                 return (
                   <div
-                    key={port.port}
+                    key={`${port.port}-${port.protocol}`}
                     onClick={() => {
                       setSelectedPort(port);
                       cyberSound.playClick();
@@ -651,7 +773,9 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
                             className={`w-2 h-2 rounded-full ${
                               port.state === 'open'
                                 ? 'bg-[#10B981] shadow-[0_0_8px_#10B981]'
-                                : 'bg-amber-400 shadow-[0_0_8px_#F59E0B]'
+                                : port.state === 'filtered'
+                                ? 'bg-amber-400 shadow-[0_0_8px_#F59E0B]'
+                                : 'bg-rose-500 shadow-[0_0_8px_#F43F5E]'
                             }`}
                           />
                           <span className="font-mono text-base font-bold text-white tracking-wider">
@@ -663,7 +787,9 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
                           className={`text-[10px] font-mono px-2 py-0.5 rounded uppercase font-semibold ${
                             port.state === 'open'
                               ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30'
-                              : 'bg-amber-500/10 text-amber-300 border border-amber-500/30'
+                              : port.state === 'filtered'
+                              ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30'
+                              : 'bg-rose-500/10 text-rose-300 border border-rose-500/30'
                           }`}
                         >
                           {port.state}
@@ -675,7 +801,7 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
                       </div>
 
                       <div className="text-[11px] font-mono text-slate-300 truncate mb-2">
-                        {port.version}
+                        {flagVersion ? port.version : '[Version probe omitted (-sV not set)]'}
                       </div>
 
                       {hasVuln && (
@@ -699,7 +825,7 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
 
             {/* Selected Port Inspection Drawer */}
             {selectedPort && (
-              <div className="mt-6 p-4 rounded-xl bg-[#051124] border border-[#00F0C0]/50 shadow-2xl space-y-3">
+              <div className="mt-6 p-4 rounded-xl bg-[#051124] border border-[#00F0C0]/50 shadow-2xl space-y-3 animate-fadeIn">
                 <div className="flex items-center justify-between pb-2 border-b border-white/10">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] shadow-[0_0_8px_#10B981]" />
@@ -719,7 +845,9 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
                   {/* Service Banner & Fingerprint */}
                   <div className="p-3 rounded-lg bg-black/40 border border-white/10 space-y-1.5">
                     <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Service Banner:</span>
-                    <p className="text-white font-semibold">{selectedPort.version}</p>
+                    <p className="text-white font-semibold">
+                      {flagVersion ? selectedPort.version : 'Version probe omitted (-sV not enabled)'}
+                    </p>
                     {selectedPort.banner && (
                       <p className="text-slate-300 text-[11px] bg-white/[0.03] p-2 rounded border border-white/5 whitespace-pre-wrap">
                         {selectedPort.banner}
@@ -730,7 +858,9 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
                   {/* NSE Script Outputs */}
                   <div className="p-3 rounded-lg bg-black/40 border border-white/10 space-y-1.5">
                     <span className="text-[10px] text-slate-400 uppercase tracking-wider block">NSE Scripts Executed:</span>
-                    {selectedPort.scripts && selectedPort.scripts.length > 0 ? (
+                    {!flagScripts ? (
+                      <p className="text-slate-500 text-[11px] italic">NSE Script scanning disabled (-sC not enabled during scan).</p>
+                    ) : selectedPort.scripts && selectedPort.scripts.length > 0 ? (
                       selectedPort.scripts.map((s, idx) => (
                         <div key={idx} className="bg-white/[0.03] p-2 rounded border border-white/5 space-y-0.5">
                           <span className="text-[#38BDF8] font-bold text-[11px]">{s.name}</span>
@@ -738,13 +868,13 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
                         </div>
                       ))
                     ) : (
-                      <p className="text-slate-400 text-[11px]">No custom script anomalies detected on this port.</p>
+                      <p className="text-slate-400 text-[11px]">No script anomalies or vulnerabilities reported on this socket.</p>
                     )}
                   </div>
                 </div>
 
                 {/* CVE List if Vulnerable */}
-                {selectedPort.cveList && selectedPort.cveList.length > 0 && (
+                {flagScripts && selectedPort.cveList && selectedPort.cveList.length > 0 && (
                   <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 space-y-2">
                     <div className="flex items-center gap-2 text-rose-400 font-bold text-xs font-mono">
                       <ShieldAlert className="w-4 h-4" />
@@ -773,88 +903,116 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
           <div className="flex-1 p-4 sm:p-6 bg-[#02060F] overflow-y-auto space-y-6">
             {/* Target OS Fingerprint Box */}
             <div className="p-5 rounded-xl bg-[#051124] border border-white/10 space-y-4">
-              <div className="flex items-center gap-2 pb-3 border-b border-white/10">
-                <Cpu className="w-4 h-4 text-[#A855F7]" />
-                <h3 className="font-mono text-sm font-bold text-white tracking-wide">
-                  TCP/IP STACK OS FINGERPRINT HEURISTICS (-O)
-                </h3>
+              <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                <div className="flex items-center gap-2">
+                  <Cpu className="w-4 h-4 text-[#A855F7]" />
+                  <h3 className="font-mono text-sm font-bold text-white tracking-wide">
+                    TCP/IP STACK OS FINGERPRINT HEURISTICS (-O)
+                  </h3>
+                </div>
+                {!flagOs && (
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300 font-mono">
+                    -O disabled in scan
+                  </span>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 font-mono text-xs">
-                <div className="p-3 rounded-lg bg-black/40 border border-white/5">
-                  <span className="text-[10px] text-slate-400 block mb-1">DEVICE TYPE</span>
-                  <span className="text-white font-semibold">{currentTarget.os.deviceType}</span>
+              {!flagOs ? (
+                <div className="p-6 rounded-lg bg-black/40 border border-white/5 text-center font-mono text-xs text-slate-400">
+                  <p>OS Detection was not requested for this scan run.</p>
+                  <p className="text-slate-500 text-[11px] mt-1">Enable <span className="text-[#A855F7]">-O (OS Detect)</span> and re-run scan to extract TCP window size and IP stack heuristics.</p>
                 </div>
-                <div className="p-3 rounded-lg bg-black/40 border border-white/5">
-                  <span className="text-[10px] text-slate-400 block mb-1">RUNNING OS KERNEL</span>
-                  <span className="text-[#00F0C0] font-semibold">{currentTarget.os.running}</span>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 font-mono text-xs">
+                  <div className="p-3 rounded-lg bg-black/40 border border-white/5">
+                    <span className="text-[10px] text-slate-400 block mb-1">DEVICE TYPE</span>
+                    <span className="text-white font-semibold">{currentTarget.os.deviceType}</span>
+                  </div>
+                  <div className="p-3 rounded-lg bg-black/40 border border-white/5">
+                    <span className="text-[10px] text-slate-400 block mb-1">RUNNING OS KERNEL</span>
+                    <span className="text-[#00F0C0] font-semibold">{currentTarget.os.running}</span>
+                  </div>
+                  <div className="p-3 rounded-lg bg-black/40 border border-white/5">
+                    <span className="text-[10px] text-slate-400 block mb-1">OS CPE</span>
+                    <span className="text-slate-300 font-semibold">{currentTarget.os.osCpe}</span>
+                  </div>
+                  <div className="p-3 rounded-lg bg-black/40 border border-white/5">
+                    <span className="text-[10px] text-slate-400 block mb-1">DETAILS</span>
+                    <span className="text-white font-semibold">{currentTarget.os.osDetails}</span>
+                  </div>
+                  <div className="p-3 rounded-lg bg-black/40 border border-white/5">
+                    <span className="text-[10px] text-slate-400 block mb-1">UPTIME</span>
+                    <span className="text-emerald-400 font-semibold">{currentTarget.os.uptime}</span>
+                  </div>
+                  <div className="p-3 rounded-lg bg-black/40 border border-white/5">
+                    <span className="text-[10px] text-slate-400 block mb-1">TCP SEQUENCE PREDICTION</span>
+                    <span className="text-amber-300 font-semibold">{currentTarget.os.tcpSequence}</span>
+                  </div>
                 </div>
-                <div className="p-3 rounded-lg bg-black/40 border border-white/5">
-                  <span className="text-[10px] text-slate-400 block mb-1">OS CPE</span>
-                  <span className="text-slate-300 font-semibold">{currentTarget.os.osCpe}</span>
-                </div>
-                <div className="p-3 rounded-lg bg-black/40 border border-white/5">
-                  <span className="text-[10px] text-slate-400 block mb-1">DETAILS</span>
-                  <span className="text-white font-semibold">{currentTarget.os.osDetails}</span>
-                </div>
-                <div className="p-3 rounded-lg bg-black/40 border border-white/5">
-                  <span className="text-[10px] text-slate-400 block mb-1">UPTIME</span>
-                  <span className="text-emerald-400 font-semibold">{currentTarget.os.uptime}</span>
-                </div>
-                <div className="p-3 rounded-lg bg-black/40 border border-white/5">
-                  <span className="text-[10px] text-slate-400 block mb-1">TCP SEQUENCE PREDICTION</span>
-                  <span className="text-amber-300 font-semibold">{currentTarget.os.tcpSequence}</span>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Hop Traceroute Visualization */}
             <div className="p-5 rounded-xl bg-[#051124] border border-white/10 space-y-4">
-              <div className="flex items-center gap-2 pb-3 border-b border-white/10">
-                <Server className="w-4 h-4 text-[#38BDF8]" />
-                <h3 className="font-mono text-sm font-bold text-white tracking-wide">
-                  HOP TRACEROUTE & RTT LATENCY (--traceroute)
-                </h3>
+              <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                <div className="flex items-center gap-2">
+                  <Server className="w-4 h-4 text-[#38BDF8]" />
+                  <h3 className="font-mono text-sm font-bold text-white tracking-wide">
+                    HOP TRACEROUTE & RTT LATENCY (--traceroute)
+                  </h3>
+                </div>
+                {!flagTraceroute && (
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300 font-mono">
+                    --traceroute disabled
+                  </span>
+                )}
               </div>
 
-              <div className="space-y-3 font-mono text-xs">
-                {currentTarget.traceroute.map((hop, idx) => {
-                  const isLastHop = idx === currentTarget.traceroute.length - 1;
+              {!flagTraceroute ? (
+                <div className="p-6 rounded-lg bg-black/40 border border-white/5 text-center font-mono text-xs text-slate-400">
+                  <p>Traceroute mapping was not requested for this scan run.</p>
+                  <p className="text-slate-500 text-[11px] mt-1">Enable <span className="text-amber-300">--traceroute</span> and re-run scan to map intermediate network routing hops.</p>
+                </div>
+              ) : (
+                <div className="space-y-3 font-mono text-xs">
+                  {currentTarget.traceroute.map((hop, idx) => {
+                    const isLastHop = idx === currentTarget.traceroute.length - 1;
 
-                  return (
-                    <div
-                      key={hop.hop}
-                      className={`flex items-center gap-4 p-3 rounded-lg border transition-all ${
-                        isLastHop
-                          ? 'bg-[#10B981]/10 border-[#10B981]/40 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
-                          : 'bg-black/30 border-white/5 text-slate-300'
-                      }`}
-                    >
-                      <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center font-bold text-xs text-white">
-                        {hop.hop}
-                      </div>
+                    return (
+                      <div
+                        key={hop.hop}
+                        className={`flex items-center gap-4 p-3 rounded-lg border transition-all ${
+                          isLastHop
+                            ? 'bg-[#10B981]/10 border-[#10B981]/40 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
+                            : 'bg-black/30 border-white/5 text-slate-300'
+                        }`}
+                      >
+                        <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center font-bold text-xs text-white">
+                          {hop.hop}
+                        </div>
 
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-white">{hop.address}</span>
-                          {hop.host && (
-                            <span className="text-[11px] text-slate-400">({hop.host})</span>
-                          )}
-                          {isLastHop && (
-                            <span className="text-[10px] px-2 py-0.5 rounded bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40 font-bold">
-                              TARGET
-                            </span>
-                          )}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-white">{hop.address}</span>
+                            {hop.host && (
+                              <span className="text-[11px] text-slate-400">({hop.host})</span>
+                            )}
+                            {isLastHop && (
+                              <span className="text-[10px] px-2 py-0.5 rounded bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40 font-bold">
+                                TARGET
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="text-right">
+                          <span className="text-xs font-bold text-[#00F0C0]">{hop.rtt}</span>
                         </div>
                       </div>
-
-                      <div className="text-right">
-                        <span className="text-xs font-bold text-[#00F0C0]">{hop.rtt}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -864,15 +1022,15 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1.5">
               <span className={`w-2 h-2 rounded-full ${isScanning ? 'bg-amber-400 animate-ping' : 'bg-[#10B981]'}`} />
-              <span className="text-slate-300">{isScanning ? 'Scan in progress' : 'Engine Ready'}</span>
+              <span className="text-slate-300">{isScanning ? 'Scan in progress...' : 'Engine Ready'}</span>
             </span>
             <span className="hidden sm:inline text-slate-600">|</span>
-            <span className="hidden sm:inline">Target: <span className="text-white">{currentTarget.ip}</span></span>
+            <span className="hidden sm:inline">Target: <span className="text-white">{currentTarget.ip}</span> ({currentTarget.name})</span>
           </div>
 
           <div className="flex items-center gap-4">
-            <span>Ports: <span className="text-[#00F0C0]">{currentTarget.ports.length} mapped</span></span>
-            <span className="hidden sm:inline">Latency: <span className="text-white">{currentTarget.latencyMs}ms</span></span>
+            <span>Ports: <span className="text-[#00F0C0]">{activePorts.length} mapped ({scanType === '-sU' ? 'UDP' : 'TCP'})</span></span>
+            <span className="hidden sm:inline">Base Latency: <span className="text-white">{currentTarget.latencyMs}ms</span></span>
           </div>
         </div>
       </div>
