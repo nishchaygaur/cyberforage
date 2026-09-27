@@ -66,3 +66,16 @@ export interface TechTool {
 }
 
 export type SceneMode = 'globe' | 'server' | 'mesh' | 'free';
+
+export interface SimulatedIncident {
+  id: string;
+  stage: 'idle' | 'inbound' | 'incident_generated' | 'containing' | 'resolved';
+  targetNode: string;
+  targetIp: string;
+  vector: string;
+  technique: string;
+  severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'ELEVATED' | 'NOMINAL' | 'RESOLVED';
+  message: string;
+  progress: number;
+  timestamp: string;
+}

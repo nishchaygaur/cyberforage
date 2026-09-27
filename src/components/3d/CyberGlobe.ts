@@ -71,6 +71,17 @@ export class CyberGlobeController {
   private arcsGroup: THREE.Group;
   private nodeMeshes: { mesh: THREE.Mesh; data: OrbitalNodeData; beacon: THREE.Mesh }[] = [];
   private activeArcs: { line: THREE.Line; progress: number; speed: number; curve: THREE.QuadraticBezierCurve3 }[] = [];
+  private activeHostileArcs: {
+    line: THREE.Line;
+    missile: THREE.Mesh;
+    progress: number;
+    speed: number;
+    curve: THREE.QuadraticBezierCurve3;
+    targetNode: OrbitalNodeData;
+    targetMesh: THREE.Mesh;
+    targetBeacon: THREE.Mesh;
+    originalColor: number;
+  }[] = [];
   private lastAttackTime: number = 0;
 
   constructor() {
@@ -335,15 +346,18 @@ export class CyberGlobeController {
     }
   }
 
-  public launchHostileMissile(): { message: string; severity: 'high' | 'critical' | 'mitigated' } {
-    // Create red inbound attack vector that strikes the shield and gets neutralized
+  public launchHostileMissile(targetName?: string): { message: string; targetNode: string } {
+    let targetNode = ORBITAL_NODES.find(n => n.name.toLowerCase() === targetName?.toLowerCase());
+    if (!targetNode) {
+      targetNode = ORBITAL_NODES[Math.floor(Math.random() * ORBITAL_NODES.length)];
+    }
+
     const startPos = new THREE.Vector3(
       (Math.random() - 0.5) * 12,
       (Math.random() - 0.5) * 12,
       (Math.random() - 0.5) * 12
     ).normalize().multiplyScalar(7.5);
 
-    const targetNode = ORBITAL_NODES[Math.floor(Math.random() * ORBITAL_NODES.length)];
     const targetPos = this.latLonToVector3(targetNode.lat, targetNode.lon, targetNode.radius);
 
     const mid = startPos.clone().add(targetPos).multiplyScalar(0.5);
@@ -361,17 +375,55 @@ export class CyberGlobeController {
     const hostileLine = new THREE.Line(geo, mat);
     this.arcsGroup.add(hostileLine);
 
-    // Auto cleanup after 3.5s
-    setTimeout(() => {
-      this.arcsGroup.remove(hostileLine);
-      geo.dispose();
-      mat.dispose();
-    }, 3500);
+    // Glowing hostile projectile head
+    const missileGeo = new THREE.SphereGeometry(0.12, 16, 16);
+    const missileMat = new THREE.MeshBasicMaterial({
+      color: 0xff0055,
+      transparent: true,
+      opacity: 1
+    });
+    const missile = new THREE.Mesh(missileGeo, missileMat);
+    missile.position.copy(startPos);
+    this.arcsGroup.add(missile);
+
+    const nodeItem = this.nodeMeshes.find(n => n.data.id === targetNode!.id);
+    const targetMesh = nodeItem ? nodeItem.mesh : this.nodeMeshes[0].mesh;
+    const targetBeacon = nodeItem ? nodeItem.beacon : this.nodeMeshes[0].beacon;
+    const originalColor = targetNode.color;
+
+    this.activeHostileArcs.push({
+      line: hostileLine,
+      missile,
+      progress: 0,
+      speed: 0.02,
+      curve,
+      targetNode,
+      targetMesh,
+      targetBeacon,
+      originalColor
+    });
 
     return {
       message: `Simulated attack [Vector T1059.001] intercepted at Node ${targetNode.name}!`,
-      severity: 'critical'
+      targetNode: targetNode.name
     };
+  }
+
+  public clearHostileArcs() {
+    this.activeHostileArcs.forEach((hostile) => {
+      const beaconMat = hostile.targetBeacon.material as THREE.MeshBasicMaterial;
+      beaconMat.color.setHex(hostile.originalColor);
+      const meshMat = hostile.targetMesh.material as THREE.MeshBasicMaterial;
+      meshMat.color.setHex(hostile.originalColor);
+
+      this.arcsGroup.remove(hostile.line);
+      this.arcsGroup.remove(hostile.missile);
+      hostile.line.geometry.dispose();
+      (hostile.line.material as THREE.Material).dispose();
+      hostile.missile.geometry.dispose();
+      (hostile.missile.material as THREE.Material).dispose();
+    });
+    this.activeHostileArcs = [];
   }
 
   public update(delta: number, elapsed: number) {
@@ -398,12 +450,49 @@ export class CyberGlobeController {
       item.mesh.rotation.x += 0.015;
     });
 
-    // Animate arc brightness pulses
+    // Animate normal arc brightness pulses
     this.activeArcs.forEach((arc) => {
       arc.progress = (arc.progress + arc.speed) % 1;
       const lineMat = arc.line.material as THREE.LineBasicMaterial;
       lineMat.opacity = 0.3 + Math.sin(elapsed * 6 + arc.progress * Math.PI) * 0.4;
     });
+
+    // Animate hostile missiles along curve and auto-clean them
+    for (let i = this.activeHostileArcs.length - 1; i >= 0; i--) {
+      const hostile = this.activeHostileArcs[i];
+      hostile.progress += hostile.speed;
+
+      if (hostile.progress < 1.0) {
+        // Traveling along curve towards target
+        const pos = hostile.curve.getPoint(hostile.progress);
+        hostile.missile.position.copy(pos);
+      } else if (hostile.progress < 2.5) {
+        // Impact at target node - flash red beacon
+        const endPos = hostile.curve.getPoint(1.0);
+        hostile.missile.position.copy(endPos);
+        const beaconMat = hostile.targetBeacon.material as THREE.MeshBasicMaterial;
+        beaconMat.color.setHex(0xf43f5e);
+        const meshMat = hostile.targetMesh.material as THREE.MeshBasicMaterial;
+        meshMat.color.setHex(0xf43f5e);
+        const lineMat = hostile.line.material as THREE.LineBasicMaterial;
+        lineMat.opacity = Math.max(0, 0.9 - (hostile.progress - 1.0) * 0.6);
+      } else {
+        // Auto-cleanup and restore node original defense color
+        const beaconMat = hostile.targetBeacon.material as THREE.MeshBasicMaterial;
+        beaconMat.color.setHex(hostile.originalColor);
+        const meshMat = hostile.targetMesh.material as THREE.MeshBasicMaterial;
+        meshMat.color.setHex(hostile.originalColor);
+
+        this.arcsGroup.remove(hostile.line);
+        this.arcsGroup.remove(hostile.missile);
+        hostile.line.geometry.dispose();
+        (hostile.line.material as THREE.Material).dispose();
+        hostile.missile.geometry.dispose();
+        (hostile.missile.material as THREE.Material).dispose();
+
+        this.activeHostileArcs.splice(i, 1);
+      }
+    }
   }
 
   public getNodeMeshes(): THREE.Mesh[] {

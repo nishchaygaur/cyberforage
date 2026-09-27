@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { ArrowRight, Terminal, ShieldAlert, Sparkles, Activity, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Terminal, ShieldAlert, CheckCircle2 } from 'lucide-react';
 import { CyberScene } from '../3d/CyberScene';
 import { CyberHUDControls } from '../3d/CyberHUDControls';
-import { SceneMode } from '../../types';
+import { SceneMode, SimulatedIncident } from '../../types';
 import { OrbitalNodeData } from '../3d/CyberGlobe';
 import { cyberSound } from '../../audio/cyberSoundEngine';
 
@@ -12,6 +12,8 @@ interface HeroSectionProps {
   onSceneModeChange: (mode: SceneMode) => void;
   attackTrigger: number;
   onSimulateAttack: () => void;
+  incident?: SimulatedIncident | null;
+  onDismissIncident?: () => void;
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
@@ -20,14 +22,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onSceneModeChange,
   attackTrigger,
   onSimulateAttack,
+  incident,
+  onDismissIncident,
 }) => {
   const [selectedNode, setSelectedNode] = useState<OrbitalNodeData | null>(null);
-  const [interceptNotice, setInterceptNotice] = useState<string | null>(null);
-
-  const handleIntercepted = (msg: string) => {
-    setInterceptNotice(msg);
-    setTimeout(() => setInterceptNotice(null), 4000);
-  };
 
   return (
     <section id="home" className="relative pt-28 pb-16 md:pt-36 md:pb-24 overflow-hidden" aria-label="Cyberforage Hero">
@@ -74,7 +72,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <a
                 href="#projects"
                 onClick={() => cyberSound.playClick()}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#00E5BE] text-[#04131E] font-bold text-sm sm:text-base transition-all duration-200 hover:bg-[#00F0C0] shadow-[0_0_25px_rgba(0,229,190,0.35)] hover:shadow-[0_0_35px_rgba(0,240,192,0.55)] cursor-pointer group"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#00E5BE] text-[#04131E] font-bold text-sm sm:text-base transition-all duration-200 hover:bg-[#00F0C0] shadow-[0_0_25px_rgba(0,229,190,0.35)] hover:shadow-[0_0_35px_rgba(0,240,192,0.55)] cursor-pointer group hover:scale-105 active:scale-95"
               >
                 <span>Explore Projects</span>
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -83,7 +81,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <a
                 href="#labs"
                 onClick={() => cyberSound.playClick()}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#06101E]/80 hover:bg-[#09172B] text-slate-200 hover:text-white border border-slate-700/80 hover:border-[#00E5BE]/60 text-sm sm:text-base font-semibold transition-all duration-200 cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#06101E]/80 hover:bg-[#09172B] text-slate-200 hover:text-white border border-slate-700/80 hover:border-[#00E5BE]/60 text-sm sm:text-base font-semibold transition-all duration-200 cursor-pointer hover:scale-105 active:scale-95"
               >
                 <span>Explore Labs</span>
               </a>
@@ -93,19 +91,97 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   cyberSound.playClick();
                   onOpenTerminal();
                 }}
-                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] text-[#00F0C0] border border-white/10 hover:border-[#00F0C0]/40 text-sm font-mono transition-all cursor-pointer"
-                title="Launch Tactical Terminal"
+                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] text-[#00F0C0] border border-white/10 hover:border-[#00F0C0]/40 text-sm font-mono transition-all cursor-pointer hover:scale-105 active:scale-95"
+                title="Launch Tactical Terminal (Ctrl+K or `~`)"
               >
                 <Terminal className="w-4 h-4" />
                 <span className="hidden sm:inline">CLI Console</span>
               </button>
             </div>
 
-            {/* Live Telemetry Notice */}
-            {interceptNotice && (
-              <div className="mb-6 p-3 rounded-xl bg-rose-500/10 border border-rose-500/40 text-rose-300 text-xs font-mono flex items-center gap-2 animate-bounce">
-                <ShieldAlert className="w-4 h-4 text-rose-400 flex-shrink-0" />
-                <span>{interceptNotice}</span>
+            {/* Live Automated Incident Response HUD Banner */}
+            {incident && (
+              <div
+                className={`mb-6 p-4 rounded-xl border backdrop-blur-md shadow-2xl transition-all duration-300 w-full max-w-xl animate-fadeIn ${
+                  incident.stage === 'resolved'
+                    ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-200 shadow-[0_0_25px_rgba(16,185,129,0.2)]'
+                    : incident.stage === 'containing'
+                    ? 'bg-sky-950/40 border-sky-500/50 text-sky-200 shadow-[0_0_25px_rgba(56,189,248,0.2)]'
+                    : 'bg-rose-950/40 border-rose-500/60 text-rose-200 shadow-[0_0_25px_rgba(244,63,94,0.25)]'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="relative flex h-2.5 w-2.5">
+                      {incident.stage !== 'resolved' && (
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                      )}
+                      <span
+                        className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
+                          incident.stage === 'resolved' ? 'bg-emerald-400' : 'bg-rose-500'
+                        }`}
+                      />
+                    </span>
+                    <span className="text-xs font-mono font-bold tracking-wider uppercase">
+                      {incident.stage === 'resolved'
+                        ? `INCIDENT #${incident.id} RESOLVED & CONTAINED`
+                        : incident.stage === 'containing'
+                        ? `ACTIVE CONTAINMENT: #${incident.id}`
+                        : `CRITICAL INCIDENT #${incident.id} ACTIVE`}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${
+                        incident.stage === 'resolved'
+                          ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
+                          : 'bg-rose-500/20 text-rose-300 border-rose-500/40 animate-pulse'
+                      }`}
+                    >
+                      {incident.severity}
+                    </span>
+                    {onDismissIncident && (
+                      <button
+                        onClick={onDismissIncident}
+                        className="text-xs font-mono text-slate-400 hover:text-white px-1.5 py-0.5 rounded bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+                        title="Dismiss Incident"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <p className="text-xs font-mono text-slate-200 mb-3 leading-relaxed">
+                  {incident.message}
+                </p>
+
+                {/* Live Progress Bar with Phase Details */}
+                <div className="space-y-1.5 pt-2 border-t border-white/10 font-mono text-[10px]">
+                  <div className="flex items-center justify-between text-slate-400">
+                    <span>
+                      Target: <span className="text-white font-semibold">{incident.targetNode}</span> ({incident.targetIp})
+                    </span>
+                    <span>
+                      {incident.stage === 'resolved'
+                        ? '100% Remediated (Auto-stopping)'
+                        : `Progress: ${incident.progress}%`}
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 rounded-full bg-black/40 overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-500 ${
+                        incident.stage === 'resolved'
+                          ? 'bg-emerald-400 shadow-[0_0_8px_#10B981]'
+                          : incident.stage === 'containing'
+                          ? 'bg-sky-400 shadow-[0_0_8px_#38BDF8]'
+                          : 'bg-rose-500 shadow-[0_0_8px_#F43F5E]'
+                      }`}
+                      style={{ width: `${incident.progress}%` }}
+                    />
+                  </div>
+                </div>
               </div>
             )}
 
@@ -144,7 +220,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <CyberScene
                 mode={sceneMode}
                 onSelectNode={(node) => setSelectedNode(node)}
-                onAttackIntercepted={handleIntercepted}
                 attackTrigger={attackTrigger}
                 className="relative z-10"
               />
@@ -201,7 +276,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   </div>
                   <button
                     onClick={() => setSelectedNode(null)}
-                    className="text-xs font-mono text-slate-400 hover:text-white px-2 py-1"
+                    className="text-xs font-mono text-slate-400 hover:text-white px-2 py-1 cursor-pointer"
                   >
                     ✕
                   </button>
@@ -215,6 +290,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 currentMode={sceneMode}
                 onModeChange={onSceneModeChange}
                 onSimulateAttack={onSimulateAttack}
+                incident={incident}
               />
             </div>
             <p className="mt-2 text-[11px] font-mono text-slate-400 text-center">

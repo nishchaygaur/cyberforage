@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, ShieldAlert, Cpu, Radio, Zap } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Cpu, Radio, Zap, RotateCcw, CheckCircle2 } from 'lucide-react';
 import { cyberSound } from '../../audio/cyberSoundEngine';
 import { Cyber3DCard } from '../ui/Cyber3DCard';
+import { SimulatedIncident } from '../../types';
 
 interface TelemetryHUDSectionProps {
   onSimulateAttack: () => void;
+  incident?: SimulatedIncident | null;
 }
 
-export const TelemetryHUDSection: React.FC<TelemetryHUDSectionProps> = ({ onSimulateAttack }) => {
+export const TelemetryHUDSection: React.FC<TelemetryHUDSectionProps> = ({
+  onSimulateAttack,
+  incident,
+}) => {
   const [telemetryEvents, setTelemetryEvents] = useState<string[]>([
     '[SOCKET-IN] 192.0.2.45:443 -> TCP SYN Packet filtered by Zero-Trust ACL',
     '[SIEM-CORR] Sysmon ID 1: Process lineage validated (no parent spoofing)',
@@ -17,6 +22,7 @@ export const TelemetryHUDSection: React.FC<TelemetryHUDSectionProps> = ({ onSimu
 
   const [counter, setCounter] = useState(14290);
 
+  // Background random telemetry ticker
   useEffect(() => {
     const interval = setInterval(() => {
       setCounter((c) => c + Math.floor(Math.random() * 3));
@@ -29,10 +35,30 @@ export const TelemetryHUDSection: React.FC<TelemetryHUDSectionProps> = ({ onSimu
       ];
       const randomMsg = pool[Math.floor(Math.random() * pool.length)];
       setTelemetryEvents((prev) => [randomMsg, ...prev.slice(0, 4)]);
-    }, 3800);
+    }, 4500);
 
     return () => clearInterval(interval);
   }, []);
+
+  // React to incident lifecycle stages
+  useEffect(() => {
+    if (!incident) return;
+
+    let logMsg = '';
+    if (incident.stage === 'inbound') {
+      logMsg = `[INTRUSION-DETECT] Hostile vector ${incident.vector} targeting Node ${incident.targetNode}`;
+    } else if (incident.stage === 'incident_generated') {
+      logMsg = `[CRIT-INCIDENT] #${incident.id} generated - Active payload alert at ${incident.targetIp}`;
+    } else if (incident.stage === 'containing') {
+      logMsg = `[ZERO-TRUST-ACL] Automated isolation policy executed on ${incident.targetNode} socket`;
+    } else if (incident.stage === 'resolved') {
+      logMsg = `[INCIDENT-CLOSED] #${incident.id} neutralized. Telemetry restored to NOMINAL.`;
+    }
+
+    if (logMsg) {
+      setTelemetryEvents((prev) => [logMsg, ...prev.slice(0, 4)]);
+    }
+  }, [incident]);
 
   return (
     <section className="relative py-12 border-t border-white/[0.04] bg-[#030814]/90" aria-label="Live Telemetry">
@@ -52,19 +78,57 @@ export const TelemetryHUDSection: React.FC<TelemetryHUDSectionProps> = ({ onSimu
                     LIVE STREAM
                   </span>
                 </h3>
-                <p className="text-xs text-slate-400 font-mono">Autonomous threat mitigation & sensor telemetry network</p>
+                <p className="text-xs text-slate-400 font-mono">Autonomous threat mitigation &amp; sensor telemetry network</p>
               </div>
             </div>
 
+            {/* Test Red-Team Intrusion with Incident Lifecycle */}
             <button
               onClick={() => {
-                cyberSound.playAlert();
-                onSimulateAttack();
+                if (!incident) {
+                  cyberSound.playAlert();
+                  onSimulateAttack();
+                }
               }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/40 hover:border-rose-400 text-rose-300 text-xs font-mono font-bold transition-all shadow-[0_0_15px_rgba(244,63,94,0.2)] cursor-pointer self-start sm:self-auto hover:scale-105 active:scale-95"
+              disabled={!!incident}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all shadow-lg self-start sm:self-auto cursor-pointer ${
+                incident?.stage === 'inbound'
+                  ? 'bg-amber-500/20 border border-amber-500/50 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.3)] cursor-wait'
+                  : incident?.stage === 'incident_generated'
+                  ? 'bg-rose-500/25 border border-rose-500 text-rose-200 shadow-[0_0_20px_rgba(244,63,94,0.4)] animate-pulse cursor-wait'
+                  : incident?.stage === 'containing'
+                  ? 'bg-sky-500/20 border border-sky-500/50 text-sky-300 shadow-[0_0_15px_rgba(56,189,248,0.3)] cursor-wait'
+                  : incident?.stage === 'resolved'
+                  ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.3)]'
+                  : 'bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/40 hover:border-rose-400 text-rose-300 shadow-[0_0_15px_rgba(244,63,94,0.2)] hover:scale-105 active:scale-95'
+              }`}
             >
-              <ShieldAlert className="w-4 h-4 text-rose-400 animate-pulse" />
-              <span>TEST RED-TEAM INTRUSION</span>
+              {incident?.stage === 'inbound' ? (
+                <>
+                  <RotateCcw className="w-4 h-4 text-amber-400 animate-spin" />
+                  <span>INTRUSION INBOUND...</span>
+                </>
+              ) : incident?.stage === 'incident_generated' ? (
+                <>
+                  <ShieldAlert className="w-4 h-4 text-rose-400 animate-bounce" />
+                  <span>INCIDENT #{incident.id} ACTIVE</span>
+                </>
+              ) : incident?.stage === 'containing' ? (
+                <>
+                  <RotateCcw className="w-4 h-4 text-sky-400 animate-spin" />
+                  <span>CONTAINING THREAT...</span>
+                </>
+              ) : incident?.stage === 'resolved' ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <span>✓ INCIDENT CONTAINED</span>
+                </>
+              ) : (
+                <>
+                  <ShieldAlert className="w-4 h-4 text-rose-400" />
+                  <span>TEST RED-TEAM INTRUSION</span>
+                </>
+              )}
             </button>
           </div>
 
@@ -105,11 +169,11 @@ export const TelemetryHUDSection: React.FC<TelemetryHUDSectionProps> = ({ onSimu
                   <span>Detection Latency</span>
                 </div>
                 <div className="text-2xl font-bold font-mono text-white tracking-tight">
-                  11.8 ms
+                  {incident ? '4.2 ms' : '11.8 ms'}
                 </div>
                 <div className="text-[10px] font-mono text-sky-400 mt-1 flex items-center gap-1">
                   <span>✓</span>
-                  <span>Nominal Response</span>
+                  <span>{incident ? 'Intrusion Tracked' : 'Nominal Response'}</span>
                 </div>
               </div>
             </Cyber3DCard>
@@ -124,13 +188,13 @@ export const TelemetryHUDSection: React.FC<TelemetryHUDSectionProps> = ({ onSimu
               <div style={{ transform: 'translateZ(24px)' }}>
                 <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
                   <Cpu className="w-3.5 h-3.5 text-purple-400" />
-                  <span>MITRE ATT&CK Coverage</span>
+                  <span>MITRE ATT&amp;CK Coverage</span>
                 </div>
                 <div className="text-2xl font-bold font-mono text-white tracking-tight">
                   87.4%
                 </div>
                 <div className="text-[10px] font-mono text-purple-400 mt-1">
-                  v14 Enterprise Matrix
+                  {incident ? `Evaluated ${incident.technique}` : 'v14 Enterprise Matrix'}
                 </div>
               </div>
             </Cyber3DCard>
@@ -166,7 +230,15 @@ export const TelemetryHUDSection: React.FC<TelemetryHUDSectionProps> = ({ onSimu
             <div className="space-y-1.5">
               {telemetryEvents.map((evt, idx) => (
                 <div key={idx} className="flex items-center gap-2 text-slate-300 truncate">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#00F0C0] flex-shrink-0" />
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                      evt.includes('CRIT') || evt.includes('INTRUSION')
+                        ? 'bg-rose-500 animate-pulse'
+                        : evt.includes('CONTAINED') || evt.includes('CLOSED')
+                        ? 'bg-emerald-400'
+                        : 'bg-[#00F0C0]'
+                    }`}
+                  />
                   <span className="truncate">{evt}</span>
                 </div>
               ))}
