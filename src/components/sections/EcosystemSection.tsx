@@ -1,10 +1,13 @@
 import React from 'react';
-import { Shield, Brain, Cog, ArrowRight } from 'lucide-react';
-import { ecosystemPillars } from '../../data/techStackData';
+import { Shield, Brain, Cog, ArrowRight, Layers } from 'lucide-react';
 import { cyberSound } from '../../audio/cyberSoundEngine';
 import { Cyber3DCard } from '../ui/Cyber3DCard';
+import { useSiteContent } from '../../context/SiteContentContext';
 
 export const EcosystemSection: React.FC = () => {
+  const { content } = useSiteContent();
+  const pillars = content.ecosystem?.pillars || [];
+
   return (
     <section id="ecosystem" className="relative py-16 md:py-24 border-t border-white/[0.04] cyber-section-visibility" aria-label="The Cyberforage Ecosystem">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -15,18 +18,19 @@ export const EcosystemSection: React.FC = () => {
               THE CYBERFORAGE ECOSYSTEM
             </span>
             <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-4">
-              More Than Just Projects
+              {content.ecosystem?.title || 'More Than Just Projects'}
             </h2>
             <p className="text-slate-300 text-sm sm:text-base leading-relaxed mb-6">
-              Cyberforage brings together security, AI and automation into a unified ecosystem — building tools, labs and research for a safer digital world.
+              {content.ecosystem?.description ||
+                'Cyberforage brings together security, AI and automation into a unified ecosystem — building tools, labs and research for a safer digital world.'}
             </p>
             <div>
               <a
-                href="#about"
+                href="#projects"
                 onClick={() => cyberSound.playClick()}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#06101E]/90 hover:bg-[#0A182E] text-slate-200 hover:text-white border border-[#00E5BE]/30 hover:border-[#00E5BE] text-sm font-medium transition-all group cursor-pointer shadow-lg hover:shadow-[0_0_20px_rgba(0,229,190,0.2)]"
               >
-                <span>Learn More</span>
+                <span>Explore Projects</span>
                 <ArrowRight className="w-4 h-4 text-[#00E5BE] transition-transform group-hover:translate-x-1" />
               </a>
             </div>
@@ -34,7 +38,7 @@ export const EcosystemSection: React.FC = () => {
 
           {/* Right 3 Pillar 3D Cards */}
           <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {ecosystemPillars.map((pillar) => {
+            {pillars.map((pillar) => {
               return (
                 <Cyber3DCard
                   key={pillar.id}
@@ -58,6 +62,7 @@ export const EcosystemSection: React.FC = () => {
                       {pillar.id === 'security' && <Shield className="w-6 h-6" />}
                       {pillar.id === 'ai' && <Brain className="w-6 h-6" />}
                       {pillar.id === 'automation' && <Cog className="w-6 h-6" />}
+                      {!['security', 'ai', 'automation'].includes(pillar.id) && <Layers className="w-6 h-6" />}
                     </div>
 
                     {/* Title & Tagline */}

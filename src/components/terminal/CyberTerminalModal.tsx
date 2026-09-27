@@ -24,6 +24,7 @@ interface CyberTerminalModalProps {
   onOpenMatrix?: () => void;
   onOpenAudioConsole?: () => void;
   onOpenNmap?: (target?: string) => void;
+  onOpenAdmin?: () => void;
 }
 
 export const CyberTerminalModal: React.FC<CyberTerminalModalProps> = ({
@@ -38,6 +39,7 @@ export const CyberTerminalModal: React.FC<CyberTerminalModalProps> = ({
   onOpenMatrix,
   onOpenAudioConsole,
   onOpenNmap,
+  onOpenAdmin,
 }) => {
   const [inputVal, setInputVal] = useState('');
   const [history, setHistory] = useState<TerminalLine[]>([
@@ -95,6 +97,7 @@ export const CyberTerminalModal: React.FC<CyberTerminalModalProps> = ({
           type: 'output',
           text: `AVAILABLE CYBER COMMANDS:
   help                    - Display tactical command reference
+  admin / cms             - Open Root CMS & Live Frontend Admin Panel
   nmap [target]           - Launch Live Nmap Network Port & Vulnerability Scanner
   ctf                     - Launch 60-Second SOC Defender CTF Challenge
   sentinel / ai           - Open Sentinel Core AI Threat Triage Assistant
@@ -113,6 +116,18 @@ export const CyberTerminalModal: React.FC<CyberTerminalModalProps> = ({
   contact                 - Open encrypted transmission coordinates
   clear                   - Purge console buffer
   exit                    - Terminate terminal console session`
+        });
+        break;
+
+      case 'admin':
+      case 'cms':
+      case 'root':
+        cyberSound.playLaser();
+        if (onOpenAdmin) onOpenAdmin();
+        newLines.push({
+          id: `out-${Date.now()}`,
+          type: 'success',
+          text: '[ROOT PRIVILEGES] Elevating session to root... Opening Cyberforage Live Admin & Frontend CMS Panel.'
         });
         break;
 

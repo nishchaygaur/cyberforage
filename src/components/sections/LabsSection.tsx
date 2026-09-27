@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Box, Shield, Search, Bug, Network, Play, Server } from 'lucide-react';
-import { labsData } from '../../data/labsData';
 import { Lab } from '../../types';
 import { cyberSound } from '../../audio/cyberSoundEngine';
 import { Cyber3DCard } from '../ui/Cyber3DCard';
+import { useSiteContent } from '../../context/SiteContentContext';
 
 interface LabsSectionProps {
   onRunLabSimulation: (lab: Lab) => void;
@@ -14,13 +14,15 @@ export const LabsSection: React.FC<LabsSectionProps> = ({
   onRunLabSimulation,
   onFocusBlade3D,
 }) => {
+  const { content } = useSiteContent();
   const [activeCategory, setActiveCategory] = useState<string>('All');
 
-  const categories = ['All', 'Attack Simulation', 'SOC', 'Forensics', 'Analysis', 'Networking'];
+  const allLabs = content.labs || [];
+  const dynamicCategories = ['All', ...Array.from(new Set(allLabs.map((l) => l.category)))];
 
   const filteredLabs = activeCategory === 'All'
-    ? labsData
-    : labsData.filter((l) => l.category === activeCategory);
+    ? allLabs
+    : allLabs.filter((l) => l.category === activeCategory);
 
   const getLabIcon = (cat: string) => {
     switch (cat) {
@@ -58,7 +60,7 @@ export const LabsSection: React.FC<LabsSectionProps> = ({
 
           {/* Category Filter Pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-            {categories.map((cat) => {
+            {dynamicCategories.map((cat) => {
               const isSelected = activeCategory === cat;
               return (
                 <button

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { ArrowRight, Terminal, ShieldAlert, CheckCircle2, ChevronDown, Network } from 'lucide-react';
+import { ArrowRight, Terminal, ShieldAlert, CheckCircle2, ChevronDown, Network, Radio } from 'lucide-react';
 import { CyberScene } from '../3d/CyberScene';
 import { CyberHUDControls } from '../3d/CyberHUDControls';
 import { SceneMode, SimulatedIncident } from '../../types';
 import { OrbitalNodeData } from '../3d/CyberGlobe';
 import { cyberSound } from '../../audio/cyberSoundEngine';
+import { useSiteContent } from '../../context/SiteContentContext';
 
 interface HeroSectionProps {
   onOpenTerminal: () => void;
@@ -27,6 +28,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onDismissIncident,
   onOpenNmap,
 }) => {
+  const { content } = useSiteContent();
   const [selectedNode, setSelectedNode] = useState<OrbitalNodeData | null>(null);
 
   return (
@@ -42,6 +44,30 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        {/* Global Emergency Alert Banner (Controlled via Admin Panel) */}
+        {content.telemetry?.isAlertActive && (
+          <div className="mb-8 p-3 sm:p-4 rounded-xl bg-gradient-to-r from-rose-950/80 via-red-950/70 to-rose-950/80 border border-rose-500/60 shadow-[0_0_35px_rgba(244,63,94,0.3)] backdrop-blur-md animate-fadeIn flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="relative flex h-3 w-3 flex-shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500 shadow-[0_0_8px_#F43F5E]" />
+              </span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-mono text-[10px] font-bold tracking-widest uppercase border border-rose-500/40">
+                  DEFCON {content.telemetry?.defconLevel || 5} ALERT
+                </span>
+                <p className="text-xs sm:text-sm font-mono text-rose-100 font-medium">
+                  {content.telemetry.broadcastAlert}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-[10px] font-mono text-rose-300/80 self-end sm:self-auto flex-shrink-0">
+              <Radio className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
+              <span>LIVE BROADCAST</span>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
           {/* Left Column: Hero Content */}
           <div className="lg:col-span-7 flex flex-col items-start z-10">
@@ -49,24 +75,26 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-[#00F0C0]/5 border border-[#00F0C0]/25 backdrop-blur-sm">
               <span className="w-2 h-2 rounded-full bg-[#00F0C0] animate-pulse" />
               <span className="text-[10px] sm:text-xs md:text-sm font-mono tracking-[0.14em] sm:tracking-[0.22em] text-[#00E5BE] font-semibold uppercase">
-                CYBERSECURITY / RESEARCH / AI / AUTOMATION
+                {content.hero?.badge || 'CYBERSECURITY / RESEARCH / AI / AUTOMATION'}
               </span>
             </div>
 
             {/* Title */}
             <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight mb-3 font-mono">
-              <span className="text-white">CYBER</span>
-              <span className="text-[#00F0C0] drop-shadow-[0_0_20px_rgba(0,240,192,0.4)]">FORAGE</span>
+              <span className="text-white">{content.hero?.brandPrefix || 'CYBER'}</span>
+              <span className="text-[#00F0C0] drop-shadow-[0_0_20px_rgba(0,240,192,0.4)]">
+                {content.hero?.brandSuffix || 'FORAGE'}
+              </span>
             </h1>
 
             {/* Motto */}
             <p className="text-2xl sm:text-3xl font-bold text-slate-100 mb-4 tracking-tight">
-              Explore. Build. Defend.
+              {content.hero?.motto || 'Explore. Build. Defend.'}
             </p>
 
             {/* Subtext */}
             <p className="text-base sm:text-lg text-slate-300 max-w-xl mb-8 leading-relaxed font-normal">
-              A technology ecosystem for cybersecurity, security research, intelligent automation and defensive engineering.
+              {content.hero?.description || 'A technology ecosystem for cybersecurity, security research, intelligent automation and defensive engineering.'}
             </p>
 
             {/* Action Buttons */}
@@ -203,20 +231,25 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
             {/* Quick Metrics Ticker */}
             <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-white/[0.06] w-full max-w-xl text-xs font-mono text-slate-400">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#00F0C0] shadow-[0_0_6px_#00F0C0]" />
-                <span className="text-slate-300">Real tools</span>
-              </div>
-              <span className="text-slate-600">/</span>
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#38BDF8] shadow-[0_0_6px_#38BDF8]" />
-                <span className="text-slate-300">Practical security</span>
-              </div>
-              <span className="text-slate-600">/</span>
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#A855F7] shadow-[0_0_6px_#A855F7]" />
-                <span className="text-slate-300">Open source</span>
-              </div>
+              {(content.hero?.metrics || [
+                { label: 'Real tools', color: '#00F0C0' },
+                { label: 'Practical security', color: '#38BDF8' },
+                { label: 'Open source', color: '#A855F7' },
+              ]).map((pill: { label: string; color: string }, idx: number, arr: { label: string; color: string }[]) => (
+                <React.Fragment key={pill.label + idx}>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="w-2 h-2 rounded-full"
+                      style={{
+                        backgroundColor: pill.color,
+                        boxShadow: `0 0 6px ${pill.color}`,
+                      }}
+                    />
+                    <span className="text-slate-300">{pill.label}</span>
+                  </div>
+                  {idx < arr.length - 1 && <span className="text-slate-600">/</span>}
+                </React.Fragment>
+              ))}
             </div>
           </div>
 

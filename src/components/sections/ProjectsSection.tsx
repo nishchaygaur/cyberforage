@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { FileSearch, Box, ShieldCheck, ExternalLink, BookOpen, Layers, Binary } from 'lucide-react';
-import { projectsData } from '../../data/projectsData';
 import { Project } from '../../types';
 import { cyberSound } from '../../audio/cyberSoundEngine';
 import { Cyber3DCard } from '../ui/Cyber3DCard';
+import { useSiteContent } from '../../context/SiteContentContext';
 
 interface ProjectsSectionProps {
   onInspect3D?: (project: Project) => void;
@@ -11,13 +11,15 @@ interface ProjectsSectionProps {
 }
 
 export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ onInspect3D, onInspectBinary }) => {
+  const { content } = useSiteContent();
   const [activeFilter, setActiveFilter] = useState<string>('All');
 
-  const categories = ['All', 'Auditing', 'Attack Simulation', 'Malware Analysis', 'SOC Platform'];
+  const allProjects = content.projects || [];
+  const dynamicCategories = ['All', ...Array.from(new Set(allProjects.map((p) => p.category)))];
 
   const filteredProjects = activeFilter === 'All'
-    ? projectsData
-    : projectsData.filter((p) => p.category === activeFilter);
+    ? allProjects
+    : allProjects.filter((p) => p.category === activeFilter);
 
   return (
     <section id="projects" className="relative py-16 md:py-24 border-t border-white/[0.04] cyber-section-visibility" aria-label="Featured Projects">
@@ -35,7 +37,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ onInspect3D, o
 
           {/* Filter Pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-            {categories.map((cat) => {
+            {dynamicCategories.map((cat) => {
               const isSelected = activeFilter === cat;
               return (
                 <button

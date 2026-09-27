@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Terminal, Volume2, VolumeX, Menu, X, ArrowUpRight, Network } from 'lucide-react';
+import { Terminal, Volume2, VolumeX, Menu, X, ArrowUpRight, Network, ShieldAlert, Sliders } from 'lucide-react';
 import { GithubIcon } from '../icons/BrandIcons';
 import { cyberSound } from '../../audio/cyberSoundEngine';
+import { useSiteContent } from '../../context/SiteContentContext';
 
 interface NavbarProps {
   onOpenTerminal: () => void;
@@ -9,6 +10,7 @@ interface NavbarProps {
   onOpenAiScanner?: () => void;
   onOpenNmap?: () => void;
   onOpenAudioConsole?: () => void;
+  onOpenAdmin?: () => void;
   activeSection?: string;
 }
 
@@ -18,8 +20,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAiScanner,
   onOpenNmap,
   onOpenAudioConsole,
+  onOpenAdmin,
   activeSection = 'home',
 }) => {
+  const { content } = useSiteContent();
+  const defconLevel = content.telemetry?.defconLevel || 5;
   const [isAudioMuted, setIsAudioMuted] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -200,6 +205,35 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
+          {/* Root CMS Admin Panel Button with DEFCON indicator */}
+          {onOpenAdmin && (
+            <button
+              onClick={() => {
+                cyberSound.playLaser();
+                onOpenAdmin();
+              }}
+              onMouseEnter={() => cyberSound.playBlip()}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:text-white text-xs font-mono transition-all shadow-sm cursor-pointer"
+              title="Open Cyberforage Root Live CMS & Admin Panel (Ctrl+Shift+A)"
+            >
+              <Sliders className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden xl:inline font-semibold">CMS Admin</span>
+              <span
+                className={`px-1.5 py-0.2 rounded text-[9px] font-bold tracking-tight uppercase ${
+                  defconLevel === 1
+                    ? 'bg-rose-500 text-white animate-pulse shadow-[0_0_8px_#F43F5E]'
+                    : defconLevel === 2
+                    ? 'bg-orange-500 text-white shadow-[0_0_8px_#F97316]'
+                    : defconLevel === 3
+                    ? 'bg-yellow-500 text-black'
+                    : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                }`}
+              >
+                D-{defconLevel}
+              </span>
+            </button>
+          )}
+
           {/* Cyber Terminal Button */}
           <button
             onClick={() => {
@@ -292,6 +326,18 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <Network className="w-4 h-4 text-emerald-400" />
                 <span>Launch Live Nmap Scanner</span>
+              </button>
+            )}
+            {onOpenAdmin && (
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onOpenAdmin();
+                }}
+                className="flex items-center justify-center gap-2 py-2 rounded-lg bg-amber-500/10 border border-amber-500/40 text-xs font-mono text-amber-300"
+              >
+                <Sliders className="w-4 h-4 text-amber-400" />
+                <span>Open Root CMS Admin (DEFCON {defconLevel})</span>
               </button>
             )}
             <button

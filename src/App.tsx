@@ -19,6 +19,7 @@ import { MatrixBreachOverlay } from './components/easteregg/MatrixBreachOverlay'
 import { CyberAudioConsole } from './components/audio/CyberAudioConsole';
 import { CyberScrollHUD } from './components/navigation/CyberScrollHUD';
 import { LiveNmapModal } from './components/nmap/LiveNmapModal';
+import { AdminPanelModal } from './components/admin/AdminPanelModal';
 import { SceneMode, Lab, SimulatedIncident } from './types';
 import { cyberSound } from './audio/cyberSoundEngine';
 import { Terminal, ShieldAlert, Cpu, Radio, Network } from 'lucide-react';
@@ -34,7 +35,8 @@ export function App() {
   const [incident, setIncident] = useState<SimulatedIncident | null>(null);
   const incidentTimersRef = useRef<number[]>([]);
 
-  // 8 High-Impact Feature Modals
+  // 9 High-Impact Feature Modals + Full CMS Admin
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isCtfOpen, setIsCtfOpen] = useState(false);
   const [isAiScannerOpen, setIsAiScannerOpen] = useState(false);
   const [isBinaryInspectorOpen, setIsBinaryInspectorOpen] = useState(false);
@@ -48,9 +50,20 @@ export function App() {
   const konamiIndexRef = useRef(0);
   const konamiSequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
 
-  // Global Keyboard Shortcuts (Ctrl+K or `~` to toggle tactical terminal, and secret easter eggs)
+  // Global Keyboard Shortcuts (Ctrl+K or `~` to toggle tactical terminal, Ctrl+Shift+A for Admin, and secret easter eggs)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Admin Panel hotkey (Ctrl+Shift+A or Alt+A)
+      if (
+        (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) ||
+        (e.altKey && (e.key === 'a' || e.key === 'A'))
+      ) {
+        e.preventDefault();
+        cyberSound.playLaser();
+        setIsAdminOpen((prev) => !prev);
+        return;
+      }
+
       // Tactical Terminal hotkeys
       if ((e.ctrlKey && e.key === 'k') || e.key === '`') {
         e.preventDefault();
@@ -58,6 +71,7 @@ export function App() {
         setIsTerminalOpen((prev) => !prev);
       } else if (e.key === 'Escape') {
         setIsTerminalOpen(false);
+        setIsAdminOpen(false);
         setSelectedLab(null);
         setIsCtfOpen(false);
         setIsAiScannerOpen(false);
@@ -254,6 +268,7 @@ export function App() {
         onOpenAiScanner={() => setIsAiScannerOpen(true)}
         onOpenNmap={() => setIsNmapOpen(true)}
         onOpenAudioConsole={() => setIsAudioConsoleOpen((prev) => !prev)}
+        onOpenAdmin={() => setIsAdminOpen(true)}
         activeSection={activeSection}
       />
 
@@ -349,6 +364,7 @@ export function App() {
           if (target) setNmapTarget(target);
           setIsNmapOpen(true);
         }}
+        onOpenAdmin={() => setIsAdminOpen(true)}
       />
 
       {/* Lab Adversary Emulation Sandbox Modal */}
@@ -399,6 +415,12 @@ export function App() {
         isOpen={isNmapOpen}
         onClose={() => setIsNmapOpen(false)}
         initialTarget={nmapTarget}
+      />
+
+      {/* 8. Full Functional Cyberforage Root CMS & Admin Panel Modal */}
+      <AdminPanelModal
+        isOpen={isAdminOpen}
+        onClose={() => setIsAdminOpen(false)}
       />
     </div>
   );

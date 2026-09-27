@@ -1,22 +1,24 @@
 import React, { useState } from 'react';
 import { Search, Terminal, Cpu, Database, Box, GitBranch, ShieldAlert, Target, FileText, Cloud, Brain, Network, ArrowRight } from 'lucide-react';
-import { techTools } from '../../data/techStackData';
 import { TechTool } from '../../types';
 import { cyberSound } from '../../audio/cyberSoundEngine';
 import { Cyber3DCard } from '../ui/Cyber3DCard';
+import { useSiteContent } from '../../context/SiteContentContext';
 
 interface TechStackSectionProps {
   onFocusMesh3D: () => void;
 }
 
 export const TechStackSection: React.FC<TechStackSectionProps> = ({ onFocusMesh3D }) => {
+  const { content } = useSiteContent();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedTool, setSelectedTool] = useState<TechTool | null>(null);
 
-  const categories = ['All', 'Core', 'Systems', 'Database', 'Container', 'VCS', 'Detection', 'Framework', 'Standards', 'Infra', 'Intelligence'];
+  const tools = content.techTools || [];
+  const categories = ['All', ...Array.from(new Set(tools.map((t) => t.category)))];
 
-  const filteredTools = techTools.filter((tool) => {
+  const filteredTools = tools.filter((tool) => {
     const matchesCat = selectedCategory === 'All' || tool.category === selectedCategory;
     const matchesQuery = tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tool.description.toLowerCase().includes(searchQuery.toLowerCase()) ||

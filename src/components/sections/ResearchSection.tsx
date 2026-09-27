@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
 import { Shield, Crosshair, FlaskConical, Cpu, Cloud, Settings, ArrowRight, Clock, Network } from 'lucide-react';
-import { researchDomains, researchArticles } from '../../data/researchData';
 import { ResearchArticle } from '../../types';
 import { ArticleReaderModal } from '../modals/ArticleReaderModal';
 import { cyberSound } from '../../audio/cyberSoundEngine';
 import { Cyber3DCard } from '../ui/Cyber3DCard';
+import { useSiteContent } from '../../context/SiteContentContext';
 
 interface ResearchSectionProps {
   onOpenThreatGraph?: () => void;
 }
 
 export const ResearchSection: React.FC<ResearchSectionProps> = ({ onOpenThreatGraph }) => {
+  const { content } = useSiteContent();
   const [selectedArticle, setSelectedArticle] = useState<ResearchArticle | null>(null);
+
+  const domains = content.researchDomains || [];
+  const articles = content.researchArticles || [];
 
   const getDomainIcon = (iconName: string, color: string) => {
     switch (iconName) {
@@ -66,7 +70,7 @@ export const ResearchSection: React.FC<ResearchSectionProps> = ({ onOpenThreatGr
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 sm:gap-5">
-            {researchDomains.map((domain) => (
+            {domains.map((domain) => (
               <Cyber3DCard
                 key={domain.id}
                 customColor={domain.color}
@@ -138,7 +142,7 @@ export const ResearchSection: React.FC<ResearchSectionProps> = ({ onOpenThreatGr
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {researchArticles.map((article) => (
+            {articles.map((article) => (
               <Cyber3DCard
                 key={article.id}
                 customColor="#00F0C0"

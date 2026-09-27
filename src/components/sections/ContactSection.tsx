@@ -3,8 +3,14 @@ import { Mail, Globe, Send, Shield, CheckCircle2, Lock, ArrowRight, Copy, Check,
 import { GithubIcon, LinkedinIcon } from '../icons/BrandIcons';
 import { cyberSound } from '../../audio/cyberSoundEngine';
 import { Cyber3DCard } from '../ui/Cyber3DCard';
+import { useSiteContent } from '../../context/SiteContentContext';
 
 export const ContactSection: React.FC = () => {
+  const { content } = useSiteContent();
+  const contactEmail = content.contact?.email || 'contact@cyberforage.space';
+  const githubUrl = content.contact?.githubUrl || 'https://github.com/nishchaygaur';
+  const linkedinUrl = content.contact?.linkedinUrl || 'https://www.linkedin.com/in/nishchay-gaur/';
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -79,7 +85,7 @@ export const ContactSection: React.FC = () => {
     // Step 3: Routing
     setTimeout(() => {
       setTransmissionStep(3);
-      setTransmissionStepText('Routing encrypted packets to contact@cyberforage.space...');
+      setTransmissionStepText(`Routing encrypted packets to ${contactEmail}...`);
     }, 850);
 
     // Step 4: Completed
@@ -91,7 +97,7 @@ export const ContactSection: React.FC = () => {
       const dispatchHash = '0x' + Array.from({ length: 8 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
       const timestamp = new Date().toISOString();
 
-      const mailtoUrl = `mailto:contact@cyberforage.space?subject=${encodeURIComponent(
+      const mailtoUrl = `mailto:${contactEmail}?subject=${encodeURIComponent(
         `[Cyberforage Dispatch ${dispatchId}] ${formData.subject || 'Security Collaboration'}`
       )}&body=${encodeURIComponent(
         `Callsign / Operator: ${formData.name}\n` +
@@ -150,7 +156,7 @@ export const ContactSection: React.FC = () => {
     const payloadText =
       `=== CYBERFORAGE DISPATCH [${transmittedData.id}] ===\n` +
       `Timestamp: ${transmittedData.timestamp}\n` +
-      `Recipient: contact@cyberforage.space\n` +
+      `Recipient: ${contactEmail}\n` +
       `Sender Callsign: ${transmittedData.name}\n` +
       `Sender Email: ${transmittedData.email}\n` +
       `Topic: ${transmittedData.subject}\n` +
@@ -214,7 +220,7 @@ export const ContactSection: React.FC = () => {
                 className="flex flex-wrap items-center gap-3 pt-2"
               >
                 <a
-                  href="https://github.com/nishchaygaur"
+                  href={githubUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => cyberSound.playClick()}
@@ -226,7 +232,7 @@ export const ContactSection: React.FC = () => {
                 </a>
 
                 <a
-                  href="https://www.linkedin.com/in/nishchay-gaur/"
+                  href={linkedinUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => cyberSound.playClick()}
@@ -272,8 +278,8 @@ export const ContactSection: React.FC = () => {
                 >
                   <div className="flex items-center gap-2">
                     <Mail className="w-3.5 h-3.5 text-[#00F0C0]" />
-                    <a href="mailto:contact@cyberforage.space" className="hover:underline text-[#00E5BE]">
-                      contact@cyberforage.space
+                    <a href={`mailto:${contactEmail}`} className="hover:underline text-[#00E5BE]">
+                      {contactEmail}
                     </a>
                   </div>
                   <div className="flex items-center gap-2">
@@ -285,7 +291,7 @@ export const ContactSection: React.FC = () => {
 
               <div style={{ transform: 'translateZ(38px)' }} className="pt-2">
                 <a
-                  href="mailto:contact@cyberforage.space"
+                  href={`mailto:${contactEmail}`}
                   className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#00F0C0]/10 hover:bg-[#00F0C0]/20 border border-[#00F0C0]/30 hover:border-[#00F0C0] text-xs font-mono font-bold text-[#00F0C0] transition-colors shadow-md hover:scale-105 active:scale-95"
                 >
                   <Mail className="w-3.5 h-3.5" />
@@ -317,7 +323,7 @@ export const ContactSection: React.FC = () => {
                 Send an Encrypted Dispatch
               </h3>
               <p className="text-xs sm:text-sm text-slate-300 mt-1">
-                Directly route security research, tool feedback, or collaboration dispatches to <span className="text-[#00F0C0] font-mono">contact@cyberforage.space</span>.
+                Directly route security research, tool feedback, or collaboration dispatches to <span className="text-[#00F0C0] font-mono">{contactEmail}</span>.
               </p>
             </div>
 
