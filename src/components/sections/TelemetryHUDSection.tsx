@@ -62,7 +62,7 @@ export const TelemetryHUDSection: React.FC<TelemetryHUDSectionProps> = ({
   }, [incident]);
 
   return (
-    <section className="relative py-12 border-t border-white/[0.04] bg-[#030814]/90" aria-label="Live Telemetry">
+    <section id="telemetry" className="relative py-12 border-t border-white/[0.04] bg-[#030814]/90 cyber-section-visibility" aria-label="Live Telemetry">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="p-6 sm:p-8 rounded-2xl bg-[#061020]/90 border border-[#00F0C0]/25 backdrop-blur-md shadow-2xl relative overflow-hidden">
           {/* Top Label */}

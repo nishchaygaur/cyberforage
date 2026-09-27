@@ -40,7 +40,7 @@ export const LabsSection: React.FC<LabsSectionProps> = ({
   };
 
   return (
-    <section id="labs" className="relative py-16 md:py-24 border-t border-white/[0.04] overflow-hidden" aria-label="Cyberforage Labs">
+    <section id="labs" className="relative py-16 md:py-24 border-t border-white/[0.04] overflow-hidden cyber-section-visibility" aria-label="Cyberforage Labs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">

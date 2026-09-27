@@ -173,7 +173,7 @@ export const ContactSection: React.FC = () => {
   };
 
   return (
-    <section id="contact" className="relative py-14 sm:py-20 border-t border-white/[0.04]" aria-label="Open Source and Contact">
+    <section id="contact" className="relative py-14 sm:py-20 border-t border-white/[0.04] cyber-section-visibility" aria-label="Open Source and Contact">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         {/* Top Split Cards: Built in Public + Verified Identity */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">

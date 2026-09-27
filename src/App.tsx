@@ -17,12 +17,14 @@ import { BinaryHexInspectorModal } from './components/inspector/BinaryHexInspect
 import { ThreatIntelGraphModal } from './components/research/ThreatIntelGraphModal';
 import { MatrixBreachOverlay } from './components/easteregg/MatrixBreachOverlay';
 import { CyberAudioConsole } from './components/audio/CyberAudioConsole';
+import { CyberScrollHUD } from './components/navigation/CyberScrollHUD';
 import { SceneMode, Lab, SimulatedIncident } from './types';
 import { cyberSound } from './audio/cyberSoundEngine';
 import { Terminal, ShieldAlert, Cpu, Radio, Network } from 'lucide-react';
 
 export function App() {
   const [sceneMode, setSceneMode] = useState<SceneMode>('globe');
+  const [activeSection, setActiveSection] = useState('home');
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
   const [selectedLab, setSelectedLab] = useState<Lab | null>(null);
   const [attackTrigger, setAttackTrigger] = useState(0);
@@ -87,6 +89,45 @@ export function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Section Spy via IntersectionObserver for Smooth HUD and Navigation Sync
+  useEffect(() => {
+    const sectionIds = ['home', 'ecosystem', 'projects', 'labs', 'research', 'technologies', 'telemetry', 'contact'];
+    const elements = sectionIds
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+
+    if (elements.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntries = entries.filter((e) => e.isIntersecting);
+        if (visibleEntries.length > 0) {
+          visibleEntries.sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+          const topVisible = visibleEntries[0].target.id;
+          setActiveSection(topVisible);
+        }
+      },
+      {
+        rootMargin: '-15% 0px -35% 0px',
+        threshold: [0.1, 0.3, 0.6],
+      }
+    );
+
+    elements.forEach((el) => observer.observe(el));
+
+    const handleScroll = () => {
+      if (window.scrollY < 120) {
+        setActiveSection('home');
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, []);
 
   // Cleanup incident timers on unmount
@@ -208,6 +249,7 @@ export function App() {
         onOpenCtf={() => setIsCtfOpen(true)}
         onOpenAiScanner={() => setIsAiScannerOpen(true)}
         onOpenAudioConsole={() => setIsAudioConsoleOpen((prev) => !prev)}
+        activeSection={activeSection}
       />
 
       {/* Main Content Sections */}
@@ -258,6 +300,12 @@ export function App() {
 
       {/* Footer */}
       <Footer />
+
+      {/* Tactical Floating Scroll-To-Top and Desktop Quick-Scroll Rail */}
+      <CyberScrollHUD
+        activeSection={activeSection}
+        onSectionChange={(id) => setActiveSection(id)}
+      />
 
       {/* Floating Tactical Terminal Button (Quick Launch) */}
       <button

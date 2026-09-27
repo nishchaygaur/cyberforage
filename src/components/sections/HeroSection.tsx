@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowRight, Terminal, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Terminal, ShieldAlert, CheckCircle2, ChevronDown } from 'lucide-react';
 import { CyberScene } from '../3d/CyberScene';
 import { CyberHUDControls } from '../3d/CyberHUDControls';
 import { SceneMode, SimulatedIncident } from '../../types';
@@ -294,10 +294,25 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               />
             </div>
             <p className="mt-2 text-[11px] font-mono text-slate-400 text-center">
-              Drag to orbit 360° | Scroll to zoom | Click nodes to inspect
+              Drag to orbit 360° | Ctrl + Scroll to zoom | Click nodes to inspect
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Cyber Scroll-Down Indicator */}
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center">
+        <a
+          href="#ecosystem"
+          onClick={() => cyberSound.playBlip()}
+          className="group flex flex-col items-center gap-1 text-slate-400 hover:text-[#00F0C0] transition-colors cursor-pointer py-1 px-3 rounded-full hover:bg-white/[0.04]"
+          aria-label="Scroll to explore ecosystem"
+        >
+          <span className="text-[10px] font-mono tracking-[0.2em] uppercase opacity-70 group-hover:opacity-100 transition-opacity">
+            Scroll to explore
+          </span>
+          <ChevronDown className="w-4 h-4 text-[#00F0C0] animate-bounce" />
+        </a>
       </div>
     </section>
   );

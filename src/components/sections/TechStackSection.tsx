@@ -52,7 +52,7 @@ export const TechStackSection: React.FC<TechStackSectionProps> = ({ onFocusMesh3
   };
 
   return (
-    <section id="technologies" className="relative py-16 md:py-24 border-t border-white/[0.04]" aria-label="Technologies">
+    <section id="technologies" className="relative py-16 md:py-24 border-t border-white/[0.04] cyber-section-visibility" aria-label="Technologies">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         {/* Section Header */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">

@@ -24,6 +24,13 @@
     --cursor-grab: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpolygon points='12,9 15,12 12,15 9,12' fill='%2300F0C0' stroke='%23040812' stroke-width='1'/%3E%3Cpath d='M12 2L16 6H8L12 2Z' fill='%2300F0C0'/%3E%3Cpath d='M12 22L16 18H8L12 22Z' fill='%2300F0C0'/%3E%3Cpath d='M2 12L6 8V16L2 12Z' fill='%2300F0C0'/%3E%3Cpath d='M22 12L18 8V16L22 12Z' fill='%2300F0C0'/%3E%3C/svg%3E") 12 12, grab;
   }
 
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5.5rem;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 240, 192, 0.4) #040812;
+  }
+
   html, body {
     background-color: #040812;
     color: #f1f5f9;
@@ -33,6 +40,9 @@
     padding: 0;
     width: 100%;
     cursor: var(--cursor-default);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   a, button, [role="button"], input[type="submit"], input[type="button"], .cursor-pointer {
@@ -45,6 +55,7 @@
 
   canvas {
     cursor: var(--cursor-grab) !important;
+    touch-action: pan-y;
   }
 
   #root {
@@ -57,22 +68,34 @@
   }
 }
 
+/* Modern Web Best Practice: Defer off-screen rendering for 120 FPS buttery-smooth scrolling */
+.cyber-section-visibility {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 750px;
+}
+
 /* Custom Cyber Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 ::-webkit-scrollbar-track {
   background: #040812;
+  border-left: 1px solid rgba(255, 255, 255, 0.03);
 }
 ::-webkit-scrollbar-thumb {
-  background: #0f2744;
-  border-radius: 3px;
-  border: 1px solid rgba(0, 240, 192, 0.2);
+  background: #0c2038;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 240, 192, 0.3);
+  transition: all 0.2s ease;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #00F0C0;
-  box-shadow: 0 0 10px #00F0C0;
+  box-shadow: 0 0 12px #00F0C0;
+}
+::-webkit-scrollbar-thumb:active {
+  background: #00E5BE;
+  box-shadow: 0 0 18px #00F0C0, 0 0 30px rgba(0, 240, 192, 0.6);
 }
 
 /* Cyber Glow Animations & Utilities */

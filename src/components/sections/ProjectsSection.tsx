@@ -20,7 +20,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ onInspect3D, o
     : projectsData.filter((p) => p.category === activeFilter);
 
   return (
-    <section id="projects" className="relative py-16 md:py-24 border-t border-white/[0.04]" aria-label="Featured Projects">
+    <section id="projects" className="relative py-16 md:py-24 border-t border-white/[0.04] cyber-section-visibility" aria-label="Featured Projects">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header & Filter Controls */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">

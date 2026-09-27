@@ -148,7 +148,10 @@ export const CyberScene: React.FC<CyberSceneProps> = ({
 
     const onWheel = (e: WheelEvent) => {
       if (!interactive) return;
-      cameraTargetDistance.current = Math.max(4.5, Math.min(14.0, cameraTargetDistance.current + e.deltaY * 0.005));
+      // Only zoom 3D scene when Ctrl/Meta is held or in 'free' mode, allowing normal frictionless page scrolling
+      if (e.ctrlKey || e.metaKey || mode === 'free') {
+        cameraTargetDistance.current = Math.max(4.5, Math.min(14.0, cameraTargetDistance.current + e.deltaY * 0.005));
+      }
     };
 
     // Touch Support
@@ -163,8 +166,12 @@ export const CyberScene: React.FC<CyberSceneProps> = ({
       const deltaX = e.touches[0].clientX - previousMousePosition.current.x;
       const deltaY = e.touches[0].clientY - previousMousePosition.current.y;
 
-      cameraRotation.current.y += deltaX * 0.006;
-      cameraRotation.current.x = Math.max(-0.9, Math.min(0.9, cameraRotation.current.x + deltaY * 0.005));
+      // If user is predominantly swiping horizontally, rotate 3D camera
+      if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        cameraRotation.current.y += deltaX * 0.006;
+      } else {
+        cameraRotation.current.x = Math.max(-0.9, Math.min(0.9, cameraRotation.current.x + deltaY * 0.005));
+      }
 
       previousMousePosition.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     };

@@ -6,7 +6,7 @@ import { Cyber3DCard } from '../ui/Cyber3DCard';
 
 export const EcosystemSection: React.FC = () => {
   return (
-    <section id="ecosystem" className="relative py-16 md:py-24 border-t border-white/[0.04]" aria-label="The Cyberforage Ecosystem">
+    <section id="ecosystem" className="relative py-16 md:py-24 border-t border-white/[0.04] cyber-section-visibility" aria-label="The Cyberforage Ecosystem">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           {/* Left Description */}

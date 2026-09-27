@@ -33,7 +33,7 @@ export const ResearchSection: React.FC<ResearchSectionProps> = ({ onOpenThreatGr
   };
 
   return (
-    <section id="research" className="relative py-16 md:py-24 border-t border-white/[0.04]" aria-label="What We Explore">
+    <section id="research" className="relative py-16 md:py-24 border-t border-white/[0.04] cyber-section-visibility" aria-label="What We Explore">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-20">
         {/* Part 1: Exploration Domains */}
         <div>

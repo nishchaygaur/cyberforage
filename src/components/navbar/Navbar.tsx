@@ -21,12 +21,17 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isAudioMuted, setIsAudioMuted] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (docHeight > 0) {
+        setScrollProgress((window.scrollY / docHeight) * 100);
+      }
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -46,7 +51,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { label: 'Labs', href: '#labs' },
     { label: 'Research', href: '#research' },
     { label: 'Tools', href: '#technologies' },
-    { label: 'Architecture', href: '#architecture' },
+    { label: 'Telemetry', href: '#telemetry' },
     { label: 'Contact', href: '#contact' },
   ];
 
@@ -272,6 +277,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
       )}
+
+      {/* Real-Time Cyber Scroll Progress Line */}
+      <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/[0.04] pointer-events-none overflow-hidden">
+        <div
+          className="h-full bg-gradient-to-r from-[#00F0C0] via-[#38BDF8] to-[#A855F7] transition-all duration-75 ease-out shadow-[0_0_10px_#00F0C0]"
+          style={{ width: `${scrollProgress}%` }}
+        />
+      </div>
     </header>
   );
 };
