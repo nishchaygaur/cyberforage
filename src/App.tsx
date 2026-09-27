@@ -18,6 +18,7 @@ import { ThreatIntelGraphModal } from './components/research/ThreatIntelGraphMod
 import { MatrixBreachOverlay } from './components/easteregg/MatrixBreachOverlay';
 import { CyberAudioConsole } from './components/audio/CyberAudioConsole';
 import { CyberScrollHUD } from './components/navigation/CyberScrollHUD';
+import { LiveNmapModal } from './components/nmap/LiveNmapModal';
 import { SceneMode, Lab, SimulatedIncident } from './types';
 import { cyberSound } from './audio/cyberSoundEngine';
 import { Terminal, ShieldAlert, Cpu, Radio, Network } from 'lucide-react';
@@ -26,6 +27,8 @@ export function App() {
   const [sceneMode, setSceneMode] = useState<SceneMode>('globe');
   const [activeSection, setActiveSection] = useState('home');
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
+  const [isNmapOpen, setIsNmapOpen] = useState(false);
+  const [nmapTarget, setNmapTarget] = useState('192.168.1.1');
   const [selectedLab, setSelectedLab] = useState<Lab | null>(null);
   const [attackTrigger, setAttackTrigger] = useState(0);
   const [incident, setIncident] = useState<SimulatedIncident | null>(null);
@@ -62,6 +65,7 @@ export function App() {
         setIsThreatGraphOpen(false);
         setIsMatrixOpen(false);
         setIsAudioConsoleOpen(false);
+        setIsNmapOpen(false);
       }
 
       // Keyword Easter Egg Buffer ("matrix", "hack", "cyberforage")
@@ -248,6 +252,7 @@ export function App() {
         onOpenTerminal={() => setIsTerminalOpen(true)}
         onOpenCtf={() => setIsCtfOpen(true)}
         onOpenAiScanner={() => setIsAiScannerOpen(true)}
+        onOpenNmap={() => setIsNmapOpen(true)}
         onOpenAudioConsole={() => setIsAudioConsoleOpen((prev) => !prev)}
         activeSection={activeSection}
       />
@@ -263,6 +268,7 @@ export function App() {
           onSimulateAttack={handleSimulateAttack}
           incident={incident}
           onDismissIncident={handleDismissIncident}
+          onOpenNmap={() => setIsNmapOpen(true)}
         />
 
         {/* The Cyberforage Ecosystem (Security, AI, Automation) */}
@@ -339,6 +345,10 @@ export function App() {
         onOpenThreatGraph={() => setIsThreatGraphOpen(true)}
         onOpenMatrix={() => setIsMatrixOpen(true)}
         onOpenAudioConsole={() => setIsAudioConsoleOpen(true)}
+        onOpenNmap={(target) => {
+          if (target) setNmapTarget(target);
+          setIsNmapOpen(true);
+        }}
       />
 
       {/* Lab Adversary Emulation Sandbox Modal */}
@@ -382,6 +392,13 @@ export function App() {
       <CyberAudioConsole
         isOpen={isAudioConsoleOpen}
         onClose={() => setIsAudioConsoleOpen(false)}
+      />
+
+      {/* 7. Live Nmap Network Port Scanner & Vulnerability Engine Modal */}
+      <LiveNmapModal
+        isOpen={isNmapOpen}
+        onClose={() => setIsNmapOpen(false)}
+        initialTarget={nmapTarget}
       />
     </div>
   );

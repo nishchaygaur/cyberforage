@@ -23,6 +23,7 @@ interface CyberTerminalModalProps {
   onOpenThreatGraph?: () => void;
   onOpenMatrix?: () => void;
   onOpenAudioConsole?: () => void;
+  onOpenNmap?: (target?: string) => void;
 }
 
 export const CyberTerminalModal: React.FC<CyberTerminalModalProps> = ({
@@ -36,6 +37,7 @@ export const CyberTerminalModal: React.FC<CyberTerminalModalProps> = ({
   onOpenThreatGraph,
   onOpenMatrix,
   onOpenAudioConsole,
+  onOpenNmap,
 }) => {
   const [inputVal, setInputVal] = useState('');
   const [history, setHistory] = useState<TerminalLine[]>([
@@ -93,6 +95,7 @@ export const CyberTerminalModal: React.FC<CyberTerminalModalProps> = ({
           type: 'output',
           text: `AVAILABLE CYBER COMMANDS:
   help                    - Display tactical command reference
+  nmap [target]           - Launch Live Nmap Network Port & Vulnerability Scanner
   ctf                     - Launch 60-Second SOC Defender CTF Challenge
   sentinel / ai           - Open Sentinel Core AI Threat Triage Assistant
   inspect / binary        - Launch Interactive Binary & Hex Disassembler
@@ -110,6 +113,18 @@ export const CyberTerminalModal: React.FC<CyberTerminalModalProps> = ({
   contact                 - Open encrypted transmission coordinates
   clear                   - Purge console buffer
   exit                    - Terminate terminal console session`
+        });
+        break;
+
+      case 'nmap':
+      case 'portscan':
+        cyberSound.playLaser();
+        const nmapTarget = args[1] || '192.168.1.1';
+        if (onOpenNmap) onOpenNmap(nmapTarget);
+        newLines.push({
+          id: `out-${Date.now()}`,
+          type: 'success',
+          text: `[NMAP v7.94] Initiating stealth port discovery & NSE audit on ${nmapTarget}... Opening Live Nmap Engine.`
         });
         break;
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Terminal, Volume2, VolumeX, Menu, X, ArrowUpRight } from 'lucide-react';
+import { Terminal, Volume2, VolumeX, Menu, X, ArrowUpRight, Network } from 'lucide-react';
 import { GithubIcon } from '../icons/BrandIcons';
 import { cyberSound } from '../../audio/cyberSoundEngine';
 
@@ -7,6 +7,7 @@ interface NavbarProps {
   onOpenTerminal: () => void;
   onOpenCtf?: () => void;
   onOpenAiScanner?: () => void;
+  onOpenNmap?: () => void;
   onOpenAudioConsole?: () => void;
   activeSection?: string;
 }
@@ -15,6 +16,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenTerminal,
   onOpenCtf,
   onOpenAiScanner,
+  onOpenNmap,
   onOpenAudioConsole,
   activeSection = 'home',
 }) => {
@@ -182,6 +184,22 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
+          {/* Live Nmap Network Scanner Button */}
+          {onOpenNmap && (
+            <button
+              onClick={() => {
+                cyberSound.playClick();
+                onOpenNmap();
+              }}
+              onMouseEnter={() => cyberSound.playBlip()}
+              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#10B981]/10 hover:bg-[#10B981]/20 border border-[#10B981]/40 text-emerald-300 hover:text-white text-xs font-mono transition-all shadow-sm cursor-pointer"
+              title="Launch Live Nmap Network Port Scanner"
+            >
+              <Network className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Live Nmap</span>
+            </button>
+          )}
+
           {/* Cyber Terminal Button */}
           <button
             onClick={() => {
@@ -264,6 +282,18 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>Request n8n Access</span>
               <ArrowUpRight className="w-4 h-4" />
             </a>
+            {onOpenNmap && (
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onOpenNmap();
+                }}
+                className="flex items-center justify-center gap-2 py-2 rounded-lg bg-[#10B981]/10 border border-[#10B981]/40 text-xs font-mono text-emerald-300"
+              >
+                <Network className="w-4 h-4 text-emerald-400" />
+                <span>Launch Live Nmap Scanner</span>
+              </button>
+            )}
             <button
               onClick={() => {
                 setMobileMenuOpen(false);

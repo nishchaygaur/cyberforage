@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowRight, Terminal, ShieldAlert, CheckCircle2, ChevronDown } from 'lucide-react';
+import { ArrowRight, Terminal, ShieldAlert, CheckCircle2, ChevronDown, Network } from 'lucide-react';
 import { CyberScene } from '../3d/CyberScene';
 import { CyberHUDControls } from '../3d/CyberHUDControls';
 import { SceneMode, SimulatedIncident } from '../../types';
@@ -14,6 +14,7 @@ interface HeroSectionProps {
   onSimulateAttack: () => void;
   incident?: SimulatedIncident | null;
   onDismissIncident?: () => void;
+  onOpenNmap?: () => void;
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
@@ -24,6 +25,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onSimulateAttack,
   incident,
   onDismissIncident,
+  onOpenNmap,
 }) => {
   const [selectedNode, setSelectedNode] = useState<OrbitalNodeData | null>(null);
 
@@ -97,6 +99,20 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <Terminal className="w-4 h-4" />
                 <span className="hidden sm:inline">CLI Console</span>
               </button>
+
+              {onOpenNmap && (
+                <button
+                  onClick={() => {
+                    cyberSound.playClick();
+                    onOpenNmap();
+                  }}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-[#10B981]/10 hover:bg-[#10B981]/25 text-emerald-300 border border-[#10B981]/40 text-sm font-mono transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
+                  title="Launch Live Nmap Network Port Scanner"
+                >
+                  <Network className="w-4 h-4 text-emerald-400" />
+                  <span>Live Nmap</span>
+                </button>
+              )}
             </div>
 
             {/* Live Automated Incident Response HUD Banner */}

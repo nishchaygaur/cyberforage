@@ -294,6 +294,21 @@ class CyberSoundEngine {
       // Ignored
     }
   }
+
+  public speak(text: string) {
+    if (this.isMuted || !this.voiceEnabled) return;
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.1;
+        utterance.pitch = 0.9;
+        window.speechSynthesis.speak(utterance);
+      } catch {
+        // Ignored
+      }
+    }
+  }
 }
 
 export const cyberSound = new CyberSoundEngine();
