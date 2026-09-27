@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
-import { Shield, Crosshair, FlaskConical, Cpu, Cloud, Settings, ArrowRight, Clock } from 'lucide-react';
+import { Shield, Crosshair, FlaskConical, Cpu, Cloud, Settings, ArrowRight, Clock, Network } from 'lucide-react';
 import { researchDomains, researchArticles } from '../../data/researchData';
 import { ResearchArticle } from '../../types';
 import { ArticleReaderModal } from '../modals/ArticleReaderModal';
 import { cyberSound } from '../../audio/cyberSoundEngine';
 import { Cyber3DCard } from '../ui/Cyber3DCard';
 
-export const ResearchSection: React.FC = () => {
+interface ResearchSectionProps {
+  onOpenThreatGraph?: () => void;
+}
+
+export const ResearchSection: React.FC<ResearchSectionProps> = ({ onOpenThreatGraph }) => {
   const [selectedArticle, setSelectedArticle] = useState<ResearchArticle | null>(null);
 
   const getDomainIcon = (iconName: string, color: string) => {
@@ -33,7 +37,7 @@ export const ResearchSection: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-20">
         {/* Part 1: Exploration Domains */}
         <div>
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 sm:mb-12">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 sm:mb-12 gap-4">
             <div>
               <span className="text-xs font-mono tracking-[0.2em] text-[#00E5BE] font-medium uppercase mb-2 block">
                 WHAT WE EXPLORE
@@ -42,8 +46,22 @@ export const ResearchSection: React.FC = () => {
                 Research. Build. Innovate.
               </h2>
             </div>
-            <div className="mt-3 sm:mt-0 text-xs font-mono text-slate-400">
-              6 Core Exploration Disciplines
+            <div className="flex items-center gap-3">
+              {onOpenThreatGraph && (
+                <button
+                  onClick={() => {
+                    cyberSound.playClick();
+                    onOpenThreatGraph();
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#00F0C0]/10 hover:bg-[#00F0C0]/20 border border-[#00F0C0]/40 text-[#00F0C0] text-xs font-mono font-semibold transition-all hover:shadow-[0_0_15px_rgba(0,240,192,0.25)]"
+                >
+                  <Network className="w-4 h-4" />
+                  <span>Threat Intel Graph</span>
+                </button>
+              )}
+              <div className="text-xs font-mono text-slate-400 hidden sm:block">
+                6 Core Exploration Disciplines
+              </div>
             </div>
           </div>
 

@@ -17,6 +17,12 @@ interface CyberTerminalModalProps {
   onClose: () => void;
   onModeChange: (mode: SceneMode) => void;
   onSimulateAttack: () => void;
+  onOpenCtf?: () => void;
+  onOpenAiScanner?: () => void;
+  onOpenBinaryInspector?: () => void;
+  onOpenThreatGraph?: () => void;
+  onOpenMatrix?: () => void;
+  onOpenAudioConsole?: () => void;
 }
 
 export const CyberTerminalModal: React.FC<CyberTerminalModalProps> = ({
@@ -24,6 +30,12 @@ export const CyberTerminalModal: React.FC<CyberTerminalModalProps> = ({
   onClose,
   onModeChange,
   onSimulateAttack,
+  onOpenCtf,
+  onOpenAiScanner,
+  onOpenBinaryInspector,
+  onOpenThreatGraph,
+  onOpenMatrix,
+  onOpenAudioConsole,
 }) => {
   const [inputVal, setInputVal] = useState('');
   const [history, setHistory] = useState<TerminalLine[]>([
@@ -81,6 +93,11 @@ export const CyberTerminalModal: React.FC<CyberTerminalModalProps> = ({
           type: 'output',
           text: `AVAILABLE CYBER COMMANDS:
   help                    - Display tactical command reference
+  ctf                     - Launch 60-Second SOC Defender CTF Challenge
+  sentinel / ai           - Open Sentinel Core AI Threat Triage Assistant
+  inspect / binary        - Launch Interactive Binary & Hex Disassembler
+  graph / apt             - Open MITRE ATT&CK Threat Intel Graph
+  matrix                  - Trigger Zero-Day Code Rain Breach Easter Egg
   status                  - Readout live threat telemetry & defense grid
   scan                    - Execute network & telemetry vulnerability audit
   projects                - List active engineering projects & repos
@@ -93,6 +110,61 @@ export const CyberTerminalModal: React.FC<CyberTerminalModalProps> = ({
   contact                 - Open encrypted transmission coordinates
   clear                   - Purge console buffer
   exit                    - Terminate terminal console session`
+        });
+        break;
+
+      case 'ctf':
+        cyberSound.playAlert();
+        if (onOpenCtf) onOpenCtf();
+        newLines.push({
+          id: `out-${Date.now()}`,
+          type: 'success',
+          text: '[CTF ARENA] Launching 60-second SOC Defender Incident Response challenge!'
+        });
+        break;
+
+      case 'sentinel':
+      case 'ai':
+        cyberSound.playLaser();
+        if (onOpenAiScanner) onOpenAiScanner();
+        newLines.push({
+          id: `out-${Date.now()}`,
+          type: 'success',
+          text: '[SENTINEL CORE] Opening AI Threat Triage & CVE attribution console...'
+        });
+        break;
+
+      case 'inspect':
+      case 'binary':
+      case 'disasm':
+        cyberSound.playClick();
+        if (onOpenBinaryInspector) onOpenBinaryInspector();
+        newLines.push({
+          id: `out-${Date.now()}`,
+          type: 'success',
+          text: '[INSPECTOR] Opening interactive x86_64 binary disassembler & hex viewer...'
+        });
+        break;
+
+      case 'graph':
+      case 'apt':
+        cyberSound.playClick();
+        if (onOpenThreatGraph) onOpenThreatGraph();
+        newLines.push({
+          id: `out-${Date.now()}`,
+          type: 'success',
+          text: '[THREAT GRAPH] Opening MITRE ATT&CK adversary dossier & kill-chain map...'
+        });
+        break;
+
+      case 'matrix':
+      case 'hack':
+        cyberSound.playAlert();
+        if (onOpenMatrix) onOpenMatrix();
+        newLines.push({
+          id: `out-${Date.now()}`,
+          type: 'error',
+          text: '[ROOT COMPROMISE] Initializing Zero-Day Matrix code rain & classified dossier!'
         });
         break;
 

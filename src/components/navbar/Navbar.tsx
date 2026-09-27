@@ -5,10 +5,19 @@ import { cyberSound } from '../../audio/cyberSoundEngine';
 
 interface NavbarProps {
   onOpenTerminal: () => void;
+  onOpenCtf?: () => void;
+  onOpenAiScanner?: () => void;
+  onOpenAudioConsole?: () => void;
   activeSection?: string;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenTerminal, activeSection = 'home' }) => {
+export const Navbar: React.FC<NavbarProps> = ({
+  onOpenTerminal,
+  onOpenCtf,
+  onOpenAiScanner,
+  onOpenAudioConsole,
+  activeSection = 'home',
+}) => {
   const [isAudioMuted, setIsAudioMuted] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -22,8 +31,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTerminal, activeSection = 
   }, []);
 
   const handleAudioToggle = () => {
-    const muted = cyberSound.toggleMute();
-    setIsAudioMuted(muted);
+    if (onOpenAudioConsole) {
+      onOpenAudioConsole();
+    } else {
+      const muted = cyberSound.toggleMute();
+      setIsAudioMuted(muted);
+    }
   };
 
   const navLinks = [
@@ -131,6 +144,38 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTerminal, activeSection = 
             <span>Request n8n</span>
             <ArrowUpRight className="w-3.5 h-3.5 text-[#00E5BE]" />
           </a>
+
+          {/* CTF Challenge Button */}
+          {onOpenCtf && (
+            <button
+              onClick={() => {
+                cyberSound.playClick();
+                onOpenCtf();
+              }}
+              onMouseEnter={() => cyberSound.playBlip()}
+              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/40 text-rose-300 hover:text-white text-xs font-mono transition-all shadow-sm"
+              title="Launch SOC Defender CTF Mini-Challenge"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+              <span>CTF Arena</span>
+            </button>
+          )}
+
+          {/* AI Threat Scanner Button */}
+          {onOpenAiScanner && (
+            <button
+              onClick={() => {
+                cyberSound.playClick();
+                onOpenAiScanner();
+              }}
+              onMouseEnter={() => cyberSound.playBlip()}
+              className="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#38BDF8]/10 hover:bg-[#38BDF8]/20 border border-[#38BDF8]/40 text-sky-300 hover:text-white text-xs font-mono transition-all shadow-sm"
+              title="Launch Sentinel AI Threat Triage"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-[#38BDF8]" />
+              <span>Sentinel AI</span>
+            </button>
+          )}
 
           {/* Cyber Terminal Button */}
           <button

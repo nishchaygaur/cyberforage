@@ -83,20 +83,35 @@ export class CyberGlobeController {
     originalColor: number;
   }[] = [];
   private lastAttackTime: number = 0;
+  private satellitesGroup: THREE.Group;
+  private radarSweepMesh: THREE.Mesh | null = null;
+  private radarBeamLine: THREE.Line | null = null;
+  private satelliteMeshes: {
+    mesh: THREE.Mesh;
+    name: string;
+    radius: number;
+    speed: number;
+    angle: number;
+    telemetry: string;
+  }[] = [];
 
   constructor() {
     this.group = new THREE.Group();
     this.nodesGroup = new THREE.Group();
     this.arcsGroup = new THREE.Group();
+    this.satellitesGroup = new THREE.Group();
 
     this.createCoreGlobe();
     this.createContinentMatrix();
     this.createOrbitRings();
     this.createDefenseShield();
     this.createOrbitalNodes();
+    this.createRadarSweep();
+    this.createOrbitingSatellites();
 
     this.group.add(this.nodesGroup);
     this.group.add(this.arcsGroup);
+    this.group.add(this.satellitesGroup);
 
     // Initial attack simulation arcs
     this.triggerAttackSimulation();
@@ -308,6 +323,86 @@ export class CyberGlobeController {
     });
   }
 
+  private createRadarSweep() {
+    // 60-degree radar fan sector
+    const sweepGeo = new THREE.CircleGeometry(3.4, 32, 0, Math.PI / 3);
+    const sweepMat = new THREE.MeshBasicMaterial({
+      color: 0x00f0c0,
+      transparent: true,
+      opacity: 0.12,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    this.radarSweepMesh = new THREE.Mesh(sweepGeo, sweepMat);
+    this.radarSweepMesh.rotation.x = Math.PI / 2; // Flat on equator XZ plane
+    this.group.add(this.radarSweepMesh);
+
+    // Leading edge tactical beam line
+    const beamGeo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(3.4, 0, 0),
+    ]);
+    const beamMat = new THREE.LineBasicMaterial({
+      color: 0x00f0c0,
+      transparent: true,
+      opacity: 0.7,
+      blending: THREE.AdditiveBlending,
+    });
+    this.radarBeamLine = new THREE.Line(beamGeo, beamMat);
+    this.group.add(this.radarBeamLine);
+  }
+
+  private createOrbitingSatellites() {
+    const satellites = [
+      { name: 'Tokyo Sentinel-Sat 1', radius: 3.4, speed: 0.008, angle: 0, color: 0x00f0c0, telemetry: 'SIGINT Intercept: 14.250 GHz | 0xDEADBEEF encrypted telemetry frame ACK' },
+      { name: 'Frankfurt Aegis-Sat 2', radius: 3.6, speed: -0.006, angle: Math.PI * 0.7, color: 0xa855f7, telemetry: 'Zero-Trust Key Exchange: Quantum entropy seed 0x7A9B valid' },
+      { name: 'Ashburn Relay-Sat 3', radius: 3.5, speed: 0.005, angle: Math.PI * 1.4, color: 0x38bdf8, telemetry: 'BGP Space-Relay: 42 autonomous systems synced, 0 route leaks' },
+    ];
+
+    satellites.forEach((sat) => {
+      const satGroup = new THREE.Group();
+
+      // Satellite core bus (cube)
+      const busGeo = new THREE.BoxGeometry(0.12, 0.12, 0.16);
+      const busMat = new THREE.MeshBasicMaterial({ color: sat.color });
+      const busMesh = new THREE.Mesh(busGeo, busMat);
+      satGroup.add(busMesh);
+
+      // Solar arrays (wings)
+      const solarGeo = new THREE.PlaneGeometry(0.3, 0.1);
+      const solarMat = new THREE.MeshBasicMaterial({
+        color: 0x38bdf8,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.85,
+      });
+      const wing1 = new THREE.Mesh(solarGeo, solarMat);
+      wing1.position.set(0.2, 0, 0);
+      const wing2 = new THREE.Mesh(solarGeo, solarMat);
+      wing2.position.set(-0.2, 0, 0);
+      satGroup.add(wing1);
+      satGroup.add(wing2);
+
+      busMesh.userData = {
+        isSatellite: true,
+        name: sat.name,
+        telemetry: sat.telemetry,
+        radius: sat.radius,
+      };
+
+      this.satellitesGroup.add(satGroup);
+      this.satelliteMeshes.push({
+        mesh: busMesh,
+        name: sat.name,
+        radius: sat.radius,
+        speed: sat.speed,
+        angle: sat.angle,
+        telemetry: sat.telemetry,
+      });
+    });
+  }
+
   public triggerAttackSimulation() {
     // Generate attack bezier curves from external vector into defense nodes
     const colors = [0xf43f5e, 0xa855f7, 0x00f0c0, 0x38bdf8];
@@ -493,10 +588,36 @@ export class CyberGlobeController {
         this.activeHostileArcs.splice(i, 1);
       }
     }
+
+    // Radar sweep rotation
+    if (this.radarSweepMesh) {
+      this.radarSweepMesh.rotation.z -= 0.02;
+    }
+    if (this.radarBeamLine) {
+      this.radarBeamLine.rotation.y += 0.02;
+    }
+
+    // Animate orbiting satellites
+    this.satelliteMeshes.forEach((sat) => {
+      sat.angle += sat.speed;
+      const parent = sat.mesh.parent;
+      if (parent) {
+        parent.position.set(
+          Math.cos(sat.angle) * sat.radius,
+          Math.sin(sat.angle * 1.5) * 0.45,
+          Math.sin(sat.angle) * sat.radius
+        );
+        parent.rotation.y += 0.015;
+      }
+    });
   }
 
   public getNodeMeshes(): THREE.Mesh[] {
     return this.nodeMeshes.map(n => n.mesh);
+  }
+
+  public getSatelliteMeshes(): THREE.Mesh[] {
+    return this.satelliteMeshes.map(s => s.mesh);
   }
 
   public dispose() {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileSearch, Box, ShieldCheck, ExternalLink, BookOpen, Layers } from 'lucide-react';
+import { FileSearch, Box, ShieldCheck, ExternalLink, BookOpen, Layers, Binary } from 'lucide-react';
 import { projectsData } from '../../data/projectsData';
 import { Project } from '../../types';
 import { cyberSound } from '../../audio/cyberSoundEngine';
@@ -7,9 +7,10 @@ import { Cyber3DCard } from '../ui/Cyber3DCard';
 
 interface ProjectsSectionProps {
   onInspect3D?: (project: Project) => void;
+  onInspectBinary?: (binaryName: string) => void;
 }
 
-export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ onInspect3D }) => {
+export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ onInspect3D, onInspectBinary }) => {
   const [activeFilter, setActiveFilter] = useState<string>('All');
 
   const categories = ['All', 'Auditing', 'Attack Simulation', 'Malware Analysis', 'SOC Platform'];
@@ -207,11 +208,25 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ onInspect3D })
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={() => cyberSound.playClick()}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#050E1A] hover:bg-white/10 border border-white/15 hover:border-[#00F0C0]/50 text-xs font-mono font-medium text-slate-300 hover:text-[#00F0C0] transition-all cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-[#050E1A] hover:bg-white/10 border border-white/15 hover:border-[#00F0C0]/50 text-xs font-mono font-medium text-slate-300 hover:text-[#00F0C0] transition-all cursor-pointer"
                     >
                       <BookOpen className="w-3.5 h-3.5 text-[#00E5BE]" />
                       <span>Docs</span>
                     </a>
+                  )}
+
+                  {onInspectBinary && (
+                    <button
+                      onClick={() => {
+                        cyberSound.playClick();
+                        onInspectBinary(`${project.slug}_payload.elf`);
+                      }}
+                      className="inline-flex items-center gap-1 px-3 py-2 rounded-full bg-[#00F0C0]/10 hover:bg-[#00F0C0]/20 border border-[#00F0C0]/40 text-xs font-mono font-semibold text-[#00F0C0] transition-all cursor-pointer hover:shadow-[0_0_10px_rgba(0,240,192,0.3)]"
+                      title="Inspect x86_64 Opcodes & Hex Dump"
+                    >
+                      <Binary className="w-3.5 h-3.5" />
+                      <span>Inspect Binary</span>
+                    </button>
                   )}
 
                   {onInspect3D && (

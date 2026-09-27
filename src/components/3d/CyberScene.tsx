@@ -191,6 +191,18 @@ export const CyberScene: React.FC<CyberSceneProps> = ({
           if (onSelectNode) onSelectNode(clickedNode);
           return;
         }
+
+        const satMeshes = globe.getSatelliteMeshes();
+        const satIntersects = raycaster.intersectObjects(satMeshes);
+        if (satIntersects.length > 0) {
+          const satData = satIntersects[0].object.userData;
+          cyberSound.playRadioStatic();
+          cyberSound.speakVoice(`Orbital intercept: ${satData.name}`);
+          if (onAttackIntercepted) {
+            onAttackIntercepted(`[SAT-SIGINT] ${satData.name} (${satData.radius}AU): ${satData.telemetry}`);
+          }
+          return;
+        }
       }
 
       if (rack.group.visible) {

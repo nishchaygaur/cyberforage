@@ -11,9 +11,15 @@ import { ContactSection } from './components/sections/ContactSection';
 import { Footer } from './components/footer/Footer';
 import { CyberTerminalModal } from './components/terminal/CyberTerminalModal';
 import { LabSimulationModal } from './components/modals/LabSimulationModal';
+import { SOCDefenderModal } from './components/ctf/SOCDefenderModal';
+import { SentinelThreatScannerModal } from './components/ai/SentinelThreatScannerModal';
+import { BinaryHexInspectorModal } from './components/inspector/BinaryHexInspectorModal';
+import { ThreatIntelGraphModal } from './components/research/ThreatIntelGraphModal';
+import { MatrixBreachOverlay } from './components/easteregg/MatrixBreachOverlay';
+import { CyberAudioConsole } from './components/audio/CyberAudioConsole';
 import { SceneMode, Lab, SimulatedIncident } from './types';
 import { cyberSound } from './audio/cyberSoundEngine';
-import { Terminal } from 'lucide-react';
+import { Terminal, ShieldAlert, Cpu, Radio, Network } from 'lucide-react';
 
 export function App() {
   const [sceneMode, setSceneMode] = useState<SceneMode>('globe');
@@ -23,9 +29,24 @@ export function App() {
   const [incident, setIncident] = useState<SimulatedIncident | null>(null);
   const incidentTimersRef = useRef<number[]>([]);
 
-  // Global Keyboard Shortcuts (Ctrl+K or `~` to toggle tactical terminal)
+  // 8 High-Impact Feature Modals
+  const [isCtfOpen, setIsCtfOpen] = useState(false);
+  const [isAiScannerOpen, setIsAiScannerOpen] = useState(false);
+  const [isBinaryInspectorOpen, setIsBinaryInspectorOpen] = useState(false);
+  const [selectedBinary, setSelectedBinary] = useState('libmalware_loader.elf');
+  const [isThreatGraphOpen, setIsThreatGraphOpen] = useState(false);
+  const [isMatrixOpen, setIsMatrixOpen] = useState(false);
+  const [isAudioConsoleOpen, setIsAudioConsoleOpen] = useState(false);
+
+  // Easter Egg tracking buffers (Matrix keywords and Konami code)
+  const keyBufferRef = useRef('');
+  const konamiIndexRef = useRef(0);
+  const konamiSequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+
+  // Global Keyboard Shortcuts (Ctrl+K or `~` to toggle tactical terminal, and secret easter eggs)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Tactical Terminal hotkeys
       if ((e.ctrlKey && e.key === 'k') || e.key === '`') {
         e.preventDefault();
         cyberSound.playClick();
@@ -33,8 +54,37 @@ export function App() {
       } else if (e.key === 'Escape') {
         setIsTerminalOpen(false);
         setSelectedLab(null);
+        setIsCtfOpen(false);
+        setIsAiScannerOpen(false);
+        setIsBinaryInspectorOpen(false);
+        setIsThreatGraphOpen(false);
+        setIsMatrixOpen(false);
+        setIsAudioConsoleOpen(false);
+      }
+
+      // Keyword Easter Egg Buffer ("matrix", "hack", "cyberforage")
+      keyBufferRef.current = (keyBufferRef.current + e.key.toLowerCase()).slice(-15);
+      if (
+        keyBufferRef.current.includes('matrix') ||
+        keyBufferRef.current.includes('hack') ||
+        keyBufferRef.current.includes('cyberforage')
+      ) {
+        setIsMatrixOpen(true);
+        keyBufferRef.current = '';
+      }
+
+      // Konami Code Tracker
+      if (e.key === konamiSequence[konamiIndexRef.current]) {
+        konamiIndexRef.current++;
+        if (konamiIndexRef.current === konamiSequence.length) {
+          setIsMatrixOpen(true);
+          konamiIndexRef.current = 0;
+        }
+      } else {
+        konamiIndexRef.current = 0;
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
@@ -153,11 +203,16 @@ export function App() {
       <div className="fixed inset-0 cyber-grid-bg opacity-30 pointer-events-none" />
 
       {/* Top Header Navigation */}
-      <Navbar onOpenTerminal={() => setIsTerminalOpen(true)} />
+      <Navbar
+        onOpenTerminal={() => setIsTerminalOpen(true)}
+        onOpenCtf={() => setIsCtfOpen(true)}
+        onOpenAiScanner={() => setIsAiScannerOpen(true)}
+        onOpenAudioConsole={() => setIsAudioConsoleOpen((prev) => !prev)}
+      />
 
       {/* Main Content Sections */}
       <main className="flex-1 flex flex-col">
-        {/* Hero Section with 3D Cyber Defense Globe */}
+        {/* Hero Section with 3D Cyber Defense Globe & Satellite Intercepts */}
         <HeroSection
           onOpenTerminal={() => setIsTerminalOpen(true)}
           sceneMode={sceneMode}
@@ -171,8 +226,13 @@ export function App() {
         {/* The Cyberforage Ecosystem (Security, AI, Automation) */}
         <EcosystemSection />
 
-        {/* Featured Projects (Audit Platform, CyberForge, PDF Analyzer, SentinelX) */}
-        <ProjectsSection />
+        {/* Featured Projects with Binary Hex Inspector Integration */}
+        <ProjectsSection
+          onInspectBinary={(binName) => {
+            setSelectedBinary(binName);
+            setIsBinaryInspectorOpen(true);
+          }}
+        />
 
         {/* Cyberforage Labs (5 interactive simulation testbeds) */}
         <LabsSection
@@ -180,13 +240,13 @@ export function App() {
           onFocusBlade3D={handleFocusBlade3D}
         />
 
-        {/* Research Disciplines & Published Insights */}
-        <ResearchSection />
+        {/* Research Disciplines & MITRE ATT&CK Threat Intel Graph */}
+        <ResearchSection onOpenThreatGraph={() => setIsThreatGraphOpen(true)} />
 
         {/* Tech Stack & Interconnected Security Mesh */}
         <TechStackSection onFocusMesh3D={handleFocusMesh3D} />
 
-        {/* Real-Time Defense Telemetry HUD */}
+        {/* Real-Time Defense Telemetry HUD with Wireshark Live Packet Sniffer */}
         <TelemetryHUDSection
           onSimulateAttack={handleSimulateAttack}
           incident={incident}
@@ -222,12 +282,58 @@ export function App() {
         onClose={() => setIsTerminalOpen(false)}
         onModeChange={(mode) => setSceneMode(mode)}
         onSimulateAttack={handleSimulateAttack}
+        onOpenCtf={() => setIsCtfOpen(true)}
+        onOpenAiScanner={() => setIsAiScannerOpen(true)}
+        onOpenBinaryInspector={() => {
+          setSelectedBinary('audit_engine.elf');
+          setIsBinaryInspectorOpen(true);
+        }}
+        onOpenThreatGraph={() => setIsThreatGraphOpen(true)}
+        onOpenMatrix={() => setIsMatrixOpen(true)}
+        onOpenAudioConsole={() => setIsAudioConsoleOpen(true)}
       />
 
       {/* Lab Adversary Emulation Sandbox Modal */}
       <LabSimulationModal
         lab={selectedLab}
         onClose={() => setSelectedLab(null)}
+      />
+
+      {/* 1. 60-Second SOC Defender CTF Challenge Modal */}
+      <SOCDefenderModal
+        isOpen={isCtfOpen}
+        onClose={() => setIsCtfOpen(false)}
+      />
+
+      {/* 2. Sentinel Core AI Threat Intelligence Triage Modal */}
+      <SentinelThreatScannerModal
+        isOpen={isAiScannerOpen}
+        onClose={() => setIsAiScannerOpen(false)}
+      />
+
+      {/* 3. Interactive Binary & Hex Opcode Inspector Modal */}
+      <BinaryHexInspectorModal
+        isOpen={isBinaryInspectorOpen}
+        onClose={() => setIsBinaryInspectorOpen(false)}
+        binaryName={selectedBinary}
+      />
+
+      {/* 4. Threat Intel Dossier & Attack Graph Modal */}
+      <ThreatIntelGraphModal
+        isOpen={isThreatGraphOpen}
+        onClose={() => setIsThreatGraphOpen(false)}
+      />
+
+      {/* 5. Matrix Code Rain Zero-Day Breach Easter Egg Overlay */}
+      <MatrixBreachOverlay
+        isOpen={isMatrixOpen}
+        onClose={() => setIsMatrixOpen(false)}
+      />
+
+      {/* 6. Cyber Soundscape & Audio Console HUD */}
+      <CyberAudioConsole
+        isOpen={isAudioConsoleOpen}
+        onClose={() => setIsAudioConsoleOpen(false)}
       />
     </div>
   );

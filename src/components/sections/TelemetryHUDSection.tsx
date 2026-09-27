@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ShieldCheck, ShieldAlert, Cpu, Radio, Zap, RotateCcw, CheckCircle2 } from 'lucide-react';
 import { cyberSound } from '../../audio/cyberSoundEngine';
 import { Cyber3DCard } from '../ui/Cyber3DCard';
+import { LivePacketSniffer } from '../telemetry/LivePacketSniffer';
 import { SimulatedIncident } from '../../types';
 
 interface TelemetryHUDSectionProps {
@@ -219,6 +220,11 @@ export const TelemetryHUDSection: React.FC<TelemetryHUDSectionProps> = ({
                 </div>
               </div>
             </Cyber3DCard>
+          </div>
+
+          {/* Promiscuous Live Network Packet Sniffer (Wireshark-style Dissector) */}
+          <div className="pt-6">
+            <LivePacketSniffer />
           </div>
 
           {/* Real-Time Event Feed */}
