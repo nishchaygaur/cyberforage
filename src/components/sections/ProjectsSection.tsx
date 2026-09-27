@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FileSearch, Box, ShieldCheck, ExternalLink, BookOpen, Layers, Binary } from 'lucide-react';
+import { GithubIcon } from '../icons/BrandIcons';
 import { Project } from '../../types';
 import { cyberSound } from '../../audio/cyberSoundEngine';
 import { Cyber3DCard } from '../ui/Cyber3DCard';
@@ -186,21 +187,35 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ onInspect3D, o
                   style={{ transform: 'translateZ(45px)' }}
                   className="pt-4 border-t border-white/[0.06] mt-auto flex flex-wrap items-center gap-3"
                 >
-                  {project.project_url && (
+                  {(project.demo_url || project.project_url) && (
                     <a
-                      href={project.project_url}
+                      href={project.demo_url || project.project_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={() => cyberSound.playClick()}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-mono font-bold text-slate-100 hover:text-white transition-all shadow-md group/btn cursor-pointer"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-mono font-bold text-slate-100 hover:text-white transition-all shadow-md group/btn cursor-pointer hover:scale-105 active:scale-95"
                       style={{
                         backgroundColor: `${accentColor}18`,
                         borderColor: `${accentColor}70`,
                         borderWidth: 1,
                       }}
                     >
-                      <span>View Live</span>
+                      <span>Live Demo</span>
                       <ExternalLink className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-0.5" style={{ color: accentColor }} />
+                    </a>
+                  )}
+
+                  {project.github_url && (
+                    <a
+                      href={project.github_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => cyberSound.playClick()}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-[#050E1A] hover:bg-white/10 border border-white/15 hover:border-[#00F0C0]/50 text-xs font-mono font-medium text-slate-300 hover:text-[#00F0C0] transition-all cursor-pointer hover:scale-105 active:scale-95"
+                      title="View GitHub Repository"
+                    >
+                      <GithubIcon className="w-3.5 h-3.5" />
+                      <span>Repo</span>
                     </a>
                   )}
 

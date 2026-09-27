@@ -31,7 +31,6 @@ export const CyberScrollHUD: React.FC<CyberScrollHUDProps> = ({
 }) => {
   const [scrollY, setScrollY] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [hoveredSection, setHoveredSection] = useState<string | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -83,15 +82,14 @@ export const CyberScrollHUD: React.FC<CyberScrollHUDProps> = ({
         <button
           onClick={scrollToTop}
           onMouseEnter={() => cyberSound.playBlip()}
-          className="flex items-center gap-2.5 px-3 py-2 rounded-full bg-[#06101E]/90 hover:bg-[#0A1A2E] border border-[#00F0C0]/40 hover:border-[#00F0C0] text-[#00F0C0] font-mono text-xs font-semibold backdrop-blur-md shadow-[0_0_20px_rgba(0,240,192,0.2)] hover:shadow-[0_0_30px_rgba(0,240,192,0.4)] transition-all cursor-pointer group"
-          title="Scroll to Top (Mission Control)"
+          className="flex items-center gap-2 p-2 rounded-full bg-[#06101E]/90 hover:bg-[#0A1A2E] border border-[#00F0C0]/40 hover:border-[#00F0C0] text-[#00F0C0] font-mono text-xs font-semibold backdrop-blur-md shadow-[0_0_20px_rgba(0,240,192,0.2)] hover:shadow-[0_0_30px_rgba(0,240,192,0.4)] transition-all cursor-pointer group"
+          title="Scroll to Top"
           aria-label="Scroll to top of page"
         >
-          <div className="relative flex items-center justify-center w-5 h-5 rounded-full bg-[#00F0C0]/10 border border-[#00F0C0]/30 group-hover:bg-[#00F0C0]/20 transition-colors">
-            <ChevronUp className="w-3.5 h-3.5 transition-transform group-hover:-translate-y-0.5 text-[#00F0C0]" />
+          <div className="relative flex items-center justify-center w-6 h-6 rounded-full bg-[#00F0C0]/10 border border-[#00F0C0]/30 group-hover:bg-[#00F0C0]/20 transition-colors">
+            <ChevronUp className="w-4 h-4 transition-transform group-hover:-translate-y-0.5 text-[#00F0C0]" />
           </div>
-          <span className="text-[11px] font-bold tracking-wider">TOP</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded bg-white/5 border border-white/10 text-slate-300 font-mono">
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-slate-300 font-mono pr-2">
             {scrollProgress}%
           </span>
         </button>
@@ -110,39 +108,18 @@ export const CyberScrollHUD: React.FC<CyberScrollHUDProps> = ({
         {/* Section Navigation Pips */}
         {SECTIONS.map((sec) => {
           const isActive = activeSection === sec.id;
-          const isHovered = hoveredSection === sec.id;
 
           return (
             <div
               key={sec.id}
               className="relative flex items-center justify-end"
-              onMouseEnter={() => {
-                setHoveredSection(sec.id);
-                cyberSound.playBlip();
-              }}
-              onMouseLeave={() => setHoveredSection(null)}
             >
-              {/* Flyout Holographic Label */}
-              {(isHovered || isActive) && (
-                <div
-                  className={`absolute right-7 py-1 px-2.5 rounded-md bg-[#040E1C]/95 border text-[10px] font-mono whitespace-nowrap shadow-xl pointer-events-none transition-all duration-150 flex items-center gap-1.5 ${
-                    isActive
-                      ? 'border-[#00F0C0]/60 text-[#00F0C0] shadow-[0_0_15px_rgba(0,240,192,0.25)]'
-                      : 'border-white/10 text-slate-300'
-                  }`}
-                >
-                  <span className="text-[9px] opacity-60">[{sec.code}]</span>
-                  <span className="font-semibold">{sec.fullLabel}</span>
-                  {isActive && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#00F0C0] animate-ping" />
-                  )}
-                </div>
-              )}
-
               {/* Pip Button */}
               <button
                 onClick={() => scrollToSection(sec.id)}
+                onMouseEnter={() => cyberSound.playBlip()}
                 aria-label={`Jump to ${sec.fullLabel}`}
+                title={sec.fullLabel}
                 className={`flex items-center justify-center transition-all cursor-pointer rounded-full ${
                   isActive
                     ? 'w-4 h-4 bg-[#00F0C0]/20 border border-[#00F0C0] shadow-[0_0_10px_#00F0C0]'

@@ -579,6 +579,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
                           description: 'Description of the newly created cyber project.',
                           accent: 'cyan',
                           tags: ['Security', 'OpenSource'],
+                          demo_url: 'https://demo.cyberforage.space',
                           github_url: 'https://github.com/nishchaygaur',
                           featured: true,
                           status: 'active',
@@ -648,28 +649,43 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <label className="text-[10px] text-slate-400 block mb-1">GITHUB REPO URL</label>
+                          <label className="text-[10px] text-[#00E5BE] font-bold block mb-1 flex items-center gap-1.5">
+                            <ExternalLink className="w-3 h-3 text-[#00F0C0]" />
+                            <span>LIVE DEMO URL</span>
+                          </label>
                           <input
                             type="text"
-                            value={editingProject.github_url || ''}
-                            onChange={(e) => setEditingProject({ ...editingProject, github_url: e.target.value })}
-                            className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none"
+                            placeholder="https://demo.cyberforage.space"
+                            value={editingProject.demo_url || ''}
+                            onChange={(e) => setEditingProject({ ...editingProject, demo_url: e.target.value })}
+                            className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none focus:border-[#00F0C0]"
                           />
                         </div>
                         <div>
-                          <label className="text-[10px] text-slate-400 block mb-1">TAGS (Comma-separated)</label>
+                          <label className="text-[10px] text-slate-400 block mb-1">GITHUB REPO URL</label>
                           <input
                             type="text"
-                            value={editingProject.tags.join(', ')}
-                            onChange={(e) =>
-                              setEditingProject({
-                                ...editingProject,
-                                tags: e.target.value.split(',').map((t) => t.trim()).filter(Boolean),
-                              })
-                            }
-                            className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none"
+                            placeholder="https://github.com/..."
+                            value={editingProject.github_url || ''}
+                            onChange={(e) => setEditingProject({ ...editingProject, github_url: e.target.value })}
+                            className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none focus:border-[#00F0C0]"
                           />
                         </div>
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] text-slate-400 block mb-1">TAGS (Comma-separated)</label>
+                        <input
+                          type="text"
+                          value={editingProject.tags.join(', ')}
+                          onChange={(e) =>
+                            setEditingProject({
+                              ...editingProject,
+                              tags: e.target.value.split(',').map((t) => t.trim()).filter(Boolean),
+                            })
+                          }
+                          className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none"
+                        />
                       </div>
 
                       <div className="flex justify-end gap-2 pt-2">
@@ -732,7 +748,21 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
                         </div>
 
                         <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono">
-                          <span className="text-[10px] text-slate-500">{proj.slug}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-slate-500">{proj.slug}</span>
+                            {proj.demo_url && (
+                              <a
+                                href={proj.demo_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-[10px] text-[#00E5BE] hover:underline px-1.5 py-0.5 rounded bg-[#00F0C0]/10 border border-[#00F0C0]/25"
+                                title="Open Live Demo URL"
+                              >
+                                <ExternalLink className="w-2.5 h-2.5" />
+                                <span>Live Demo</span>
+                              </a>
+                            )}
+                          </div>
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => {
