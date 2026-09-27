@@ -6,7 +6,7 @@ export const CyberCursor: React.FC = () => {
   const [isClicked, setIsClicked] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
-  const ringPos = useRef({ x: -100, y: -100 });
+  const hudPos = useRef({ x: -100, y: -100 });
   const targetPos = useRef({ x: -100, y: -100 });
   const rafId = useRef<number | null>(null);
 
@@ -46,16 +46,16 @@ export const CyberCursor: React.FC = () => {
     document.addEventListener('mouseleave', handleMouseLeave);
     document.addEventListener('mouseenter', handleMouseEnter);
 
-    // Smooth lerp loop for the trailing outer reticle
+    // Smooth lerp loop for the trailing outer tactical HUD frame
     const render = () => {
-      const ease = 0.18;
-      ringPos.current.x += (targetPos.current.x - ringPos.current.x) * ease;
-      ringPos.current.y += (targetPos.current.y - ringPos.current.y) * ease;
+      const ease = 0.2;
+      hudPos.current.x += (targetPos.current.x - hudPos.current.x) * ease;
+      hudPos.current.y += (targetPos.current.y - hudPos.current.y) * ease;
 
-      const ringEl = document.getElementById('cyber-cursor-ring');
-      if (ringEl) {
-        ringEl.style.transform = `translate3d(${ringPos.current.x}px, ${ringPos.current.y}px, 0) translate(-50%, -50%) scale(${
-          isClicked ? 0.8 : isHovered ? 1.45 : 1
+      const hudEl = document.getElementById('cyber-cursor-hud');
+      if (hudEl) {
+        hudEl.style.transform = `translate3d(${hudPos.current.x}px, ${hudPos.current.y}px, 0) translate(-50%, -50%) scale(${
+          isClicked ? 0.8 : isHovered ? 1.3 : 1
         })`;
       }
 
@@ -78,52 +78,83 @@ export const CyberCursor: React.FC = () => {
 
   return (
     <div className="pointer-events-none fixed inset-0 z-[99999] overflow-hidden select-none">
-      {/* Central Laser Pip (Instant response) */}
+      {/* Central Precision Laser Diamond Pip (Zero circles, instant tracking) */}
       <div
-        className="fixed top-0 left-0 w-2 h-2 rounded-full pointer-events-none transition-colors duration-150"
+        className="fixed top-0 left-0 w-2 h-2 pointer-events-none transition-colors duration-150"
         style={{
-          transform: `translate3d(${pos.x}px, ${pos.y}px, 0) translate(-50%, -50%)`,
+          transform: `translate3d(${pos.x}px, ${pos.y}px, 0) translate(-50%, -50%) rotate(45deg)`,
           backgroundColor: isHovered ? '#00F0C0' : '#00E5BE',
           boxShadow: isHovered
-            ? '0 0 10px #00F0C0, 0 0 20px rgba(0, 240, 192, 0.6)'
-            : '0 0 6px rgba(0, 229, 190, 0.8)',
+            ? '0 0 10px #00F0C0, 0 0 20px rgba(0, 240, 192, 0.7)'
+            : '0 0 5px rgba(0, 229, 190, 0.8)',
         }}
       />
 
-      {/* Trailing Sci-Fi Crosshair Reticle (Smooth lerp) */}
+      {/* Trailing Tactical Cybersecurity Targeting Frame (Corner Brackets & Crosshairs, Zero Circles) */}
       <div
-        id="cyber-cursor-ring"
-        className="fixed top-0 left-0 w-8 h-8 rounded-full pointer-events-none transition-opacity duration-200"
-        style={{
-          border: isHovered
-            ? '1.5px solid rgba(0, 240, 192, 0.9)'
-            : '1px solid rgba(0, 240, 192, 0.35)',
-          boxShadow: isHovered
-            ? '0 0 15px rgba(0, 240, 192, 0.4), inset 0 0 10px rgba(0, 240, 192, 0.2)'
-            : 'none',
-        }}
+        id="cyber-cursor-hud"
+        className="fixed top-0 left-0 w-7 h-7 pointer-events-none transition-opacity duration-200"
       >
-        {/* 4 Precision Crosshair Corner Ticks */}
+        {/* 4 Precision L-Shaped Corner Brackets (Target Lock-On) */}
+        {/* Top-Left */}
         <span
-          className="absolute -top-1 left-1/2 -translate-x-1/2 w-0.5 h-1.5 transition-colors"
-          style={{ backgroundColor: isHovered ? '#00F0C0' : 'rgba(0, 240, 192, 0.6)' }}
+          className="absolute top-0 left-0 w-2 h-2 border-t-[1.5px] border-l-[1.5px] transition-colors duration-150"
+          style={{
+            borderColor: isHovered ? '#00F0C0' : 'rgba(0, 240, 192, 0.45)',
+            filter: isHovered ? 'drop-shadow(0 0 4px #00F0C0)' : 'none',
+          }}
         />
+        {/* Top-Right */}
         <span
-          className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0.5 h-1.5 transition-colors"
-          style={{ backgroundColor: isHovered ? '#00F0C0' : 'rgba(0, 240, 192, 0.6)' }}
+          className="absolute top-0 right-0 w-2 h-2 border-t-[1.5px] border-r-[1.5px] transition-colors duration-150"
+          style={{
+            borderColor: isHovered ? '#00F0C0' : 'rgba(0, 240, 192, 0.45)',
+            filter: isHovered ? 'drop-shadow(0 0 4px #00F0C0)' : 'none',
+          }}
         />
+        {/* Bottom-Left */}
         <span
-          className="absolute -left-1 top-1/2 -translate-y-1/2 h-0.5 w-1.5 transition-colors"
-          style={{ backgroundColor: isHovered ? '#00F0C0' : 'rgba(0, 240, 192, 0.6)' }}
+          className="absolute bottom-0 left-0 w-2 h-2 border-b-[1.5px] border-l-[1.5px] transition-colors duration-150"
+          style={{
+            borderColor: isHovered ? '#00F0C0' : 'rgba(0, 240, 192, 0.45)',
+            filter: isHovered ? 'drop-shadow(0 0 4px #00F0C0)' : 'none',
+          }}
         />
+        {/* Bottom-Right */}
         <span
-          className="absolute -right-1 top-1/2 -translate-y-1/2 h-0.5 w-1.5 transition-colors"
-          style={{ backgroundColor: isHovered ? '#00F0C0' : 'rgba(0, 240, 192, 0.6)' }}
+          className="absolute bottom-0 right-0 w-2 h-2 border-b-[1.5px] border-r-[1.5px] transition-colors duration-150"
+          style={{
+            borderColor: isHovered ? '#00F0C0' : 'rgba(0, 240, 192, 0.45)',
+            filter: isHovered ? 'drop-shadow(0 0 4px #00F0C0)' : 'none',
+          }}
         />
 
-        {/* Tactical Crosshair Dot in Reticle Center when locked */}
+        {/* Crosshair Cardinal Tick Marks */}
+        <span
+          className="absolute top-1/2 left-0 w-1 h-[1px] -translate-y-1/2 transition-colors duration-150"
+          style={{ backgroundColor: isHovered ? '#00F0C0' : 'rgba(0, 240, 192, 0.35)' }}
+        />
+        <span
+          className="absolute top-1/2 right-0 w-1 h-[1px] -translate-y-1/2 transition-colors duration-150"
+          style={{ backgroundColor: isHovered ? '#00F0C0' : 'rgba(0, 240, 192, 0.35)' }}
+        />
+        <span
+          className="absolute top-0 left-1/2 h-1 w-[1px] -translate-x-1/2 transition-colors duration-150"
+          style={{ backgroundColor: isHovered ? '#00F0C0' : 'rgba(0, 240, 192, 0.35)' }}
+        />
+        <span
+          className="absolute bottom-0 left-1/2 h-1 w-[1px] -translate-x-1/2 transition-colors duration-150"
+          style={{ backgroundColor: isHovered ? '#00F0C0' : 'rgba(0, 240, 192, 0.35)' }}
+        />
+
+        {/* Micro Cybersecurity HUD Lock Badge (appears on interactive elements) */}
         {isHovered && (
-          <div className="absolute inset-1.5 rounded-full border border-[#00F0C0]/30 animate-ping pointer-events-none" />
+          <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1 px-1 py-0.5 bg-[#040812]/95 border border-[#00F0C0]/60 shadow-[0_0_8px_rgba(0,240,192,0.4)]">
+            <span className="w-1 h-1 bg-[#00F0C0] animate-pulse" />
+            <span className="text-[7px] font-mono tracking-widest text-[#00F0C0] font-bold uppercase leading-none">
+              LOCK
+            </span>
+          </div>
         )}
       </div>
     </div>
