@@ -32,6 +32,7 @@ import {
 import { useSiteContent } from '../../context/SiteContentContext';
 import { cyberSound } from '../../audio/cyberSoundEngine';
 import { Project, Lab, ResearchArticle, TechTool } from '../../types';
+import { GithubIcon, LinkedinIcon, TwitterIcon, DiscordIcon, TelegramIcon, MatrixIcon } from '../icons/BrandIcons';
 
 interface AdminPanelModalProps {
   isOpen: boolean;
@@ -833,6 +834,182 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
                     </button>
                   </div>
 
+                  {/* Inline Lab Add/Edit Form */}
+                  {editingLab && (
+                    <div className="p-5 rounded-xl bg-[#07162C] border border-[#38BDF8]/50 space-y-4 font-mono text-xs shadow-xl animate-fadeIn">
+                      <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                        <span className="font-bold text-white">
+                          {isAddingLab ? 'ADD VIRTUAL LAB TESTBED' : `EDIT: ${editingLab.name}`}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setEditingLab(null);
+                            setIsAddingLab(false);
+                          }}
+                          className="text-slate-400 hover:text-white"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-[10px] text-slate-400 block mb-1">LAB NAME</label>
+                          <input
+                            type="text"
+                            value={editingLab.name}
+                            onChange={(e) => setEditingLab({ ...editingLab, name: e.target.value })}
+                            className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none focus:border-[#38BDF8]"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-slate-400 block mb-1">SLUG IDENTIFIER</label>
+                          <input
+                            type="text"
+                            value={editingLab.slug}
+                            onChange={(e) => setEditingLab({ ...editingLab, slug: e.target.value })}
+                            className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none focus:border-[#38BDF8]"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                          <label className="text-[10px] text-slate-400 block mb-1">CATEGORY</label>
+                          <select
+                            value={editingLab.category}
+                            onChange={(e) => setEditingLab({ ...editingLab, category: e.target.value as any })}
+                            className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none"
+                          >
+                            <option value="Attack Simulation">Attack Simulation</option>
+                            <option value="SOC">SOC</option>
+                            <option value="Forensics">Forensics</option>
+                            <option value="Analysis">Analysis</option>
+                            <option value="Networking">Networking</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-slate-400 block mb-1">DIFFICULTY</label>
+                          <select
+                            value={editingLab.difficulty}
+                            onChange={(e) => setEditingLab({ ...editingLab, difficulty: e.target.value as any })}
+                            className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none"
+                          >
+                            <option value="Beginner">Beginner</option>
+                            <option value="Intermediate">Intermediate</option>
+                            <option value="Advanced">Advanced</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-slate-400 block mb-1">STATUS</label>
+                          <select
+                            value={editingLab.status}
+                            onChange={(e) => setEditingLab({ ...editingLab, status: e.target.value as any })}
+                            className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none"
+                          >
+                            <option value="available">available</option>
+                            <option value="in_testing">in_testing</option>
+                            <option value="planned">planned</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] text-slate-400 block mb-1">BRIEF DESCRIPTION</label>
+                        <textarea
+                          rows={2}
+                          value={editingLab.description}
+                          onChange={(e) => setEditingLab({ ...editingLab, description: e.target.value })}
+                          className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] text-slate-400 block mb-1">FULL TACTICAL OVERVIEW</label>
+                        <textarea
+                          rows={3}
+                          value={editingLab.fullOverview}
+                          onChange={(e) => setEditingLab({ ...editingLab, fullOverview: e.target.value })}
+                          className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-[10px] text-slate-400 block mb-1">ATTACK VECTORS (Comma-separated)</label>
+                          <input
+                            type="text"
+                            value={editingLab.attackVectors.join(', ')}
+                            onChange={(e) =>
+                              setEditingLab({
+                                ...editingLab,
+                                attackVectors: e.target.value.split(',').map((s) => s.trim()).filter(Boolean),
+                              })
+                            }
+                            className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-slate-400 block mb-1">DEFENSE TECHNIQUES (Comma-separated)</label>
+                          <input
+                            type="text"
+                            value={editingLab.defenseTechniques.join(', ')}
+                            onChange={(e) =>
+                              setEditingLab({
+                                ...editingLab,
+                                defenseTechniques: e.target.value.split(',').map((s) => s.trim()).filter(Boolean),
+                              })
+                            }
+                            className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] text-slate-400 block mb-1">SIMULATED LOG LINES (One per line)</label>
+                        <textarea
+                          rows={3}
+                          value={editingLab.simulatedLogs.join('\n')}
+                          onChange={(e) =>
+                            setEditingLab({
+                              ...editingLab,
+                              simulatedLogs: e.target.value.split('\n').filter(Boolean),
+                            })
+                          }
+                          className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="flex justify-end gap-2 pt-2">
+                        <button
+                          onClick={() => {
+                            setEditingLab(null);
+                            setIsAddingLab(false);
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 text-xs"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (isAddingLab) {
+                              addLab(editingLab);
+                              triggerSaveNotification(`Added lab "${editingLab.name}"`);
+                            } else {
+                              editLab(editingLab.id, editingLab);
+                              triggerSaveNotification(`Updated lab "${editingLab.name}"`);
+                            }
+                            setEditingLab(null);
+                            setIsAddingLab(false);
+                          }}
+                          className="px-4 py-1.5 rounded-lg bg-[#38BDF8] text-black font-bold text-xs"
+                        >
+                          Save Lab
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Labs List */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                     {content.labs.map((lab) => (
@@ -854,18 +1031,31 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
 
                         <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono">
                           <span className="text-[10px] text-slate-500">{lab.category}</span>
-                          <button
-                            onClick={() => {
-                              if (confirm(`Delete lab "${lab.name}"?`)) {
-                                deleteLab(lab.id);
-                                triggerSaveNotification(`Deleted lab "${lab.name}"`);
-                              }
-                            }}
-                            className="p-1 rounded hover:bg-rose-500/20 text-slate-400 hover:text-rose-400"
-                            title="Delete Lab"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => {
+                                setEditingLab(lab);
+                                setIsAddingLab(false);
+                                cyberSound.playClick();
+                              }}
+                              className="p-1 rounded hover:bg-white/10 text-slate-300 hover:text-white"
+                              title="Edit Lab"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (confirm(`Delete lab "${lab.name}"?`)) {
+                                  deleteLab(lab.id);
+                                  triggerSaveNotification(`Deleted lab "${lab.name}"`);
+                                }
+                              }}
+                              className="p-1 rounded hover:bg-rose-500/20 text-slate-400 hover:text-rose-400"
+                              title="Delete Lab"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -876,13 +1066,202 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
               {/* 6. Research Articles Module */}
               {activeTab === 'research' && (
                 <div className="space-y-6 max-w-5xl">
-                  <div>
-                    <h3 className="font-mono text-base font-bold text-white mb-1">RESEARCH VECTORS & ARTICLES</h3>
-                    <p className="text-xs font-mono text-slate-400">
-                      Manage MITRE ATT&CK research papers and whitepapers.
-                    </p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-mono text-base font-bold text-white mb-1">RESEARCH PAPERS & ARTICLES</h3>
+                      <p className="text-xs font-mono text-slate-400">
+                        Publish, edit, or retire offensive/defensive research whitepapers and MITRE ATT&CK breakdowns.
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setIsAddingArticle(true);
+                        setEditingArticle({
+                          id: `art-${Date.now()}`,
+                          title: 'New Research Paper',
+                          category: 'Threat Intelligence',
+                          date: 'OCT 2026',
+                          readTime: '8 min read',
+                          summary: 'Executive briefing analyzing emerging threat vectors and defense postures.',
+                          content: [
+                            'Detailed technical analysis of the threat scenario and observed behaviors.',
+                            'Tactical countermeasures, telemetry signatures, and audit recommendations.',
+                          ],
+                          keyTakeaways: [
+                            'Comprehensive detection coverage across initial access vectors.',
+                            'Continuous telemetry auditing and automated containment playbook integration.',
+                          ],
+                          threatIndicators: [
+                            'SHA256: 4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a',
+                            'IP: 198.51.100.42:8443',
+                          ],
+                        });
+                        cyberSound.playClick();
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#A855F7] hover:bg-[#9333EA] text-white font-mono text-xs font-bold transition-all cursor-pointer shadow-md"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add Research Paper</span>
+                    </button>
                   </div>
 
+                  {/* Inline Article Add/Edit Form */}
+                  {editingArticle && (
+                    <div className="p-5 rounded-xl bg-[#07162C] border border-[#A855F7]/50 space-y-4 font-mono text-xs shadow-xl animate-fadeIn">
+                      <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                        <span className="font-bold text-white">
+                          {isAddingArticle ? 'PUBLISH NEW RESEARCH PAPER' : `EDIT: ${editingArticle.title}`}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setEditingArticle(null);
+                            setIsAddingArticle(false);
+                          }}
+                          className="text-slate-400 hover:text-white"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="sm:col-span-2">
+                          <label className="text-[10px] text-slate-400 block mb-1">PAPER TITLE</label>
+                          <input
+                            type="text"
+                            value={editingArticle.title}
+                            onChange={(e) => setEditingArticle({ ...editingArticle, title: e.target.value })}
+                            className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none focus:border-[#A855F7]"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-slate-400 block mb-1">CATEGORY</label>
+                          <input
+                            type="text"
+                            value={editingArticle.category}
+                            onChange={(e) => setEditingArticle({ ...editingArticle, category: e.target.value })}
+                            placeholder="e.g. Adversary Simulation"
+                            className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none focus:border-[#A855F7]"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-[10px] text-slate-400 block mb-1">PUBLICATION DATE (e.g. OCT 2026)</label>
+                          <input
+                            type="text"
+                            value={editingArticle.date}
+                            onChange={(e) => setEditingArticle({ ...editingArticle, date: e.target.value })}
+                            className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-slate-400 block mb-1">READ TIME (e.g. 8 min read)</label>
+                          <input
+                            type="text"
+                            value={editingArticle.readTime}
+                            onChange={(e) => setEditingArticle({ ...editingArticle, readTime: e.target.value })}
+                            className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] text-slate-400 block mb-1">EXECUTIVE SUMMARY</label>
+                        <textarea
+                          rows={2}
+                          value={editingArticle.summary}
+                          onChange={(e) => setEditingArticle({ ...editingArticle, summary: e.target.value })}
+                          className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] text-slate-400 block mb-1">
+                          FULL ARTICLE CONTENT (Paragraphs separated by double newlines)
+                        </label>
+                        <textarea
+                          rows={4}
+                          value={editingArticle.content.join('\n\n')}
+                          onChange={(e) =>
+                            setEditingArticle({
+                              ...editingArticle,
+                              content: e.target.value.split('\n\n').filter(Boolean),
+                            })
+                          }
+                          className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none font-mono text-xs"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-[10px] text-slate-400 block mb-1">
+                            KEY TAKEAWAYS (One per line)
+                          </label>
+                          <textarea
+                            rows={3}
+                            value={editingArticle.keyTakeaways.join('\n')}
+                            onChange={(e) =>
+                              setEditingArticle({
+                                ...editingArticle,
+                                keyTakeaways: e.target.value.split('\n').filter(Boolean),
+                              })
+                            }
+                            className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none font-mono text-xs"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[10px] text-slate-400 block mb-1">
+                            THREAT INDICATORS / IOCs (Optional, one per line)
+                          </label>
+                          <textarea
+                            rows={3}
+                            value={(editingArticle.threatIndicators || []).join('\n')}
+                            onChange={(e) =>
+                              setEditingArticle({
+                                ...editingArticle,
+                                threatIndicators: e.target.value.split('\n').filter(Boolean),
+                              })
+                            }
+                            placeholder="SHA256: ...&#10;IP: ..."
+                            className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none font-mono text-xs"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end gap-2 pt-2">
+                        <button
+                          onClick={() => {
+                            setEditingArticle(null);
+                            setIsAddingArticle(false);
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 text-xs"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (isAddingArticle) {
+                              addArticle(editingArticle);
+                              triggerSaveNotification(`Published paper "${editingArticle.title}"`);
+                            } else {
+                              editArticle(editingArticle.id, editingArticle);
+                              triggerSaveNotification(`Updated paper "${editingArticle.title}"`);
+                            }
+                            setEditingArticle(null);
+                            setIsAddingArticle(false);
+                          }}
+                          className="px-4 py-1.5 rounded-lg bg-[#A855F7] text-white font-bold text-xs"
+                        >
+                          Save Research Paper
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Research Articles List */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                     {content.researchArticles.map((art) => (
                       <div
@@ -903,18 +1282,31 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
 
                         <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono">
                           <span className="text-[10px] text-slate-500">{art.category}</span>
-                          <button
-                            onClick={() => {
-                              if (confirm(`Delete article "${art.title}"?`)) {
-                                deleteArticle(art.id);
-                                triggerSaveNotification(`Deleted article "${art.title}"`);
-                              }
-                            }}
-                            className="p-1 rounded hover:bg-rose-500/20 text-slate-400 hover:text-rose-400"
-                            title="Delete Article"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => {
+                                setEditingArticle(art);
+                                setIsAddingArticle(false);
+                                cyberSound.playClick();
+                              }}
+                              className="p-1 rounded hover:bg-white/10 text-slate-300 hover:text-white"
+                              title="Edit Article"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (confirm(`Delete article "${art.title}"?`)) {
+                                  deleteArticle(art.id);
+                                  triggerSaveNotification(`Deleted article "${art.title}"`);
+                                }
+                              }}
+                              className="p-1 rounded hover:bg-rose-500/20 text-slate-400 hover:text-rose-400"
+                              title="Delete Article"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -925,31 +1317,253 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
               {/* 7. Tech Stack Tools Module */}
               {activeTab === 'tools' && (
                 <div className="space-y-6 max-w-5xl">
-                  <div>
-                    <h3 className="font-mono text-base font-bold text-white mb-1">TECH STACK TOOLS</h3>
-                    <p className="text-xs font-mono text-slate-400">
-                      Edit frameworks, database engines, and detection agents shown in the interactive tool matrix.
-                    </p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-mono text-base font-bold text-white mb-1">TECH STACK & DETECTION MATRIX</h3>
+                      <p className="text-xs font-mono text-slate-400">
+                        Edit frameworks, telemetry engines, and detection agents rendered in the interactive 3D tool matrix.
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setIsAddingTool(true);
+                        setEditingTool({
+                          id: `tool-${Date.now()}`,
+                          name: 'New Tool / Agent',
+                          category: 'Detection',
+                          description: 'High-throughput telemetry analysis engine for live cluster defense.',
+                          defenseRole: 'Adversary behavior tracking and real-time telemetry streaming.',
+                          icon: 'terminal',
+                          accentColor: '#00F0C0',
+                        });
+                        cyberSound.playClick();
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#00F0C0] hover:bg-[#00E5BE] text-black font-mono text-xs font-bold transition-all cursor-pointer shadow-md"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add New Tool</span>
+                    </button>
                   </div>
 
+                  {/* Inline Tool Add/Edit Form */}
+                  {editingTool && (
+                    <div className="p-5 rounded-xl bg-[#07162C] border border-[#00F0C0]/50 space-y-4 font-mono text-xs shadow-xl animate-fadeIn">
+                      <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                        <span className="font-bold text-white flex items-center gap-2">
+                          <span
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: editingTool.accentColor }}
+                          />
+                          {isAddingTool ? 'ADD NEW TOOL TO STACK' : `EDIT TOOL: ${editingTool.name}`}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setEditingTool(null);
+                            setIsAddingTool(false);
+                          }}
+                          className="text-slate-400 hover:text-white"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-[10px] text-slate-400 block mb-1">TOOL / SYSTEM NAME</label>
+                          <input
+                            type="text"
+                            value={editingTool.name}
+                            onChange={(e) => setEditingTool({ ...editingTool, name: e.target.value })}
+                            className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none focus:border-[#00F0C0]"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-slate-400 block mb-1">CATEGORY</label>
+                          <select
+                            value={editingTool.category}
+                            onChange={(e) => setEditingTool({ ...editingTool, category: e.target.value as any })}
+                            className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none"
+                          >
+                            <option value="Core">Core</option>
+                            <option value="Systems">Systems</option>
+                            <option value="Database">Database</option>
+                            <option value="Container">Container</option>
+                            <option value="VCS">VCS</option>
+                            <option value="Detection">Detection</option>
+                            <option value="Framework">Framework</option>
+                            <option value="Standards">Standards</option>
+                            <option value="Infra">Infra</option>
+                            <option value="Intelligence">Intelligence</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-[10px] text-slate-400 block mb-1">ICON IDENTIFIER</label>
+                          <select
+                            value={editingTool.icon}
+                            onChange={(e) => setEditingTool({ ...editingTool, icon: e.target.value })}
+                            className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none"
+                          >
+                            <option value="terminal">terminal (Terminal)</option>
+                            <option value="cpu">cpu (CPU)</option>
+                            <option value="database">database (Database)</option>
+                            <option value="box">box (Container / Box)</option>
+                            <option value="git-branch">git-branch (VCS)</option>
+                            <option value="shield-alert">shield-alert (Shield)</option>
+                            <option value="target">target (Target)</option>
+                            <option value="file-text">file-text (File)</option>
+                            <option value="cloud">cloud (Cloud)</option>
+                            <option value="brain">brain (AI / Brain)</option>
+                            <option value="network">network (Network)</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="text-[10px] text-slate-400 block mb-1">ACCENT COLOR (HEX)</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={editingTool.accentColor.startsWith('#') ? editingTool.accentColor : '#00F0C0'}
+                              onChange={(e) => setEditingTool({ ...editingTool, accentColor: e.target.value })}
+                              className="w-8 h-8 rounded border border-white/20 bg-transparent cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              value={editingTool.accentColor}
+                              onChange={(e) => setEditingTool({ ...editingTool, accentColor: e.target.value })}
+                              className="flex-1 px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none font-mono"
+                            />
+                            <div className="flex items-center gap-1">
+                              {['#00F0C0', '#38BDF8', '#A855F7', '#F43F5E', '#FBBF24', '#10B981'].map((c) => (
+                                <button
+                                  key={c}
+                                  type="button"
+                                  onClick={() => setEditingTool({ ...editingTool, accentColor: c })}
+                                  className="w-4 h-4 rounded-full border border-white/20 hover:scale-125 transition-transform"
+                                  style={{ backgroundColor: c }}
+                                  title={c}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] text-slate-400 block mb-1">TACTICAL DEFENSE ROLE</label>
+                        <textarea
+                          rows={2}
+                          value={editingTool.defenseRole}
+                          onChange={(e) => setEditingTool({ ...editingTool, defenseRole: e.target.value })}
+                          placeholder="e.g. Adversary emulation scripts, network socket monitors, and telemetry analysis."
+                          className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] text-slate-400 block mb-1">TOOL DESCRIPTION</label>
+                        <textarea
+                          rows={2}
+                          value={editingTool.description}
+                          onChange={(e) => setEditingTool({ ...editingTool, description: e.target.value })}
+                          placeholder="General summary of the tool or engine."
+                          className="w-full px-3 py-1.5 rounded-lg bg-[#030A14] border border-white/10 text-white focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="flex justify-end gap-2 pt-2">
+                        <button
+                          onClick={() => {
+                            setEditingTool(null);
+                            setIsAddingTool(false);
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 text-xs"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (isAddingTool) {
+                              addTool(editingTool);
+                              triggerSaveNotification(`Added tool "${editingTool.name}"`);
+                            } else {
+                              editTool(editingTool.id, editingTool);
+                              triggerSaveNotification(`Updated tool "${editingTool.name}"`);
+                            }
+                            setEditingTool(null);
+                            setIsAddingTool(false);
+                          }}
+                          className="px-4 py-1.5 rounded-lg bg-[#00F0C0] text-black font-bold text-xs"
+                        >
+                          Save Tool
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tech Tools List */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
                     {content.techTools.map((tool) => (
                       <div
                         key={tool.id}
-                        className="p-4 rounded-xl bg-[#051124] border border-white/10 space-y-2 font-mono text-xs"
+                        className="p-4 rounded-xl bg-[#051124] border border-white/10 flex flex-col justify-between font-mono text-xs group"
                       >
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-white flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tool.accentColor }} />
-                            {tool.name}
-                          </span>
-                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-white/5 border border-white/10 text-slate-400">
-                            {tool.category}
-                          </span>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-white flex items-center gap-2">
+                              <span
+                                className="w-2.5 h-2.5 rounded-full shadow-[0_0_6px]"
+                                style={{ backgroundColor: tool.accentColor, color: tool.accentColor }}
+                              />
+                              {tool.name}
+                            </span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-slate-400">
+                              {tool.category}
+                            </span>
+                          </div>
+
+                          <p className="text-slate-300 text-[11px] leading-relaxed line-clamp-2">
+                            {tool.defenseRole}
+                          </p>
+
+                          <div className="text-[10px] text-slate-500 font-mono">
+                            Icon: <span className="text-slate-400">{tool.icon}</span>
+                          </div>
                         </div>
-                        <p className="text-slate-300 text-[11px] leading-relaxed line-clamp-2">
-                          {tool.defenseRole}
-                        </p>
+
+                        <div className="pt-3 mt-3 border-t border-white/[0.06] flex items-center justify-between">
+                          <span className="text-[10px] font-mono" style={{ color: tool.accentColor }}>
+                            {tool.accentColor}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => {
+                                setEditingTool(tool);
+                                setIsAddingTool(false);
+                                cyberSound.playClick();
+                              }}
+                              className="p-1 rounded hover:bg-white/10 text-slate-300 hover:text-white"
+                              title="Edit Tool"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (confirm(`Delete tool "${tool.name}" from stack?`)) {
+                                  deleteTool(tool.id);
+                                  triggerSaveNotification(`Deleted tool "${tool.name}"`);
+                                }
+                              }}
+                              className="p-1 rounded hover:bg-rose-500/20 text-slate-400 hover:text-rose-400"
+                              title="Delete Tool"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -962,53 +1576,240 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
                   <div>
                     <h3 className="font-mono text-base font-bold text-white mb-1">COMMS & TRANSMISSION COORDINATES</h3>
                     <p className="text-xs font-mono text-slate-400">
-                      Configure recipient email, n8n webhook portal, and social links.
+                      Configure recipient email, n8n webhook portal, social channels, and cryptographic identity keys.
                     </p>
                   </div>
 
-                  <div className="p-5 rounded-xl bg-[#051124] border border-white/10 space-y-4 font-mono text-xs">
-                    <div>
-                      <label className="text-[10px] text-slate-400 block mb-1">CONTACT EMAIL (DISPATCH TARGET)</label>
-                      <input
-                        type="email"
-                        value={content.contact.email}
-                        onChange={(e) => updateContact({ email: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg bg-[#07172C] border border-white/10 text-white focus:outline-none focus:border-[#00F0C0]"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] text-slate-400 block mb-1">n8n ACCESS PORTAL URL</label>
-                      <input
-                        type="url"
-                        value={content.contact.n8nUrl}
-                        onChange={(e) => updateContact({ n8nUrl: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg bg-[#07172C] border border-white/10 text-white focus:outline-none focus:border-[#00F0C0]"
-                      />
-                    </div>
-
+                  <div className="p-5 rounded-xl bg-[#051124] border border-white/10 space-y-5 font-mono text-xs">
+                    {/* Email and n8n */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="text-[10px] text-slate-400 block mb-1">GITHUB PROFILE / ORG URL</label>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-[10px] text-slate-400 block">CONTACT EMAIL (DISPATCH TARGET)</label>
+                          {content.contact.email && (
+                            <a
+                              href={`mailto:${content.contact.email}`}
+                              className="text-[10px] text-[#00E5BE] hover:underline inline-flex items-center gap-1"
+                              title="Test mailto"
+                            >
+                              <span>Test Mail</span>
+                              <ExternalLink className="w-2.5 h-2.5" />
+                            </a>
+                          )}
+                        </div>
                         <input
-                          type="url"
-                          value={content.contact.githubUrl}
-                          onChange={(e) => updateContact({ githubUrl: e.target.value })}
+                          type="email"
+                          value={content.contact.email}
+                          onChange={(e) => updateContact({ email: e.target.value })}
                           className="w-full px-3 py-2 rounded-lg bg-[#07172C] border border-white/10 text-white focus:outline-none focus:border-[#00F0C0]"
                         />
                       </div>
+
                       <div>
-                        <label className="text-[10px] text-slate-400 block mb-1">LINKEDIN URL</label>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-[10px] text-slate-400 block">n8n ACCESS PORTAL URL</label>
+                          {content.contact.n8nUrl && (
+                            <a
+                              href={content.contact.n8nUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[10px] text-[#38BDF8] hover:underline inline-flex items-center gap-1"
+                              title="Open Portal"
+                            >
+                              <span>Open URL</span>
+                              <ExternalLink className="w-2.5 h-2.5" />
+                            </a>
+                          )}
+                        </div>
                         <input
                           type="url"
-                          value={content.contact.linkedinUrl}
-                          onChange={(e) => updateContact({ linkedinUrl: e.target.value })}
+                          value={content.contact.n8nUrl}
+                          onChange={(e) => updateContact({ n8nUrl: e.target.value })}
                           className="w-full px-3 py-2 rounded-lg bg-[#07172C] border border-white/10 text-white focus:outline-none focus:border-[#00F0C0]"
                         />
                       </div>
                     </div>
 
+                    {/* Extended Social Channels */}
                     <div>
+                      <h4 className="text-[11px] font-bold text-slate-300 mb-3 flex items-center gap-1.5">
+                        <Globe className="w-3.5 h-3.5 text-[#00F0C0]" />
+                        <span>PUBLIC SOCIAL & COMMUNITY CHANNELS</span>
+                      </h4>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* GitHub */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="text-[10px] text-slate-400 flex items-center gap-1.5">
+                              <GithubIcon className="w-3 h-3 text-white" />
+                              <span>GITHUB URL</span>
+                            </label>
+                            {content.contact.githubUrl && (
+                              <a
+                                href={content.contact.githubUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[10px] text-[#00E5BE] hover:underline inline-flex items-center gap-1"
+                              >
+                                <span>Visit</span>
+                                <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            )}
+                          </div>
+                          <input
+                            type="url"
+                            value={content.contact.githubUrl}
+                            onChange={(e) => updateContact({ githubUrl: e.target.value })}
+                            placeholder="https://github.com/..."
+                            className="w-full px-3 py-2 rounded-lg bg-[#07172C] border border-white/10 text-white focus:outline-none focus:border-[#00F0C0]"
+                          />
+                        </div>
+
+                        {/* LinkedIn */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="text-[10px] text-slate-400 flex items-center gap-1.5">
+                              <LinkedinIcon className="w-3 h-3 text-[#38BDF8]" />
+                              <span>LINKEDIN URL</span>
+                            </label>
+                            {content.contact.linkedinUrl && (
+                              <a
+                                href={content.contact.linkedinUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[10px] text-[#38BDF8] hover:underline inline-flex items-center gap-1"
+                              >
+                                <span>Visit</span>
+                                <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            )}
+                          </div>
+                          <input
+                            type="url"
+                            value={content.contact.linkedinUrl}
+                            onChange={(e) => updateContact({ linkedinUrl: e.target.value })}
+                            placeholder="https://linkedin.com/in/..."
+                            className="w-full px-3 py-2 rounded-lg bg-[#07172C] border border-white/10 text-white focus:outline-none focus:border-[#00F0C0]"
+                          />
+                        </div>
+
+                        {/* Twitter / X */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="text-[10px] text-slate-400 flex items-center gap-1.5">
+                              <TwitterIcon className="w-3 h-3 text-white" />
+                              <span>TWITTER / X URL</span>
+                            </label>
+                            {content.contact.twitterUrl && (
+                              <a
+                                href={content.contact.twitterUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[10px] text-[#00E5BE] hover:underline inline-flex items-center gap-1"
+                              >
+                                <span>Visit</span>
+                                <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            )}
+                          </div>
+                          <input
+                            type="url"
+                            value={content.contact.twitterUrl || ''}
+                            onChange={(e) => updateContact({ twitterUrl: e.target.value })}
+                            placeholder="https://twitter.com/..."
+                            className="w-full px-3 py-2 rounded-lg bg-[#07172C] border border-white/10 text-white focus:outline-none focus:border-[#00F0C0]"
+                          />
+                        </div>
+
+                        {/* Discord */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="text-[10px] text-slate-400 flex items-center gap-1.5">
+                              <DiscordIcon className="w-3 h-3 text-[#818CF8]" />
+                              <span>DISCORD SERVER / INVITE URL</span>
+                            </label>
+                            {content.contact.discordUrl && (
+                              <a
+                                href={content.contact.discordUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[10px] text-[#818CF8] hover:underline inline-flex items-center gap-1"
+                              >
+                                <span>Visit</span>
+                                <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            )}
+                          </div>
+                          <input
+                            type="url"
+                            value={content.contact.discordUrl || ''}
+                            onChange={(e) => updateContact({ discordUrl: e.target.value })}
+                            placeholder="https://discord.gg/..."
+                            className="w-full px-3 py-2 rounded-lg bg-[#07172C] border border-white/10 text-white focus:outline-none focus:border-[#00F0C0]"
+                          />
+                        </div>
+
+                        {/* Telegram */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="text-[10px] text-slate-400 flex items-center gap-1.5">
+                              <TelegramIcon className="w-3 h-3 text-[#38BDF8]" />
+                              <span>TELEGRAM CHANNEL / GROUP URL</span>
+                            </label>
+                            {content.contact.telegramUrl && (
+                              <a
+                                href={content.contact.telegramUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[10px] text-[#38BDF8] hover:underline inline-flex items-center gap-1"
+                              >
+                                <span>Visit</span>
+                                <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            )}
+                          </div>
+                          <input
+                            type="url"
+                            value={content.contact.telegramUrl || ''}
+                            onChange={(e) => updateContact({ telegramUrl: e.target.value })}
+                            placeholder="https://t.me/..."
+                            className="w-full px-3 py-2 rounded-lg bg-[#07172C] border border-white/10 text-white focus:outline-none focus:border-[#00F0C0]"
+                          />
+                        </div>
+
+                        {/* Matrix */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="text-[10px] text-slate-400 flex items-center gap-1.5">
+                              <MatrixIcon className="w-3 h-3 text-[#00F0C0]" />
+                              <span>MATRIX ROOM / HOMESERVER URL</span>
+                            </label>
+                            {content.contact.matrixUrl && (
+                              <a
+                                href={content.contact.matrixUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[10px] text-[#00E5BE] hover:underline inline-flex items-center gap-1"
+                              >
+                                <span>Visit</span>
+                                <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            )}
+                          </div>
+                          <input
+                            type="url"
+                            value={content.contact.matrixUrl || ''}
+                            onChange={(e) => updateContact({ matrixUrl: e.target.value })}
+                            placeholder="https://matrix.to/#/..."
+                            className="w-full px-3 py-2 rounded-lg bg-[#07172C] border border-white/10 text-white focus:outline-none focus:border-[#00F0C0]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Cryptographic PGP */}
+                    <div className="pt-2 border-t border-white/[0.08]">
                       <label className="text-[10px] text-slate-400 block mb-1">PGP KEY FINGERPRINT</label>
                       <input
                         type="text"

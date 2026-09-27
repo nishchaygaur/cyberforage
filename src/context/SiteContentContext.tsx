@@ -33,6 +33,10 @@ export interface ContactSettings {
   n8nUrl: string;
   githubUrl: string;
   linkedinUrl: string;
+  twitterUrl?: string;
+  discordUrl?: string;
+  telegramUrl?: string;
+  matrixUrl?: string;
   pgpKey: string;
 }
 
@@ -91,6 +95,9 @@ const DEFAULT_CONTENT: SiteContent = {
     n8nUrl: 'https://n8nrequest.cyberforage.space/',
     githubUrl: 'https://github.com/nishchaygaur',
     linkedinUrl: 'https://linkedin.com/company/cyberforage',
+    twitterUrl: 'https://twitter.com/cyberforage',
+    discordUrl: 'https://discord.gg/cyberforage',
+    telegramUrl: 'https://t.me/cyberforage',
     pgpKey: '4A79 F82D 9C1B 33E4 8802  DAF6 5E21 00C8 99B7 12FA',
   },
   sceneConfig: {

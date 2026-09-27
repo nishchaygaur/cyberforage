@@ -1,9 +1,13 @@
 import React from 'react';
 import { ArrowUp } from 'lucide-react';
-import { GithubIcon, LinkedinIcon } from '../icons/BrandIcons';
+import { GithubIcon, LinkedinIcon, TwitterIcon, DiscordIcon, TelegramIcon } from '../icons/BrandIcons';
 import { cyberSound } from '../../audio/cyberSoundEngine';
+import { useSiteContent } from '../../context/SiteContentContext';
 
 export const Footer: React.FC = () => {
+  const { content } = useSiteContent();
+  const contact = content.contact;
+
   const scrollToTop = () => {
     cyberSound.playClick();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -79,30 +83,76 @@ export const Footer: React.FC = () => {
           </nav>
 
           {/* Social Icons & Scroll Top */}
-          <div className="flex items-center space-x-3">
-            <a
-              href="https://github.com/nishchaygaur"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => cyberSound.playClick()}
-              aria-label="GitHub"
-              title="GitHub Profile"
-              className="p-2 text-slate-400 hover:text-[#00F0C0] hover:bg-white/5 rounded-lg transition-colors"
-            >
-              <GithubIcon className="w-4 h-4" />
-            </a>
+          <div className="flex items-center space-x-2.5">
+            {contact?.githubUrl && (
+              <a
+                href={contact.githubUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => cyberSound.playClick()}
+                aria-label="GitHub"
+                title="GitHub Profile"
+                className="p-2 text-slate-400 hover:text-[#00F0C0] hover:bg-white/5 rounded-lg transition-colors"
+              >
+                <GithubIcon className="w-4 h-4" />
+              </a>
+            )}
 
-            <a
-              href="https://www.linkedin.com/in/nishchay-gaur/"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => cyberSound.playClick()}
-              aria-label="LinkedIn"
-              title="LinkedIn Profile"
-              className="p-2 text-slate-400 hover:text-[#00F0C0] hover:bg-white/5 rounded-lg transition-colors"
-            >
-              <LinkedinIcon className="w-4 h-4" />
-            </a>
+            {contact?.linkedinUrl && (
+              <a
+                href={contact.linkedinUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => cyberSound.playClick()}
+                aria-label="LinkedIn"
+                title="LinkedIn Profile"
+                className="p-2 text-slate-400 hover:text-[#00F0C0] hover:bg-white/5 rounded-lg transition-colors"
+              >
+                <LinkedinIcon className="w-4 h-4" />
+              </a>
+            )}
+
+            {contact?.twitterUrl && (
+              <a
+                href={contact.twitterUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => cyberSound.playClick()}
+                aria-label="Twitter / X"
+                title="Twitter / X"
+                className="p-2 text-slate-400 hover:text-[#00F0C0] hover:bg-white/5 rounded-lg transition-colors"
+              >
+                <TwitterIcon className="w-4 h-4" />
+              </a>
+            )}
+
+            {contact?.discordUrl && (
+              <a
+                href={contact.discordUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => cyberSound.playClick()}
+                aria-label="Discord"
+                title="Discord Community"
+                className="p-2 text-slate-400 hover:text-[#00F0C0] hover:bg-white/5 rounded-lg transition-colors"
+              >
+                <DiscordIcon className="w-4 h-4" />
+              </a>
+            )}
+
+            {contact?.telegramUrl && (
+              <a
+                href={contact.telegramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => cyberSound.playClick()}
+                aria-label="Telegram"
+                title="Telegram Channel"
+                className="p-2 text-slate-400 hover:text-[#00F0C0] hover:bg-white/5 rounded-lg transition-colors"
+              >
+                <TelegramIcon className="w-4 h-4" />
+              </a>
+            )}
 
             <button
               onClick={scrollToTop}
