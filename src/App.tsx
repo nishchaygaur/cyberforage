@@ -11,7 +11,6 @@ import { ContactSection } from './components/sections/ContactSection';
 import { Footer } from './components/footer/Footer';
 import { CyberTerminalModal } from './components/terminal/CyberTerminalModal';
 import { LabSimulationModal } from './components/modals/LabSimulationModal';
-import { CyberCursor } from './components/ui/CyberCursor';
 import { SceneMode, Lab, SimulatedIncident } from './types';
 import { cyberSound } from './audio/cyberSoundEngine';
 import { Terminal } from 'lucide-react';
@@ -150,9 +149,6 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-[#040812] text-white flex flex-col relative selection:bg-[#00F0C0]/20 selection:text-[#00F0C0]">
-      {/* Sci-Fi Futuristic Custom Cyber Cursor */}
-      <CyberCursor />
-
       {/* Background Cyber Grid */}
       <div className="fixed inset-0 cyber-grid-bg opacity-30 pointer-events-none" />
 

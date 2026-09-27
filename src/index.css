@@ -11,17 +11,17 @@
     --cyber-rose: #F43F5E;
     --cyber-sky: #38BDF8;
 
-    /* Futuristic Cyan Tactical Stealth Arrow (Default) - Zero circles, sharp apex */
-    --cursor-default: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M2 1L19 10L11 12.5L8.5 21L2 1Z' fill='%23040812' stroke='%2300F0C0' stroke-width='1.5' stroke-linejoin='miter' stroke-miterlimit='4'/%3E%3Cpath d='M4.5 4.5L14.5 9.5L10.5 11.2L9 16.5L4.5 4.5Z' fill='%2300F0C0'/%3E%3Cpolygon points='2,1 4,1 4,3 2,3' fill='%2338BDF8'/%3E%3C/svg%3E") 2 1, auto;
+    /* Futuristic Cyan Tactical Stealth Arrow (Default) - Only clean cursor, nothing around it */
+    --cursor-default: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M2 2L19 10L11 12.5L8 20L2 2Z' fill='%23040812' stroke='%2300F0C0' stroke-width='1.5' stroke-linejoin='miter' stroke-miterlimit='4'/%3E%3Cpath d='M4.5 5L14 9.5L10 11.2L8.5 15.8L4.5 5Z' fill='%2300F0C0' fill-opacity='0.25'/%3E%3Cpolygon points='2,2 6,3.5 3.5,6' fill='%2300F0C0'/%3E%3C/svg%3E") 2 2, auto;
 
-    /* Tactical Cybersecurity Target-Lock Brackets (Pointer/Clickable) - Zero circles, angular brackets */
-    --cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cpath d='M5 10V5H10' fill='none' stroke='%2300F0C0' stroke-width='1.5' stroke-linecap='square'/%3E%3Cpath d='M18 5H23V10' fill='none' stroke='%2300F0C0' stroke-width='1.5' stroke-linecap='square'/%3E%3Cpath d='M5 18V23H10' fill='none' stroke='%2300F0C0' stroke-width='1.5' stroke-linecap='square'/%3E%3Cpath d='M18 23H23V18' fill='none' stroke='%2300F0C0' stroke-width='1.5' stroke-linecap='square'/%3E%3Cline x1='14' y1='8' x2='14' y2='12' stroke='%2300F0C0' stroke-width='1.5'/%3E%3Cline x1='14' y1='16' x2='14' y2='20' stroke='%2300F0C0' stroke-width='1.5'/%3E%3Cline x1='8' y1='14' x2='12' y2='14' stroke='%2300F0C0' stroke-width='1.5'/%3E%3Cline x1='16' y1='14' x2='20' y2='14' stroke='%2300F0C0' stroke-width='1.5'/%3E%3Cpolygon points='14,12 16,14 14,16 12,14' fill='%2300F0C0'/%3E%3C/svg%3E") 14 14, pointer;
+    /* Energized Tactical Cyber Pointer (Pointer/Clickable) - Only clean energized pointer, nothing around it */
+    --cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M2 2L19 10L11 12.5L8 20L2 2Z' fill='%2300F0C0' stroke='%23040812' stroke-width='1.5' stroke-linejoin='miter' stroke-miterlimit='4'/%3E%3Cpath d='M4.5 5L14 9.5L10 11.2L8.5 15.8L4.5 5Z' fill='%23040812'/%3E%3Cpolygon points='2,2 6,3.5 3.5,6' fill='%2338BDF8'/%3E%3C/svg%3E") 2 2, pointer;
 
-    /* Cyber Text Cursor - Angular I-beam with diamond center */
+    /* Cyber Text Cursor - Precision I-Beam */
     --cursor-text: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='24' viewBox='0 0 20 24'%3E%3Cline x1='10' y1='3' x2='10' y2='21' stroke='%2300F0C0' stroke-width='2'/%3E%3Cline x1='6' y1='3' x2='14' y2='3' stroke='%2300F0C0' stroke-width='1.5'/%3E%3Cline x1='6' y1='21' x2='14' y2='21' stroke='%2300F0C0' stroke-width='1.5'/%3E%3Cpolygon points='10,10.5 11.5,12 10,13.5 8.5,12' fill='%2338BDF8'/%3E%3C/svg%3E") 10 12, text;
 
-    /* 3D Tactical Orbit / Grab Cursor - Angular 4-way reticle with diamond center */
-    --cursor-grab: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpolygon points='12,9 15,12 12,15 9,12' fill='%2300F0C0' fill-opacity='0.35' stroke='%2300F0C0' stroke-width='1.2'/%3E%3Cpath d='M12 2L16 6H8L12 2Z' fill='%2300F0C0'/%3E%3Cpath d='M12 22L16 18H8L12 22Z' fill='%2300F0C0'/%3E%3Cpath d='M2 12L6 8V16L2 12Z' fill='%2300F0C0'/%3E%3Cpath d='M22 12L18 8V16L22 12Z' fill='%2300F0C0'/%3E%3C/svg%3E") 12 12, grab;
+    /* 3D Tactical Orbit / Grab Cursor */
+    --cursor-grab: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpolygon points='12,9 15,12 12,15 9,12' fill='%2300F0C0' stroke='%23040812' stroke-width='1'/%3E%3Cpath d='M12 2L16 6H8L12 2Z' fill='%2300F0C0'/%3E%3Cpath d='M12 22L16 18H8L12 22Z' fill='%2300F0C0'/%3E%3Cpath d='M2 12L6 8V16L2 12Z' fill='%2300F0C0'/%3E%3Cpath d='M22 12L18 8V16L22 12Z' fill='%2300F0C0'/%3E%3C/svg%3E") 12 12, grab;
   }
 
   html, body {
