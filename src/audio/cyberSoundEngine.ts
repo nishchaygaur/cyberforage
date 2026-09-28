@@ -43,23 +43,34 @@ class CyberSoundEngine {
   }
 
   public async triggerWelcomeSequence(customText?: string): Promise<boolean> {
+    if (typeof window !== 'undefined' && (window as unknown as { __CYBERFORAGE_PAGE_WELCOMED?: boolean }).__CYBERFORAGE_PAGE_WELCOMED) {
+      this.hasWelcomed = true;
+      return true;
+    }
     if (this.hasWelcomed || this.isMuted || this.isWelcoming) return false;
 
-    this.initCtx();
-    if (!this.ctx) return false;
+    this.isWelcoming = true;
 
-    // Check if AudioContext is running or can be resumed immediately
+    this.initCtx();
+    if (!this.ctx) {
+      this.isWelcoming = false;
+      return false;
+    }
+
+    // Attempt to resume audio context
     if (this.ctx.state === 'suspended') {
       try {
         await this.ctx.resume();
       } catch {
-        // Autoplay restriction in effect
+        // Autoplay restriction in effect; will trigger on first user interaction
       }
     }
 
     if (this.ctx.state === 'running') {
-      this.isWelcoming = true;
       this.hasWelcomed = true;
+      if (typeof window !== 'undefined') {
+        (window as unknown as { __CYBERFORAGE_PAGE_WELCOMED?: boolean }).__CYBERFORAGE_PAGE_WELCOMED = true;
+      }
       this.playWelcome(customText);
       setTimeout(() => {
         this.isWelcoming = false;
@@ -67,21 +78,8 @@ class CyberSoundEngine {
       return true;
     }
 
-    // Attempt direct voice synthesis if Web Audio is suspended by browser
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window && this.voiceEnabled) {
-      try {
-        this.speakVoice(
-          customText || "Welcome to Cyberforage. Tactical defense systems online.",
-          () => {
-            this.hasWelcomed = true;
-          }
-        );
-      } catch {
-        // Ignored
-      }
-    }
-
-    return this.hasWelcomed;
+    this.isWelcoming = false;
+    return false;
   }
 
   public setMuted(muted: boolean): boolean {
@@ -183,70 +181,95 @@ class CyberSoundEngine {
 
       const now = this.ctx.currentTime;
 
-      // 1. Deep sub-bass energy swell
-      const subOsc = this.ctx.createOscillator();
-      const subGain = this.ctx.createGain();
-      subOsc.type = 'sine';
-      subOsc.frequency.setValueAtTime(55, now);
-      subOsc.frequency.exponentialRampToValueAtTime(160, now + 0.6);
-      subGain.gain.setValueAtTime(0.001, now);
-      subGain.gain.linearRampToValueAtTime(0.14, now + 0.25);
-      subGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.85);
-      subOsc.connect(subGain);
-      subGain.connect(this.ctx.destination);
-      subOsc.start(now);
-      subOsc.stop(now + 0.85);
+      // 1. Warm Analog Cyber Bass Foundation (clean sine, gentle presence)
+      const bassOsc = this.ctx.createOscillator();
+      const bassGain = this.ctx.createGain();
+      bassOsc.type = 'sine';
+      bassOsc.frequency.setValueAtTime(75, now);
+      bassOsc.frequency.exponentialRampToValueAtTime(52, now + 0.65);
+      bassGain.gain.setValueAtTime(0.001, now);
+      bassGain.gain.linearRampToValueAtTime(0.07, now + 0.12);
+      bassGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.75);
+      bassOsc.connect(bassGain);
+      bassGain.connect(this.ctx.destination);
+      bassOsc.start(now);
+      bassOsc.stop(now + 0.75);
 
-      // 2. Harmonic Cyber Arpeggio (Futuristic power-up chord)
-      const chordNotes = [329.63, 440.0, 554.37, 659.25, 880.0, 1108.73];
-      chordNotes.forEach((freq, idx) => {
+      // 2. High-Tech Glass Cyber Chime (Pristine 3-tone Harmonic Handshake)
+      // Note 1: D5 (587.33 Hz)
+      // Note 2: A5 (880.00 Hz)
+      // Note 3: E6 (1318.51 Hz) + F#6 shimmer (1479.98 Hz)
+      const chimes = [
+        { freq: 587.33, start: now + 0.05, dur: 0.55, gainVal: 0.06 },
+        { freq: 880.00, start: now + 0.18, dur: 0.60, gainVal: 0.07 },
+        { freq: 1318.51, start: now + 0.32, dur: 0.65, gainVal: 0.06 },
+        { freq: 1479.98, start: now + 0.40, dur: 0.55, gainVal: 0.035 }
+      ];
+
+      chimes.forEach(({ freq, start, dur, gainVal }) => {
         if (!this.ctx) return;
         const osc = this.ctx.createOscillator();
+        const overtone = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
-        const startTime = now + 0.08 + idx * 0.07;
+        const filter = this.ctx.createBiquadFilter();
 
-        osc.type = idx % 2 === 0 ? 'sine' : 'triangle';
-        osc.frequency.setValueAtTime(freq * 0.75, startTime);
-        osc.frequency.exponentialRampToValueAtTime(freq, startTime + 0.15);
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(3600, start);
 
-        gain.gain.setValueAtTime(0.001, startTime);
-        gain.gain.linearRampToValueAtTime(0.07, startTime + 0.06);
-        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.9);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, start);
+
+        overtone.type = 'triangle';
+        overtone.frequency.setValueAtTime(freq * 2, start);
+
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.linearRampToValueAtTime(gainVal, start + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+
+        const blendGain = this.ctx.createGain();
+        blendGain.gain.setValueAtTime(0.18, start);
+        overtone.connect(blendGain);
+        blendGain.connect(gain);
 
         osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(startTime);
-        osc.stop(startTime + 0.9);
+        gain.connect(filter);
+        filter.connect(this.ctx.destination);
+
+        osc.start(start);
+        overtone.start(start);
+        osc.stop(start + dur);
+        overtone.stop(start + dur);
       });
 
-      // 3. Shimmering high-frequency cyber beam
-      const highOsc = this.ctx.createOscillator();
-      const highGain = this.ctx.createGain();
-      highOsc.type = 'sawtooth';
-      highOsc.frequency.setValueAtTime(1100, now + 0.45);
-      highOsc.frequency.exponentialRampToValueAtTime(2200, now + 0.75);
+      // 3. Subtle Holographic Resonant Swell
+      const pulseOsc = this.ctx.createOscillator();
+      const pulseGain = this.ctx.createGain();
+      const pulseFilter = this.ctx.createBiquadFilter();
 
-      const filter = this.ctx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(3200, now);
+      pulseFilter.type = 'bandpass';
+      pulseFilter.Q.setValueAtTime(2.5, now + 0.1);
+      pulseFilter.frequency.setValueAtTime(1600, now + 0.1);
+      pulseFilter.frequency.exponentialRampToValueAtTime(800, now + 0.6);
 
-      highGain.gain.setValueAtTime(0.001, now + 0.45);
-      highGain.gain.linearRampToValueAtTime(0.04, now + 0.55);
-      highGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
+      pulseOsc.type = 'sine';
+      pulseOsc.frequency.setValueAtTime(1200, now + 0.1);
+      pulseGain.gain.setValueAtTime(0.001, now + 0.1);
+      pulseGain.gain.linearRampToValueAtTime(0.02, now + 0.22);
+      pulseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.65);
 
-      highOsc.connect(filter);
-      filter.connect(highGain);
-      highGain.connect(this.ctx.destination);
-      highOsc.start(now + 0.45);
-      highOsc.stop(now + 0.9);
+      pulseOsc.connect(pulseGain);
+      pulseGain.connect(pulseFilter);
+      pulseFilter.connect(this.ctx.destination);
+      pulseOsc.start(now + 0.1);
+      pulseOsc.stop(now + 0.65);
 
-      // 4. Tactical Welcome Voice Synthesizer
+      // 4. Tactical Welcome Voice Synthesizer (Starts cleanly as chimes settle)
       if (this.voiceEnabled) {
         setTimeout(() => {
           this.speakVoice(
             customText || "Welcome to Cyberforage. Tactical defense systems online."
           );
-        }, 600);
+        }, 800);
       }
     } catch {
       // Ignored if browser audio context restricted
@@ -254,8 +277,7 @@ class CyberSoundEngine {
   }
 
   public replayWelcome(customText?: string) {
-    this.hasWelcomed = false;
-    this.isWelcoming = false;
+    if (this.isMuted) return;
     this.initCtx();
     if (this.ctx && this.ctx.state === 'suspended') {
       this.ctx.resume().catch(() => {});
@@ -495,16 +517,3 @@ class CyberSoundEngine {
 
 export const cyberSound = new CyberSoundEngine();
 
-// Auto-trigger welcome sequence at initial document loading
-if (typeof window !== 'undefined') {
-  const tryAutoPlay = () => {
-    cyberSound.triggerWelcomeSequence().catch(() => {});
-  };
-
-  if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    tryAutoPlay();
-  } else {
-    window.addEventListener('DOMContentLoaded', tryAutoPlay, { once: true });
-    window.addEventListener('load', tryAutoPlay, { once: true });
-  }
-}

@@ -52,62 +52,62 @@ export function App() {
   const konamiIndexRef = useRef(0);
   const konamiSequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
 
-  // Auto-play / Immediate Tactical Welcome Sequence
+  // Auto-play / Immediate Tactical Welcome Sequence (strictly ONCE per page load)
   useEffect(() => {
-    let played = false;
+    let triggered = false;
 
-    const attemptWelcome = async () => {
-      if (played) return;
+    const cleanupGestureListeners = () => {
+      window.removeEventListener('pointerdown', handleUserGesture);
+      window.removeEventListener('click', handleUserGesture);
+      window.removeEventListener('keydown', handleUserGesture);
+      window.removeEventListener('touchstart', handleUserGesture);
+    };
+
+    const handleUserGesture = () => {
+      if (triggered || cyberSound.hasWelcomed) {
+        cleanupGestureListeners();
+        return;
+      }
+      // Detach immediately on the very first touch/click/press to prevent double firing
+      cleanupGestureListeners();
+      runWelcome();
+    };
+
+    const runWelcome = async () => {
+      if (triggered || cyberSound.hasWelcomed) return;
       const success = await cyberSound.triggerWelcomeSequence();
       if (success) {
-        played = true;
+        triggered = true;
         setShowAudioUnlockPrompt(false);
         cleanupGestureListeners();
       }
     };
 
-    // 1. Immediate trigger on component mount
-    attemptWelcome();
+    // 1. Attempt immediate auto-play on initial render
+    runWelcome();
 
-    // 2. Micro-stagger retries (allowing browser audio context / speech engine to finish booting)
-    const t1 = window.setTimeout(attemptWelcome, 150);
-    const t2 = window.setTimeout(attemptWelcome, 500);
-    const t3 = window.setTimeout(attemptWelcome, 1200);
+    // 2. Micro-staggered fallback (for browsers where audio engine initializes slightly after mount)
+    const t1 = window.setTimeout(() => {
+      if (!triggered && !cyberSound.hasWelcomed) {
+        runWelcome();
+      }
+    }, 250);
 
-    // 3. Fallback prompt if browser autoplay policy holds context suspended
+    // 3. Fallback prompt only if audio is still blocked after 1.8s
     const promptTimer = window.setTimeout(() => {
-      if (!cyberSound.hasWelcomed && !played) {
+      if (!triggered && !cyberSound.hasWelcomed) {
         setShowAudioUnlockPrompt(true);
       }
-    }, 1600);
+    }, 1800);
 
-    // 4. Fallback listeners for the very first interaction if browser blocked initial autoplay
-    const handleGesture = () => {
-      attemptWelcome();
-    };
-
-    const cleanupGestureListeners = () => {
-      window.removeEventListener('pointerdown', handleGesture);
-      window.removeEventListener('pointermove', handleGesture);
-      window.removeEventListener('click', handleGesture);
-      window.removeEventListener('keydown', handleGesture);
-      window.removeEventListener('wheel', handleGesture);
-      window.removeEventListener('scroll', handleGesture);
-      window.removeEventListener('touchstart', handleGesture);
-    };
-
-    window.addEventListener('pointerdown', handleGesture, { passive: true });
-    window.addEventListener('pointermove', handleGesture, { passive: true, once: true });
-    window.addEventListener('click', handleGesture, { passive: true });
-    window.addEventListener('keydown', handleGesture, { passive: true });
-    window.addEventListener('wheel', handleGesture, { passive: true });
-    window.addEventListener('scroll', handleGesture, { passive: true });
-    window.addEventListener('touchstart', handleGesture, { passive: true });
+    // 4. Fallback listener for the first interaction if browser blocked initial autoplay
+    window.addEventListener('pointerdown', handleUserGesture, { passive: true });
+    window.addEventListener('click', handleUserGesture, { passive: true });
+    window.addEventListener('keydown', handleUserGesture, { passive: true });
+    window.addEventListener('touchstart', handleUserGesture, { passive: true });
 
     return () => {
       window.clearTimeout(t1);
-      window.clearTimeout(t2);
-      window.clearTimeout(t3);
       window.clearTimeout(promptTimer);
       cleanupGestureListeners();
     };
@@ -416,11 +416,11 @@ export function App() {
       </button>
 
       {/* Floating Tactical Audio Unlock Notification if browser policy requires user activation */}
-      {showAudioUnlockPrompt && (
+      {showAudioUnlockPrompt && !cyberSound.hasWelcomed && (
         <button
           onClick={() => {
-            cyberSound.replayWelcome();
             setShowAudioUnlockPrompt(false);
+            cyberSound.triggerWelcomeSequence();
           }}
           className="fixed bottom-6 left-28 z-40 flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-[#071322]/95 hover:bg-[#0c1f38] border border-[#00F0C0]/60 hover:border-[#00F0C0] text-[#00F0C0] font-mono text-xs font-semibold backdrop-blur-md shadow-[0_0_25px_rgba(0,240,192,0.35)] animate-pulse transition-all cursor-pointer group"
           title="Click to engage Tactical Cyber Audio"
