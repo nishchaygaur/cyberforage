@@ -127,60 +127,138 @@ export class CyberGlobeController {
     );
   }
 
+  private isLandCoordinates(lat: number, lon: number): boolean {
+    // Normalize longitude to -180..180
+    while (lon > 180) lon -= 360;
+    while (lon < -180) lon += 360;
+
+    // North America & Central America
+    if (lat >= 10 && lat <= 75 && lon >= -170 && lon <= -50) {
+      if (lat < 30 && lon < -105 && lon > -120) return true; // Mexico / Baja
+      if (lat < 25 && lon < -98 && lon > -105) return false; // Gulf of Mexico
+      if (lat > 55 && lon > -85 && lon < -65 && lat < 65) return false; // Hudson Bay
+      return true;
+    }
+    // South America
+    if (lat >= -56 && lat <= 13 && lon >= -82 && lon <= -34) {
+      if (lat < -40 && lon > -60) return false;
+      if (lat > 5 && lon > -50) return false;
+      return true;
+    }
+    // Europe, Scandinavia & UK
+    if (lat >= 35 && lat <= 72 && lon >= -11 && lon <= 45) {
+      if (lat < 45 && lon < -5) return true; // Iberia
+      if (lat > 55 && lon > 5 && lon < 30) return true; // Scandinavia / Baltic
+      if (lat > 50 && lat < 60 && lon >= -11 && lon <= 2) return true; // UK & Ireland
+      if (lat >= 36 && lat <= 46 && lon >= 6 && lon <= 19) return true; // Italy
+      return true;
+    }
+    // Africa & Madagascar
+    if (lat >= -35 && lat <= 38 && lon >= -18 && lon <= 52) {
+      if (lat > 15 && lon > 35 && lat < 30 && lon < 45) return false; // Red Sea
+      if (lat < -10 && lon > 43 && lon < 51) return true; // Madagascar
+      return true;
+    }
+    // Asia (India, China, SE Asia, Siberia, Middle East)
+    if (lat >= 1 && lat <= 78 && lon >= 40 && lon <= 180) {
+      if (lat < 10 && lon < 95 && lon > 60) return false; // Indian ocean south of India
+      if (lat > 65 && lon > 170) return true; // Chukotka
+      if (lat >= 7 && lat <= 35 && lon >= 68 && lon <= 92) return true; // India
+      return true;
+    }
+    // Japan
+    if (lat >= 30 && lat <= 46 && lon >= 128 && lon <= 147) return true;
+    // Indonesia, Philippines, Malaysia
+    if (lat >= -11 && lat <= 20 && lon >= 95 && lon <= 130) {
+      if (lat > 5 && lon > 118 && lon < 127) return true; // Philippines
+      if (lat > -9 && lat < 6 && lon > 95 && lon < 120) return true; // Sumatra / Java / Borneo
+      return true;
+    }
+    // Australia & New Zealand
+    if (lat >= -44 && lat <= -10 && lon >= 112 && lon <= 155) return true;
+    if (lat >= -47 && lat <= -34 && lon >= 165 && lon <= 179) return true; // New Zealand
+
+    return false;
+  }
+
   private createCoreGlobe() {
     // Dark cyber core
-    const coreGeo = new THREE.SphereGeometry(2.5, 48, 48);
+    const coreGeo = new THREE.SphereGeometry(2.45, 48, 48);
     const coreMat = new THREE.MeshBasicMaterial({
-      color: 0x040d1a,
+      color: 0x030a16,
       transparent: true,
-      opacity: 0.92
+      opacity: 0.88
     });
     this.coreSphere = new THREE.Mesh(coreGeo, coreMat);
     this.group.add(this.coreSphere);
 
-    // Outer wireframe grid
-    const wireGeo = new THREE.WireframeGeometry(new THREE.SphereGeometry(2.52, 28, 28));
+    // Subtle atmospheric wireframe grid
+    const wireGeo = new THREE.WireframeGeometry(new THREE.SphereGeometry(2.48, 24, 24));
     this.wireSphere = new THREE.LineSegments(
       wireGeo,
       new THREE.LineBasicMaterial({
         color: 0x00f0c0,
         transparent: true,
-        opacity: 0.12
+        opacity: 0.04
       })
     );
     this.group.add(this.wireSphere);
   }
 
   private createContinentMatrix() {
-    // Generate holographic continent dot clusters
-    const count = 3800;
+    // Generate uniform holographic cyber dots using true Fibonacci Golden Spiral
+    // This mathematically prevents dots from ever collapsing into rings or vanishing on rotation
+    const count = 7600;
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
-    const baseColor = new THREE.Color(0x00f0c0);
-    const altColor = new THREE.Color(0x38bdf8);
+
+    const landColor1 = new THREE.Color(0x00f0c0); // Neon cyber cyan
+    const landColor2 = new THREE.Color(0x38bdf8); // Sky blue cyber glow
+    const landColor3 = new THREE.Color(0xa7f3d0); // Radiant highlight
+    const oceanColor = new THREE.Color(0x0284c7); // Deep cyber ocean blue
+    const oceanAltColor = new THREE.Color(0x0369a1);
+
+    const goldenAngle = Math.PI * (3 - Math.sqrt(5)); // ~2.399963 rad (Golden Angle)
 
     let idx = 0;
     for (let i = 0; i < count; i++) {
-      // Fibonacci sphere distribution with cluster density masking
-      const phi = Math.acos(-1 + (2 * i) / count);
-      const theta = Math.sqrt(count * Math.PI) * phi;
-      const radius = 2.54;
+      // True isotropic spherical Fibonacci lattice
+      const yNorm = 1 - (i / (count - 1)) * 2; // from 1 to -1
+      const radiusAtY = Math.sqrt(Math.max(0, 1 - yNorm * yNorm));
+      const theta = goldenAngle * i;
 
-      const x = radius * Math.sin(phi) * Math.cos(theta);
-      const y = radius * Math.cos(phi);
-      const z = radius * Math.sin(phi) * Math.sin(theta);
+      const lat = Math.asin(Math.max(-1, Math.min(1, yNorm))) * (180 / Math.PI);
+      const lon = ((((theta % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)) - Math.PI) * (180 / Math.PI);
+
+      const isLand = this.isLandCoordinates(lat, lon);
+      const radius = isLand ? 2.54 : 2.51;
+
+      const x = radius * Math.cos(theta) * radiusAtY;
+      const y = radius * yNorm;
+      const z = radius * Math.sin(theta) * radiusAtY;
 
       positions[idx] = x;
       positions[idx + 1] = y;
       positions[idx + 2] = z;
 
-      // Color variation across latitudes
-      const mixRatio = Math.sin(phi * 3) * 0.5 + 0.5;
-      const pointColor = baseColor.clone().lerp(altColor, mixRatio);
-
-      colors[idx] = pointColor.r;
-      colors[idx + 1] = pointColor.g;
-      colors[idx + 2] = pointColor.b;
+      if (isLand) {
+        // Bright neon gradients for continents
+        const latMix = (Math.sin(lat * 0.08) + 1) * 0.5;
+        const ptColor = landColor1.clone().lerp(landColor2, latMix);
+        if (i % 7 === 0) {
+          ptColor.lerp(landColor3, 0.45);
+        }
+        colors[idx] = ptColor.r;
+        colors[idx + 1] = ptColor.g;
+        colors[idx + 2] = ptColor.b;
+      } else {
+        // Deep cyber ocean grid dots (keeps globe full of dots from every angle)
+        const oceanMix = (Math.sin(lat * 0.05 + theta) + 1) * 0.5;
+        const ptColor = oceanColor.clone().lerp(oceanAltColor, oceanMix);
+        colors[idx] = ptColor.r * 0.5;
+        colors[idx + 1] = ptColor.g * 0.5;
+        colors[idx + 2] = ptColor.b * 0.5;
+      }
 
       idx += 3;
     }
@@ -189,27 +267,28 @@ export class CyberGlobeController {
     geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
-    // Custom circular particle texture
+    // High-resolution circular particle texture with soft neon corona
     const canvas = document.createElement('canvas');
-    canvas.width = 16;
-    canvas.height = 16;
+    canvas.width = 32;
+    canvas.height = 32;
     const ctx = canvas.getContext('2d');
     if (ctx) {
-      const grad = ctx.createRadialGradient(8, 8, 0, 8, 8, 8);
+      const grad = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
       grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
-      grad.addColorStop(0.5, 'rgba(0, 240, 192, 0.8)');
+      grad.addColorStop(0.35, 'rgba(0, 240, 192, 0.95)');
+      grad.addColorStop(0.7, 'rgba(0, 240, 192, 0.35)');
       grad.addColorStop(1, 'rgba(0, 240, 192, 0)');
       ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 16, 16);
+      ctx.fillRect(0, 0, 32, 32);
     }
     const texture = new THREE.CanvasTexture(canvas);
 
     const mat = new THREE.PointsMaterial({
-      size: 0.08,
+      size: 0.088,
       vertexColors: true,
       map: texture,
       transparent: true,
-      opacity: 0.75,
+      opacity: 0.92,
       blending: THREE.AdditiveBlending,
       depthWrite: false
     });
@@ -265,13 +344,13 @@ export class CyberGlobeController {
   }
 
   private createDefenseShield() {
-    // Hexagonal shield outer layer
+    // Hexagonal shield outer layer (subtle holographic forcefield)
     const shieldGeo = new THREE.IcosahedronGeometry(2.78, 2);
     const shieldMat = new THREE.MeshBasicMaterial({
       color: 0x00f0c0,
       wireframe: true,
       transparent: true,
-      opacity: 0.08,
+      opacity: 0.035,
       blending: THREE.AdditiveBlending
     });
     this.shieldHex = new THREE.Mesh(shieldGeo, shieldMat);
@@ -522,12 +601,13 @@ export class CyberGlobeController {
   }
 
   public update(delta: number, elapsed: number) {
-    // Gentle rotation
-    this.coreSphere.rotation.y += 0.002;
-    this.wireSphere.rotation.y += 0.0025;
-    this.continentPoints.rotation.y += 0.002;
-    this.nodesGroup.rotation.y += 0.002;
-    this.arcsGroup.rotation.y += 0.002;
+    // Synchronized gentle rotation across all elements
+    const rotSpeed = 0.0020;
+    this.coreSphere.rotation.y += rotSpeed;
+    this.wireSphere.rotation.y += rotSpeed;
+    this.continentPoints.rotation.y += rotSpeed;
+    this.nodesGroup.rotation.y += rotSpeed;
+    this.arcsGroup.rotation.y += rotSpeed;
 
     // Counter rotate shield for radar hologram effect
     this.shieldHex.rotation.y -= 0.0015;
