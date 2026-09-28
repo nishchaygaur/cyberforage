@@ -232,7 +232,7 @@ export class CyberGlobeController {
   private createContinentMatrix() {
     // Full isotropic Fibonacci Golden Spiral coverage guaranteeing dots ALL OVER THE ENTIRE GLOBE
     // Base lattice covers 100% of the sphere (land + oceans) with vibrant, clearly visible glowing dots
-    const baseCount = 14500;
+    const baseCount = 22000;
     const extraLandCount = 4000;
     const totalCount = baseCount + extraLandCount;
 
@@ -241,17 +241,17 @@ export class CyberGlobeController {
 
     const landColor1 = new THREE.Color(0x00f0c0); // Radiant neon cyber cyan
     const landColor2 = new THREE.Color(0x38bdf8); // Sky blue cyber glow
-    const landColor3 = new THREE.Color(0xffffff); // Brilliant luminous pearl white
+    const landColor3 = new THREE.Color(0xffffff); // Brilliant diamond pearl white
     const oceanColor1 = new THREE.Color(0x00f0ff); // Electric vivid cyber cyan
-    const oceanColor2 = new THREE.Color(0x0ea5e9); // Luminous electric cyber blue
+    const oceanColor2 = new THREE.Color(0x38bdf8); // Luminous electric cyber blue
     const oceanColor3 = new THREE.Color(0x67e8f9); // High-luminance sky cyan
-    const oceanBeacon = new THREE.Color(0xffffff); // Sparkling white coordinate node
+    const diamondWhite = new THREE.Color(0xffffff); // Brilliant diamond sparkle
 
     const goldenAngle = Math.PI * (3 - Math.sqrt(5)); // ~2.399963 rad (Golden Angle)
 
     let idx = 0;
 
-    // 1. Base Layer: Uniform dots all over the globe (100% spherical coverage)
+    // 1. Base Layer: Uniform high-density dots all over the entire globe (100% spherical coverage)
     for (let i = 0; i < baseCount; i++) {
       const yNorm = 1 - (i / (baseCount - 1)) * 2; // from 1 to -1
       const theta = goldenAngle * i;
@@ -274,21 +274,25 @@ export class CyberGlobeController {
         // High-contrast neon gradients for continents
         const latMix = (Math.sin(lat * 0.08) + 1) * 0.5;
         const ptColor = landColor1.clone().lerp(landColor2, latMix);
-        if (i % 3 === 0) {
-          ptColor.lerp(landColor3, 0.65);
+        if (i % 2 === 0) {
+          ptColor.lerp(landColor3, 0.85); // Dazzling diamond white sparkle
+        } else if (i % 5 === 0) {
+          ptColor.lerp(landColor3, 0.5);
         }
         colors[idx] = ptColor.r;
         colors[idx + 1] = ptColor.g;
         colors[idx + 2] = ptColor.b;
       } else {
         // Vibrant, luminous cyber ocean dots spanning the entire globe
-        // Clearly visible at all times, no matter how the globe rotates
-        const oceanMix = (Math.sin(lat * 0.05 + theta * 1.5) + 1) * 0.5;
+        // Exactly matches the dense, glittering white-and-cyan matrix in all 360 degrees
+        const oceanMix = (Math.sin(lat * 0.06 + theta * 1.2) + 1) * 0.5;
         const ptColor = oceanColor1.clone().lerp(oceanColor2, oceanMix);
-        if (i % 3 === 0) {
-          ptColor.lerp(oceanBeacon, 0.65); // Sparkling white coordinate node
-        } else if (i % 2 === 0) {
-          ptColor.lerp(oceanColor3, 0.5);
+        if (i % 2 === 0) {
+          ptColor.lerp(diamondWhite, 0.82); // High-density diamond white sparkle
+        } else if (i % 3 === 0) {
+          ptColor.lerp(oceanColor3, 0.65); // Radiant icy cyan accent
+        } else {
+          ptColor.lerp(landColor1, 0.45); // Electric cyber turquoise
         }
         colors[idx] = ptColor.r;
         colors[idx + 1] = ptColor.g;
@@ -323,7 +327,7 @@ export class CyberGlobeController {
         positions[idx + 1] = pos.y;
         positions[idx + 2] = pos.z;
 
-        const ptColor = landColor1.clone().lerp(landColor3, pseudoRandom() * 0.7);
+        const ptColor = landColor1.clone().lerp(landColor3, pseudoRandom() * 0.8);
         colors[idx] = ptColor.r;
         colors[idx + 1] = ptColor.g;
         colors[idx + 2] = ptColor.b;
@@ -346,9 +350,9 @@ export class CyberGlobeController {
     if (ctx) {
       const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
       grad.addColorStop(0, 'rgba(255, 255, 255, 1.0)');
-      grad.addColorStop(0.35, 'rgba(255, 255, 255, 1.0)'); // Solid sharp bead core
-      grad.addColorStop(0.70, 'rgba(255, 255, 255, 0.65)'); // Luminous cyber halo
-      grad.addColorStop(0.92, 'rgba(255, 255, 255, 0.15)');
+      grad.addColorStop(0.38, 'rgba(255, 255, 255, 1.0)'); // Solid sharp bead core
+      grad.addColorStop(0.70, 'rgba(255, 255, 255, 0.68)'); // Luminous cyber halo
+      grad.addColorStop(0.92, 'rgba(255, 255, 255, 0.16)');
       grad.addColorStop(1.0, 'rgba(255, 255, 255, 0)');
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 64, 64);
@@ -356,7 +360,7 @@ export class CyberGlobeController {
     const texture = new THREE.CanvasTexture(canvas);
 
     const mat = new THREE.PointsMaterial({
-      size: 0.092,
+      size: 0.088,
       vertexColors: true,
       map: texture,
       transparent: true,
