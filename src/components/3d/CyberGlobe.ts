@@ -62,8 +62,6 @@ export const ORBITAL_NODES: OrbitalNodeData[] = [
 export class CyberGlobeController {
   public group: THREE.Group;
   private coreSphere!: THREE.Mesh;
-  private wireSphere!: THREE.LineSegments;
-  private shieldHex!: THREE.Mesh;
   private continentPoints!: THREE.Points;
   private ring1!: THREE.Line;
   private ring2!: THREE.Line;
@@ -104,7 +102,6 @@ export class CyberGlobeController {
     this.createCoreGlobe();
     this.createContinentMatrix();
     this.createOrbitRings();
-    this.createDefenseShield();
     this.createOrbitalNodes();
     this.createRadarSweep();
     this.createOrbitingSatellites();
@@ -206,27 +203,16 @@ export class CyberGlobeController {
   }
 
   private createCoreGlobe() {
-    // Dark cyber core
+    // Dark cyber core - rendered in opaque pass to reliably occlude back hemisphere dots
     const coreGeo = new THREE.SphereGeometry(2.45, 48, 48);
     const coreMat = new THREE.MeshBasicMaterial({
       color: 0x020814,
-      transparent: true,
-      opacity: 0.85
+      depthWrite: true,
+      depthTest: true
     });
     this.coreSphere = new THREE.Mesh(coreGeo, coreMat);
+    this.coreSphere.renderOrder = 0;
     this.group.add(this.coreSphere);
-
-    // Subtle atmospheric wireframe grid
-    const wireGeo = new THREE.WireframeGeometry(new THREE.SphereGeometry(2.48, 24, 24));
-    this.wireSphere = new THREE.LineSegments(
-      wireGeo,
-      new THREE.LineBasicMaterial({
-        color: 0x00f0c0,
-        transparent: true,
-        opacity: 0.07
-      })
-    );
-    this.group.add(this.wireSphere);
   }
 
   private createContinentMatrix() {
@@ -370,6 +356,7 @@ export class CyberGlobeController {
     });
 
     this.continentPoints = new THREE.Points(geo, mat);
+    this.continentPoints.renderOrder = 10;
     this.group.add(this.continentPoints);
   }
 
@@ -417,20 +404,6 @@ export class CyberGlobeController {
     );
     this.ring2.computeLineDistances();
     this.group.add(this.ring2);
-  }
-
-  private createDefenseShield() {
-    // Hexagonal shield outer layer (subtle holographic forcefield)
-    const shieldGeo = new THREE.IcosahedronGeometry(2.78, 2);
-    const shieldMat = new THREE.MeshBasicMaterial({
-      color: 0x00f0c0,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.018,
-      blending: THREE.AdditiveBlending
-    });
-    this.shieldHex = new THREE.Mesh(shieldGeo, shieldMat);
-    this.group.add(this.shieldHex);
   }
 
   private createOrbitalNodes() {
@@ -680,14 +653,9 @@ export class CyberGlobeController {
     // Synchronized gentle rotation across all elements
     const rotSpeed = 0.0020;
     this.coreSphere.rotation.y += rotSpeed;
-    this.wireSphere.rotation.y += rotSpeed;
     this.continentPoints.rotation.y += rotSpeed;
     this.nodesGroup.rotation.y += rotSpeed;
     this.arcsGroup.rotation.y += rotSpeed;
-
-    // Counter rotate shield for radar hologram effect
-    this.shieldHex.rotation.y -= 0.0015;
-    this.shieldHex.rotation.x = Math.sin(elapsed * 0.4) * 0.05;
 
     // Pulse orbit rings
     this.ring1.rotation.z += 0.003;
@@ -779,10 +747,6 @@ export class CyberGlobeController {
   public dispose() {
     this.coreSphere.geometry.dispose();
     (this.coreSphere.material as THREE.Material).dispose();
-    this.wireSphere.geometry.dispose();
-    (this.wireSphere.material as THREE.Material).dispose();
-    this.shieldHex.geometry.dispose();
-    (this.shieldHex.material as THREE.Material).dispose();
     this.continentPoints.geometry.dispose();
     (this.continentPoints.material as THREE.Material).dispose();
     this.ring1.geometry.dispose();
