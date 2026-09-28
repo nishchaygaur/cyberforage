@@ -29,7 +29,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const { content } = useSiteContent();
   const defconLevel = content.telemetry?.defconLevel || 5;
-  const [isAudioMuted, setIsAudioMuted] = useState(true);
+  const [isAudioMuted, setIsAudioMuted] = useState(cyberSound.isMuted);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 

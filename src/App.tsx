@@ -102,6 +102,34 @@ export function App() {
     }
   };
 
+  // Auto-play / Gesture-unlocked Tactical Welcome Sequence
+  useEffect(() => {
+    // Attempt immediate trigger on mount
+    cyberSound.triggerWelcomeSequence();
+
+    // In case browser requires user gesture to unlock AudioContext:
+    const handleFirstGesture = () => {
+      cyberSound.triggerWelcomeSequence();
+      cleanupGestureListeners();
+    };
+
+    const cleanupGestureListeners = () => {
+      window.removeEventListener('pointerdown', handleFirstGesture);
+      window.removeEventListener('keydown', handleFirstGesture);
+      window.removeEventListener('wheel', handleFirstGesture);
+      window.removeEventListener('touchstart', handleFirstGesture);
+    };
+
+    window.addEventListener('pointerdown', handleFirstGesture, { passive: true });
+    window.addEventListener('keydown', handleFirstGesture, { passive: true });
+    window.addEventListener('wheel', handleFirstGesture, { passive: true });
+    window.addEventListener('touchstart', handleFirstGesture, { passive: true });
+
+    return () => {
+      cleanupGestureListeners();
+    };
+  }, []);
+
   // Global Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
