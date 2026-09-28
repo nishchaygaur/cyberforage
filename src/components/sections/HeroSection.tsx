@@ -387,7 +387,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           {/* Right Column: 3D Interactive Canvas & Orbital Badges */}
           <div className="relative flex flex-col items-center justify-center w-full">
             {/* Free-Floating 3D Globe Wrapper - Zero square bounding box */}
-            <div className="relative w-full aspect-square max-w-[280px] sm:max-w-[340px] md:max-w-[370px] lg:max-w-[390px] xl:max-w-[430px] max-h-[42vh] sm:max-h-[45vh] mx-auto flex items-center justify-center select-none">
+            <div className="relative w-full aspect-square max-w-[340px] sm:max-w-[420px] md:max-w-[480px] lg:max-w-[530px] xl:max-w-[580px] 2xl:max-w-[640px] max-h-[52vh] sm:max-h-[58vh] md:max-h-[64vh] lg:max-h-[70vh] mx-auto flex items-center justify-center select-none">
               {/* Soft Ambient Holographic Energy Halo (Diffused, zero hard edges) */}
               <div
                 className="absolute inset-0 pointer-events-none -z-10"
@@ -415,7 +415,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 />
 
                 {/* Floating Holographic Cyber Badges with Individual Floating Offsets */}
-                <div className="absolute top-[10%] left-[24%] z-20 pointer-events-none transform -translate-x-1/2 animate-badge-float-1">
+                <div className="absolute top-[8%] left-[22%] z-20 pointer-events-none transform -translate-x-1/2 animate-badge-float-1">
                   <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#071322]/85 border border-[#00F0C0]/35 backdrop-blur-md shadow-[0_0_18px_rgba(0,240,192,0.25)]">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#00F0C0] shadow-[0_0_6px_#00F0C0]" />
                     <span className="text-[11px] font-mono font-semibold tracking-wider text-slate-200">
@@ -424,7 +424,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   </div>
                 </div>
 
-                <div className="absolute top-[22%] right-[5%] z-20 pointer-events-none animate-badge-float-2">
+                <div className="absolute top-[18%] right-[2%] z-20 pointer-events-none animate-badge-float-2">
                   <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#071322]/85 border border-[#A855F7]/35 backdrop-blur-md shadow-[0_0_18px_rgba(168,85,247,0.25)]">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#A855F7] shadow-[0_0_6px_#A855F7]" />
                     <span className="text-[11px] font-mono font-semibold tracking-wider text-slate-200">
@@ -433,7 +433,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   </div>
                 </div>
 
-                <div className="absolute bottom-[30%] left-[8%] z-20 pointer-events-none animate-badge-float-3">
+                <div className="absolute bottom-[28%] left-[5%] z-20 pointer-events-none animate-badge-float-3">
                   <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#071322]/85 border border-[#38BDF8]/35 backdrop-blur-md shadow-[0_0_18px_rgba(56,189,248,0.25)]">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#38BDF8] shadow-[0_0_6px_#38BDF8]" />
                     <span className="text-[11px] font-mono font-semibold tracking-wider text-slate-200">
@@ -442,7 +442,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   </div>
                 </div>
 
-                <div className="absolute bottom-[16%] right-[3%] z-20 pointer-events-none animate-badge-float-4">
+                <div className="absolute bottom-[14%] right-[2%] z-20 pointer-events-none animate-badge-float-4">
                   <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#071322]/85 border border-[#00E5BE]/35 backdrop-blur-md shadow-[0_0_18px_rgba(0,229,190,0.25)]">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#00E5BE] shadow-[0_0_6px_#00E5BE]" />
                     <span className="text-[11px] font-mono font-semibold tracking-wider text-slate-200">
