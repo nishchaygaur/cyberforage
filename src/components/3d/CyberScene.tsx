@@ -39,6 +39,8 @@ export const CyberScene: React.FC<CyberSceneProps> = ({
   const isDragging = useRef(false);
   const previousMousePosition = useRef({ x: 0, y: 0 });
   const cameraRotation = useRef({ x: 0.2, y: 0 });
+  const targetHover = useRef({ x: 0, y: 0 });
+  const hoverOffset = useRef({ x: 0, y: 0 });
   const cameraTargetDistance = useRef(mode === 'server' ? 8.5 : 7.6);
   const currentCameraDistance = useRef(mode === 'server' ? 8.5 : 7.6);
 
@@ -128,18 +130,43 @@ export const CyberScene: React.FC<CyberSceneProps> = ({
       if (!interactive) return;
       isDragging.current = true;
       previousMousePosition.current = { x: e.clientX, y: e.clientY };
+
+      // Seamlessly merge the current hover offset into cameraRotation so there is zero snap on click
+      cameraRotation.current.y += hoverOffset.current.x * 0.45;
+      cameraRotation.current.x = Math.max(-0.9, Math.min(0.9, cameraRotation.current.x + hoverOffset.current.y * 0.32));
+      hoverOffset.current = { x: 0, y: 0 };
+      targetHover.current = { x: 0, y: 0 };
     };
 
     const onMouseMove = (e: MouseEvent) => {
       if (!interactive) return;
-      if (!isDragging.current) return;
-      const deltaX = e.clientX - previousMousePosition.current.x;
-      const deltaY = e.clientY - previousMousePosition.current.y;
 
-      cameraRotation.current.y += deltaX * 0.006;
-      cameraRotation.current.x = Math.max(-0.9, Math.min(0.9, cameraRotation.current.x + deltaY * 0.005));
+      if (isDragging.current) {
+        // Drag rotation (full 360-degree orbital rotation)
+        const deltaX = e.clientX - previousMousePosition.current.x;
+        const deltaY = e.clientY - previousMousePosition.current.y;
 
-      previousMousePosition.current = { x: e.clientX, y: e.clientY };
+        cameraRotation.current.y += deltaX * 0.006;
+        cameraRotation.current.x = Math.max(-0.9, Math.min(0.9, cameraRotation.current.x + deltaY * 0.005));
+
+        previousMousePosition.current = { x: e.clientX, y: e.clientY };
+      } else {
+        // Responsive mouse hover tracking: smoothly tilt and rotate globe towards mouse cursor
+        const rect = canvas.getBoundingClientRect();
+        const canvasCenterX = rect.left + rect.width / 2;
+        const canvasCenterY = rect.top + rect.height / 2;
+
+        const nx = Math.max(-1.3, Math.min(1.3, (e.clientX - canvasCenterX) / (rect.width * 0.5)));
+        const ny = Math.max(-1.3, Math.min(1.3, (e.clientY - canvasCenterY) / (rect.height * 0.5)));
+
+        targetHover.current = { x: nx, y: ny };
+      }
+    };
+
+    const onMouseLeave = () => {
+      if (!isDragging.current) {
+        targetHover.current = { x: 0, y: 0 };
+      }
     };
 
     const onMouseUp = () => {
@@ -229,6 +256,8 @@ export const CyberScene: React.FC<CyberSceneProps> = ({
     canvas.addEventListener('mousedown', onMouseDown);
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
+    canvas.addEventListener('mouseleave', onMouseLeave);
+    document.addEventListener('mouseleave', onMouseLeave);
     canvas.addEventListener('wheel', onWheel, { passive: true });
     canvas.addEventListener('touchstart', onTouchStart, { passive: true });
     window.addEventListener('touchmove', onTouchMove, { passive: true });
@@ -265,13 +294,26 @@ export const CyberScene: React.FC<CyberSceneProps> = ({
       // Smooth distance zoom lerp
       currentCameraDistance.current += (cameraTargetDistance.current - currentCameraDistance.current) * 0.08;
 
+      // Smooth hover lerp
+      hoverOffset.current.x += (targetHover.current.x - hoverOffset.current.x) * 0.08;
+      hoverOffset.current.y += (targetHover.current.y - hoverOffset.current.y) * 0.08;
+
+      // Effective camera rotation combines base drag position + smooth hover parallax tilt
+      const effectiveRotY = cameraRotation.current.y + hoverOffset.current.x * 0.45;
+      const effectiveRotX = Math.max(-0.9, Math.min(0.9, cameraRotation.current.x + hoverOffset.current.y * 0.32));
+
       // Update camera orbital position
-      const cx = Math.sin(cameraRotation.current.y) * Math.cos(cameraRotation.current.x) * currentCameraDistance.current;
-      const cy = Math.sin(cameraRotation.current.x) * currentCameraDistance.current;
-      const cz = Math.cos(cameraRotation.current.y) * Math.cos(cameraRotation.current.x) * currentCameraDistance.current;
+      const cx = Math.sin(effectiveRotY) * Math.cos(effectiveRotX) * currentCameraDistance.current;
+      const cy = Math.sin(effectiveRotX) * currentCameraDistance.current;
+      const cz = Math.cos(effectiveRotY) * Math.cos(effectiveRotX) * currentCameraDistance.current;
 
       camera.position.set(cx, cy, cz);
       camera.lookAt(0, 0, 0);
+
+      // Subtle dynamic anti-gravity levitation tilt on the globe group
+      if (globe.group.visible) {
+        globe.group.rotation.z = -hoverOffset.current.x * 0.08;
+      }
 
       // Starfield slow drift
       starField.rotation.y = elapsed * 0.015;
@@ -294,6 +336,8 @@ export const CyberScene: React.FC<CyberSceneProps> = ({
       canvas.removeEventListener('mousedown', onMouseDown);
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
+      canvas.removeEventListener('mouseleave', onMouseLeave);
+      document.removeEventListener('mouseleave', onMouseLeave);
       canvas.removeEventListener('wheel', onWheel);
       canvas.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchmove', onTouchMove);
