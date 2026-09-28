@@ -39,6 +39,7 @@ export function App() {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isCtfOpen, setIsCtfOpen] = useState(false);
   const [isAiScannerOpen, setIsAiScannerOpen] = useState(false);
+  const [sentinelCve, setSentinelCve] = useState<string>('CVE-2024-6387');
   const [isBinaryInspectorOpen, setIsBinaryInspectorOpen] = useState(false);
   const [selectedBinary, setSelectedBinary] = useState('libmalware_loader.elf');
   const [isThreatGraphOpen, setIsThreatGraphOpen] = useState(false);
@@ -436,7 +437,10 @@ export function App() {
         onModeChange={(mode) => setSceneMode(mode)}
         onSimulateAttack={handleSimulateAttack}
         onOpenCtf={() => setIsCtfOpen(true)}
-        onOpenAiScanner={() => setIsAiScannerOpen(true)}
+        onOpenAiScanner={(cve) => {
+          if (cve) setSentinelCve(cve);
+          setIsAiScannerOpen(true);
+        }}
         onOpenBinaryInspector={() => {
           setSelectedBinary('audit_engine.elf');
           setIsBinaryInspectorOpen(true);
@@ -467,6 +471,7 @@ export function App() {
       <SentinelThreatScannerModal
         isOpen={isAiScannerOpen}
         onClose={() => setIsAiScannerOpen(false)}
+        initialCve={sentinelCve}
       />
 
       {/* 3. Interactive Binary & Hex Opcode Inspector Modal */}
@@ -480,6 +485,10 @@ export function App() {
       <ThreatIntelGraphModal
         isOpen={isThreatGraphOpen}
         onClose={() => setIsThreatGraphOpen(false)}
+        onOpenAiScanner={(cve) => {
+          if (cve) setSentinelCve(cve);
+          setIsAiScannerOpen(true);
+        }}
       />
 
       {/* 5. Matrix Code Rain Zero-Day Breach Easter Egg Overlay */}

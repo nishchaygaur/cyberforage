@@ -18,7 +18,7 @@ interface CyberTerminalModalProps {
   onModeChange: (mode: SceneMode) => void;
   onSimulateAttack: () => void;
   onOpenCtf?: () => void;
-  onOpenAiScanner?: () => void;
+  onOpenAiScanner?: (cve?: string) => void;
   onOpenBinaryInspector?: () => void;
   onOpenThreatGraph?: () => void;
   onOpenMatrix?: () => void;
@@ -100,7 +100,8 @@ export const CyberTerminalModal: React.FC<CyberTerminalModalProps> = ({
   admin / cms             - Open Root CMS & Live Frontend Admin Panel
   nmap [target]           - Launch Live Nmap Network Port & Vulnerability Scanner
   ctf                     - Launch 60-Second SOC Defender CTF Challenge
-  sentinel / ai           - Open Sentinel Core AI Threat Triage Assistant
+  sentinel / ai [cve]     - Open Sentinel Core AI Threat Triage Assistant & CVE Scanner
+  cve <cve_id>            - Search & triage specific CVE vulnerability details
   inspect / binary        - Launch Interactive Binary & Hex Disassembler
   graph / apt             - Open MITRE ATT&CK Threat Intel Graph
   matrix                  - Trigger Zero-Day Code Rain Breach Easter Egg
@@ -155,12 +156,16 @@ export const CyberTerminalModal: React.FC<CyberTerminalModalProps> = ({
 
       case 'sentinel':
       case 'ai':
+      case 'cve':
         cyberSound.playLaser();
-        if (onOpenAiScanner) onOpenAiScanner();
+        const targetCve = args[1]?.toUpperCase();
+        if (onOpenAiScanner) onOpenAiScanner(targetCve);
         newLines.push({
           id: `out-${Date.now()}`,
           type: 'success',
-          text: '[SENTINEL CORE] Opening AI Threat Triage & CVE attribution console...'
+          text: targetCve
+            ? `[SENTINEL CORE] Opening AI Threat Scanner for ${targetCve}...`
+            : '[SENTINEL CORE] Opening AI Threat Triage & CVE attribution console...'
         });
         break;
 

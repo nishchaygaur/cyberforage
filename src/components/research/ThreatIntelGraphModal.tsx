@@ -69,9 +69,10 @@ const APT_GROUPS: APTProfile[] = [
 interface ThreatIntelGraphModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenAiScanner?: (cve?: string) => void;
 }
 
-export const ThreatIntelGraphModal: React.FC<ThreatIntelGraphModalProps> = ({ isOpen, onClose }) => {
+export const ThreatIntelGraphModal: React.FC<ThreatIntelGraphModalProps> = ({ isOpen, onClose, onOpenAiScanner }) => {
   const [selectedApt, setSelectedApt] = useState<APTProfile>(APT_GROUPS[0]);
 
   if (!isOpen) return null;
@@ -187,10 +188,26 @@ export const ThreatIntelGraphModal: React.FC<ThreatIntelGraphModalProps> = ({ is
                 </div>
 
                 {/* Stage 2: Weaponized CVE */}
-                <div className="p-3.5 rounded-xl bg-white/[0.03] border border-rose-500/30">
-                  <div className="text-[10px] text-rose-400 uppercase mb-1">Phase 2: Exploit</div>
-                  <div className="text-xs font-bold text-rose-300 mb-1">{selectedApt.primaryCVE}</div>
-                  <p className="text-[11px] text-slate-300 leading-tight">Weaponized remote zero-day execution</p>
+                <div className="p-3.5 rounded-xl bg-white/[0.03] border border-rose-500/30 flex flex-col justify-between">
+                  <div>
+                    <div className="text-[10px] text-rose-400 uppercase mb-1">Phase 2: Exploit</div>
+                    <div className="text-xs font-bold text-rose-300 mb-1">{selectedApt.primaryCVE}</div>
+                    <p className="text-[11px] text-slate-300 leading-tight">Weaponized remote zero-day execution</p>
+                  </div>
+                  {onOpenAiScanner && (
+                    <button
+                      onClick={() => {
+                        cyberSound.playLaser();
+                        const cveMatch = selectedApt.primaryCVE.match(/CVE-\d{4}-\d+/i);
+                        const cveId = cveMatch ? cveMatch[0] : selectedApt.primaryCVE;
+                        onOpenAiScanner(cveId);
+                      }}
+                      className="mt-2.5 inline-flex items-center gap-1.5 text-[10px] font-mono text-[#00F0C0] hover:text-white bg-[#00F0C0]/10 hover:bg-[#00F0C0]/20 border border-[#00F0C0]/30 hover:border-[#00F0C0]/60 px-2 py-1 rounded transition-colors w-fit cursor-pointer"
+                    >
+                      <Zap className="w-3 h-3" />
+                      <span>Triage in Sentinel AI &rarr;</span>
+                    </button>
+                  )}
                 </div>
 
                 {/* Stage 3: Persistence */}
