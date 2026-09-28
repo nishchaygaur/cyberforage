@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Terminal, Volume2, VolumeX, Menu, X, ArrowUpRight, Network, ShieldAlert, Sliders } from 'lucide-react';
 import { GithubIcon } from '../icons/BrandIcons';
 import { cyberSound } from '../../audio/cyberSoundEngine';
@@ -28,18 +28,65 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isAudioMuted, setIsAudioMuted] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
+
+  const scrolledRef = useRef(false);
+  const progressBarRef = useRef<HTMLDivElement>(null);
+  const progressGlowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      if (docHeight > 0) {
-        setScrollProgress((window.scrollY / docHeight) * 100);
+    const supportsScrollTimeline =
+      typeof CSS !== 'undefined' && CSS.supports && CSS.supports('animation-timeline', 'scroll()');
+
+    let rafId: number | null = null;
+    let currentProgress = 0;
+    let targetProgress = 0;
+
+    const updateProgress = () => {
+      // High-performance smooth lerp interpolation (GPU compositor target)
+      currentProgress += (targetProgress - currentProgress) * 0.35;
+      if (Math.abs(targetProgress - currentProgress) < 0.001) {
+        currentProgress = targetProgress;
+      }
+
+      const scaleStr = `scaleX(${currentProgress})`;
+      if (progressBarRef.current) {
+        progressBarRef.current.style.transform = scaleStr;
+      }
+      if (progressGlowRef.current) {
+        progressGlowRef.current.style.transform = scaleStr;
+      }
+
+      if (currentProgress !== targetProgress) {
+        rafId = requestAnimationFrame(updateProgress);
+      } else {
+        rafId = null;
       }
     };
+
+    const handleScroll = () => {
+      const isOver20 = window.scrollY > 20;
+      if (scrolledRef.current !== isOver20) {
+        scrolledRef.current = isOver20;
+        setScrolled(isOver20);
+      }
+
+      // If browser doesn't have native scroll-driven animations, use smooth RAF lerp
+      if (!supportsScrollTimeline) {
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        targetProgress = docHeight > 0 ? Math.min(1, Math.max(0, window.scrollY / docHeight)) : 0;
+        if (!rafId) {
+          rafId = requestAnimationFrame(updateProgress);
+        }
+      }
+    };
+
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    handleScroll();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, []);
 
   const handleAudioToggle = () => {
@@ -354,12 +401,21 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       )}
 
-      {/* Real-Time Cyber Scroll Progress Line */}
-      <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/[0.04] pointer-events-none overflow-hidden">
+      {/* Real-Time Cyber Scroll Progress Line (GPU-Composited & Ultra-Smooth) */}
+      <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-white/[0.04] pointer-events-none overflow-visible">
+        {/* Ambient bloom aura */}
         <div
-          className="h-full bg-gradient-to-r from-[#00F0C0] via-[#38BDF8] to-[#A855F7] transition-all duration-75 ease-out shadow-[0_0_10px_#00F0C0]"
-          style={{ width: `${scrollProgress}%` }}
+          ref={progressGlowRef}
+          className="cyber-scroll-progress-line absolute inset-0 h-full bg-gradient-to-r from-[#00F0C0] via-[#38BDF8] to-[#A855F7] blur-[3px] opacity-75 pointer-events-none"
         />
+        {/* Crisp laser line */}
+        <div
+          ref={progressBarRef}
+          className="cyber-scroll-progress-line relative w-full h-full bg-gradient-to-r from-[#00F0C0] via-[#00E5BE] to-[#38BDF8] shadow-[0_0_12px_#00F0C0]"
+        >
+          {/* Leading laser spark beacon */}
+          <span className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white shadow-[0_0_10px_#00F0C0,0_0_20px_#38BDF8]" />
+        </div>
       </div>
     </header>
   );

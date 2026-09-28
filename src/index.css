@@ -227,3 +227,25 @@
 .animate-badge-float-4 {
   animation: badge-float-4 7s ease-in-out infinite 1.5s;
 }
+
+/* High-Performance Compositor-Driven Scroll Progress */
+@keyframes cyber-scroll-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.cyber-scroll-progress-line {
+  transform-origin: 0% 50%;
+  will-change: transform;
+}
+
+@supports (animation-timeline: scroll()) {
+  .cyber-scroll-progress-line {
+    animation: cyber-scroll-grow auto linear forwards;
+    animation-timeline: scroll(root);
+  }
+}

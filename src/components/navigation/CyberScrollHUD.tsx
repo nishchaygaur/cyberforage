@@ -29,22 +29,43 @@ export const CyberScrollHUD: React.FC<CyberScrollHUDProps> = ({
   activeSection,
   onSectionChange,
 }) => {
-  const [scrollY, setScrollY] = useState(0);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
+    let rafId: number | null = null;
+    let lastProgress = -1;
+    let lastShow = false;
+
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      setScrollY(currentScrollY);
-      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
-      if (totalHeight > 0) {
-        setScrollProgress(Math.min(100, Math.max(0, Math.round((currentScrollY / totalHeight) * 100))));
-      }
+      if (rafId) return;
+
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        const currentScrollY = window.scrollY;
+        const shouldShow = currentScrollY > 320;
+        if (shouldShow !== lastShow) {
+          lastShow = shouldShow;
+          setShowScrollTop(shouldShow);
+        }
+
+        const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+        if (totalHeight > 0) {
+          const pct = Math.min(100, Math.max(0, Math.round((currentScrollY / totalHeight) * 100)));
+          if (pct !== lastProgress) {
+            lastProgress = pct;
+            setScrollProgress(pct);
+          }
+        }
+      });
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, []);
 
   const scrollToSection = (id: string) => {
@@ -66,8 +87,6 @@ export const CyberScrollHUD: React.FC<CyberScrollHUDProps> = ({
     cyberSound.playClick();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
-  const showScrollTop = scrollY > 320;
 
   return (
     <>

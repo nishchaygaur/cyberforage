@@ -32,7 +32,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   const [selectedNode, setSelectedNode] = useState<OrbitalNodeData | null>(null);
 
   return (
-    <section id="home" className="relative pt-28 pb-16 md:pt-36 md:pb-24 overflow-hidden" aria-label="Cyberforage Hero">
+    <section
+      id="home"
+      className="relative min-h-[calc(100vh-3.5rem)] flex flex-col justify-center pt-24 pb-16 sm:pt-28 md:pt-32 md:pb-20 overflow-hidden"
+      aria-label="Cyberforage Hero"
+    >
       {/* Background Cyber Ambient Lights */}
       <div
         className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[550px] bg-[#00F0C0]/[0.05] blur-[150px] rounded-full pointer-events-none"
@@ -43,7 +47,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         aria-hidden="true"
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full my-auto">
         {/* Global Emergency Alert Banner (Controlled via Admin Panel) */}
         {content.telemetry?.isAlertActive && (
           <div className="mb-8 p-3 sm:p-4 rounded-xl bg-gradient-to-r from-rose-950/80 via-red-950/70 to-rose-950/80 border border-rose-500/60 shadow-[0_0_35px_rgba(244,63,94,0.3)] backdrop-blur-md animate-fadeIn flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -68,9 +72,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12 xl:gap-16 items-center">
           {/* Left Column: Hero Content */}
-          <div className="lg:col-span-7 flex flex-col items-start z-10">
+          <div className="flex flex-col items-start z-10 w-full max-w-xl mx-auto lg:mx-0">
             {/* Top Chip */}
             <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-[#00F0C0]/5 border border-[#00F0C0]/25 backdrop-blur-sm">
               <span className="w-2 h-2 rounded-full bg-[#00F0C0] animate-pulse" />
@@ -254,9 +258,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </div>
 
           {/* Right Column: 3D Interactive Canvas & Orbital Badges */}
-          <div className="lg:col-span-5 relative flex flex-col items-center justify-center">
+          <div className="relative flex flex-col items-center justify-center w-full">
             {/* Free-Floating 3D Globe Wrapper - Zero square bounding box */}
-            <div className="relative w-full aspect-square max-w-[500px] lg:max-w-[580px] mx-auto flex items-center justify-center select-none">
+            <div className="relative w-full aspect-square max-w-[420px] sm:max-w-[460px] lg:max-w-[500px] xl:max-w-[520px] mx-auto flex items-center justify-center select-none">
               {/* Soft Ambient Holographic Energy Halo (Diffused, zero hard edges) */}
               <div
                 className="absolute inset-0 pointer-events-none -z-10"
