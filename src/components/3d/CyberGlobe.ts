@@ -149,8 +149,11 @@ export class CyberGlobeController {
     // Caribbean
     if (lat >= 10 && lat <= 26 && lon >= -85 && lon <= -59) return true;
 
-    // Hawaii & Pacific Islands
-    if (lat >= 18 && lat <= 23 && lon >= -161 && lon <= -154) return true;
+    // Hawaii & Pacific Island Chains
+    if (lat >= 18 && lat <= 23 && lon >= -161 && lon <= -154) return true; // Hawaii
+    if (lat >= -22 && lat <= -12 && lon >= -176 && lon <= -148) return true; // Polynesia / Tahiti / Samoa / Tonga
+    if (lat >= 4 && lat <= 16 && lon >= 140 && lon <= 173) return true; // Micronesia / Guam / Marshall Islands
+    if (lat >= 51 && lat <= 55 && (lon <= -165 || lon >= 170)) return true; // Aleutian Islands
 
     // South America
     if (lat >= -56 && lat <= 13 && lon >= -82 && lon <= -34) {
@@ -206,9 +209,9 @@ export class CyberGlobeController {
     // Dark cyber core
     const coreGeo = new THREE.SphereGeometry(2.45, 48, 48);
     const coreMat = new THREE.MeshBasicMaterial({
-      color: 0x030a16,
+      color: 0x020814,
       transparent: true,
-      opacity: 0.88
+      opacity: 0.85
     });
     this.coreSphere = new THREE.Mesh(coreGeo, coreMat);
     this.group.add(this.coreSphere);
@@ -220,7 +223,7 @@ export class CyberGlobeController {
       new THREE.LineBasicMaterial({
         color: 0x00f0c0,
         transparent: true,
-        opacity: 0.04
+        opacity: 0.07
       })
     );
     this.group.add(this.wireSphere);
@@ -229,8 +232,8 @@ export class CyberGlobeController {
   private createContinentMatrix() {
     // Full isotropic Fibonacci Golden Spiral coverage guaranteeing dots ALL OVER THE ENTIRE GLOBE
     // Base lattice covers 100% of the sphere (land + oceans) with vibrant, clearly visible glowing dots
-    const baseCount = 11000;
-    const extraLandCount = 3000;
+    const baseCount = 14500;
+    const extraLandCount = 4000;
     const totalCount = baseCount + extraLandCount;
 
     const positions = new Float32Array(totalCount * 3);
@@ -239,9 +242,10 @@ export class CyberGlobeController {
     const landColor1 = new THREE.Color(0x00f0c0); // Radiant neon cyber cyan
     const landColor2 = new THREE.Color(0x38bdf8); // Sky blue cyber glow
     const landColor3 = new THREE.Color(0xffffff); // Brilliant luminous pearl white
-    const oceanColor1 = new THREE.Color(0x00d2b4); // Vibrant cyber teal
-    const oceanColor2 = new THREE.Color(0x0284c7); // Luminous electric cyber blue
-    const oceanBeacon = new THREE.Color(0x67e8f9); // Sparkling ocean coordinate beacon
+    const oceanColor1 = new THREE.Color(0x00f0ff); // Electric vivid cyber cyan
+    const oceanColor2 = new THREE.Color(0x0ea5e9); // Luminous electric cyber blue
+    const oceanColor3 = new THREE.Color(0x67e8f9); // High-luminance sky cyan
+    const oceanBeacon = new THREE.Color(0xffffff); // Sparkling white coordinate node
 
     const goldenAngle = Math.PI * (3 - Math.sqrt(5)); // ~2.399963 rad (Golden Angle)
 
@@ -250,7 +254,6 @@ export class CyberGlobeController {
     // 1. Base Layer: Uniform dots all over the globe (100% spherical coverage)
     for (let i = 0; i < baseCount; i++) {
       const yNorm = 1 - (i / (baseCount - 1)) * 2; // from 1 to -1
-      const radiusAtY = Math.sqrt(Math.max(0, 1 - yNorm * yNorm));
       const theta = goldenAngle * i;
 
       const lat = Math.asin(Math.max(-1, Math.min(1, yNorm))) * (180 / Math.PI);
@@ -260,20 +263,19 @@ export class CyberGlobeController {
       // Continents are slightly elevated for 3D relief, oceans form a crisp base sphere
       const radius = isLand ? 2.535 : 2.50;
 
-      const x = radius * Math.cos(theta) * radiusAtY;
-      const y = radius * yNorm;
-      const z = radius * Math.sin(theta) * radiusAtY;
+      // Canonical 3D spherical projection matching latLonToVector3
+      const pos = this.latLonToVector3(lat, lon, radius);
 
-      positions[idx] = x;
-      positions[idx + 1] = y;
-      positions[idx + 2] = z;
+      positions[idx] = pos.x;
+      positions[idx + 1] = pos.y;
+      positions[idx + 2] = pos.z;
 
       if (isLand) {
         // High-contrast neon gradients for continents
         const latMix = (Math.sin(lat * 0.08) + 1) * 0.5;
         const ptColor = landColor1.clone().lerp(landColor2, latMix);
-        if (i % 4 === 0) {
-          ptColor.lerp(landColor3, 0.55);
+        if (i % 3 === 0) {
+          ptColor.lerp(landColor3, 0.65);
         }
         colors[idx] = ptColor.r;
         colors[idx + 1] = ptColor.g;
@@ -283,12 +285,14 @@ export class CyberGlobeController {
         // Clearly visible at all times, no matter how the globe rotates
         const oceanMix = (Math.sin(lat * 0.05 + theta * 1.5) + 1) * 0.5;
         const ptColor = oceanColor1.clone().lerp(oceanColor2, oceanMix);
-        if (i % 6 === 0) {
-          ptColor.lerp(oceanBeacon, 0.45);
+        if (i % 3 === 0) {
+          ptColor.lerp(oceanBeacon, 0.65); // Sparkling white coordinate node
+        } else if (i % 2 === 0) {
+          ptColor.lerp(oceanColor3, 0.5);
         }
-        colors[idx] = ptColor.r * 0.85;
-        colors[idx + 1] = ptColor.g * 0.90;
-        colors[idx + 2] = ptColor.b * 0.95;
+        colors[idx] = ptColor.r;
+        colors[idx + 1] = ptColor.g;
+        colors[idx + 2] = ptColor.b;
       }
 
       idx += 3;
@@ -313,14 +317,11 @@ export class CyberGlobeController {
 
       if (this.isLandCoordinates(lat, lon)) {
         const radius = 2.54;
-        const sinPhi = Math.sin(phi);
-        const x = -(radius * sinPhi * Math.cos(theta));
-        const y = radius * Math.cos(phi);
-        const z = radius * sinPhi * Math.sin(theta);
+        const pos = this.latLonToVector3(lat, lon, radius);
 
-        positions[idx] = x;
-        positions[idx + 1] = y;
-        positions[idx + 2] = z;
+        positions[idx] = pos.x;
+        positions[idx + 1] = pos.y;
+        positions[idx + 2] = pos.z;
 
         const ptColor = landColor1.clone().lerp(landColor3, pseudoRandom() * 0.7);
         colors[idx] = ptColor.r;
@@ -336,7 +337,7 @@ export class CyberGlobeController {
     geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
-    // High-resolution pure-white circular particle texture with smooth radial alpha falloff
+    // High-resolution pure-white circular particle texture with sharp solid center core and soft neon falloff
     // Being pure white ensures vertexColors render with 100% faithful brilliance without darkening
     const canvas = document.createElement('canvas');
     canvas.width = 64;
@@ -344,22 +345,22 @@ export class CyberGlobeController {
     const ctx = canvas.getContext('2d');
     if (ctx) {
       const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-      grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
-      grad.addColorStop(0.2, 'rgba(255, 255, 255, 0.95)');
-      grad.addColorStop(0.55, 'rgba(255, 255, 255, 0.55)');
-      grad.addColorStop(0.85, 'rgba(255, 255, 255, 0.15)');
-      grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      grad.addColorStop(0, 'rgba(255, 255, 255, 1.0)');
+      grad.addColorStop(0.35, 'rgba(255, 255, 255, 1.0)'); // Solid sharp bead core
+      grad.addColorStop(0.70, 'rgba(255, 255, 255, 0.65)'); // Luminous cyber halo
+      grad.addColorStop(0.92, 'rgba(255, 255, 255, 0.15)');
+      grad.addColorStop(1.0, 'rgba(255, 255, 255, 0)');
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 64, 64);
     }
     const texture = new THREE.CanvasTexture(canvas);
 
     const mat = new THREE.PointsMaterial({
-      size: 0.080,
+      size: 0.092,
       vertexColors: true,
       map: texture,
       transparent: true,
-      opacity: 0.95,
+      opacity: 1.0,
       blending: THREE.AdditiveBlending,
       depthWrite: false
     });
