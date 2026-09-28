@@ -129,18 +129,18 @@ export const Navbar: React.FC<NavbarProps> = ({
           : 'bg-[#040812]/50 backdrop-blur-sm border-b border-white/[0.04] py-4'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+      <div className="max-w-[1720px] w-full mx-auto px-3 sm:px-4 lg:px-6 flex items-center justify-between gap-2">
         {/* Brand Logo */}
         <a
           href="#home"
           onClick={(e) => handleNavClick('#home', e)}
-          className="group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00F0C0] rounded"
+          className="group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00F0C0] rounded flex-shrink-0"
         >
-          <div className="inline-flex items-center gap-2.5 select-none">
+          <div className="inline-flex items-center gap-2 select-none">
             {/* Cyberforage Hexagonal Logo */}
             <svg
-              width="28"
-              height="28"
+              width="26"
+              height="26"
               viewBox="0 0 32 32"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -166,7 +166,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <line x1="13.5" y1="12.5" x2="9" y2="10" stroke="#00F0C0" strokeWidth="1.5" />
               <line x1="18.5" y1="12.5" x2="23" y2="10" stroke="#00F0C0" strokeWidth="1.5" />
             </svg>
-            <span className="font-mono font-bold tracking-[0.18em] text-white text-base md:text-lg">
+            <span className="font-mono font-bold tracking-[0.16em] text-white text-sm sm:text-base md:text-lg">
               CYBER<span className="text-[#00F0C0]">FORAGE</span>
             </span>
             <span className="hidden sm:inline-block px-1.5 py-0.5 rounded bg-[#00F0C0]/10 border border-[#00F0C0]/25 text-[10px] font-mono text-[#00E5BE]">
@@ -176,7 +176,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </a>
 
         {/* Desktop Navigation Links */}
-        <nav className="hidden lg:flex items-center space-x-1" aria-label="Main Navigation">
+        <nav className="hidden lg:flex items-center space-x-0.5 xl:space-x-1" aria-label="Main Navigation">
           {navLinks.map((link) => {
             const isActive = activeSection === link.href.replace('#', '');
             return (
@@ -185,14 +185,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                 href={link.href}
                 onClick={(e) => handleNavClick(link.href, e)}
                 onMouseEnter={() => cyberSound.playBlip()}
-                className={`relative px-3 py-1.5 text-xs font-mono font-medium transition-colors ${
+                className={`relative px-2 xl:px-2.5 2xl:px-3 py-1.5 text-xs font-mono font-medium transition-colors ${
                   isActive ? 'text-[#00F0C0]' : 'text-slate-400 hover:text-slate-100'
                 }`}
               >
                 {link.label}
                 {isActive && (
                   <span
-                    className="absolute -bottom-1 left-3 right-3 h-[2px] bg-[#00F0C0] rounded-full shadow-[0_0_8px_#00F0C0]"
+                    className="absolute -bottom-1 left-2 right-2 h-[2px] bg-[#00F0C0] rounded-full shadow-[0_0_8px_#00F0C0]"
                     aria-hidden="true"
                   />
                 )}
@@ -202,17 +202,18 @@ export const Navbar: React.FC<NavbarProps> = ({
         </nav>
 
         {/* Action Controls & Utilities */}
-        <div className="flex items-center space-x-2 sm:space-x-3">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
           {/* n8n Access Portal Link */}
           <a
             href="https://n8nrequest.cyberforage.space/"
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => cyberSound.playClick()}
-            className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-[#00F0C0]/30 bg-[#00F0C0]/5 px-3 py-1.5 text-xs font-mono font-semibold text-[#00F0C0] transition-all hover:border-[#00F0C0] hover:bg-[#00F0C0]/10 hover:shadow-[0_0_15px_rgba(0,240,192,0.2)]"
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-[#00F0C0]/30 bg-[#00F0C0]/5 px-2.5 py-1.5 text-xs font-mono font-semibold text-[#00F0C0] transition-all hover:border-[#00F0C0] hover:bg-[#00F0C0]/10 hover:shadow-[0_0_15px_rgba(0,240,192,0.2)]"
           >
             <span className="h-1.5 w-1.5 rounded-full bg-[#00F0C0] shadow-[0_0_6px_#00F0C0]" />
-            <span>Request n8n</span>
+            <span className="hidden xl:inline">Request n8n</span>
+            <span className="xl:hidden">n8n</span>
             <ArrowUpRight className="w-3.5 h-3.5 text-[#00E5BE]" />
           </a>
 
@@ -224,11 +225,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onOpenCtf();
               }}
               onMouseEnter={() => cyberSound.playBlip()}
-              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/40 text-rose-300 hover:text-white text-xs font-mono transition-all shadow-sm"
+              className="hidden lg:flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/40 text-rose-300 hover:text-white text-xs font-mono transition-all shadow-sm cursor-pointer"
               title="Launch SOC Defender CTF Mini-Challenge"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-              <span>CTF Arena</span>
+              <span className="hidden xl:inline">CTF Arena</span>
+              <span className="xl:hidden">CTF</span>
             </button>
           )}
 
@@ -240,11 +242,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onOpenAiScanner();
               }}
               onMouseEnter={() => cyberSound.playBlip()}
-              className="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#38BDF8]/10 hover:bg-[#38BDF8]/20 border border-[#38BDF8]/40 text-sky-300 hover:text-white text-xs font-mono transition-all shadow-sm"
+              className="hidden lg:flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-[#38BDF8]/10 hover:bg-[#38BDF8]/20 border border-[#38BDF8]/40 text-sky-300 hover:text-white text-xs font-mono transition-all shadow-sm cursor-pointer"
               title="Launch Sentinel AI Threat Triage"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-[#38BDF8]" />
-              <span>Sentinel AI</span>
+              <span className="hidden xl:inline">Sentinel AI</span>
+              <span className="xl:hidden">Sentinel</span>
             </button>
           )}
 
@@ -256,11 +259,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onOpenNmap();
               }}
               onMouseEnter={() => cyberSound.playBlip()}
-              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#10B981]/10 hover:bg-[#10B981]/20 border border-[#10B981]/40 text-emerald-300 hover:text-white text-xs font-mono transition-all shadow-sm cursor-pointer"
+              className="hidden xl:flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-[#10B981]/10 hover:bg-[#10B981]/20 border border-[#10B981]/40 text-emerald-300 hover:text-white text-xs font-mono transition-all shadow-sm cursor-pointer"
               title="Launch Live Nmap Network Port Scanner"
             >
               <Network className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Live Nmap</span>
+              <span className="hidden 2xl:inline">Live Nmap</span>
+              <span className="2xl:hidden">Nmap</span>
             </button>
           )}
 
@@ -272,13 +276,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onOpenAdmin();
               }}
               onMouseEnter={() => cyberSound.playBlip()}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:text-white text-xs font-mono transition-all shadow-sm cursor-pointer"
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:text-white text-xs font-mono transition-all shadow-sm cursor-pointer flex-shrink-0"
               title="Open Cyberforage Root Live CMS & Admin Panel (Ctrl+Shift+A)"
             >
               <Sliders className="w-3.5 h-3.5 text-amber-400" />
-              <span className="hidden xl:inline font-semibold">CMS Admin</span>
+              <span className="hidden 2xl:inline font-semibold">CMS Admin</span>
+              <span className="2xl:hidden font-semibold">CMS</span>
               <span
-                className={`px-1.5 py-0.2 rounded text-[9px] font-bold tracking-tight uppercase ${
+                className={`px-1 py-0.2 rounded text-[9px] font-bold tracking-tight uppercase ${
                   defconLevel === 1
                     ? 'bg-rose-500 text-white animate-pulse shadow-[0_0_8px_#F43F5E]'
                     : defconLevel === 2
@@ -300,7 +305,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onOpenTerminal();
             }}
             onMouseEnter={() => cyberSound.playBlip()}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#071322] hover:bg-[#0b1d33] border border-white/10 hover:border-[#00F0C0]/50 text-slate-300 hover:text-[#00F0C0] text-xs font-mono transition-all cursor-pointer shadow-sm"
+            className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg bg-[#071322] hover:bg-[#0b1d33] border border-white/10 hover:border-[#00F0C0]/50 text-slate-300 hover:text-[#00F0C0] text-xs font-mono transition-all cursor-pointer shadow-sm flex-shrink-0"
             title="Open Interactive Cyber Terminal Console (~)"
           >
             <Terminal className="w-3.5 h-3.5 text-[#00F0C0]" />
@@ -310,7 +315,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Audio Synthesizer Toggle */}
           <button
             onClick={handleAudioToggle}
-            className={`p-2 rounded-lg border transition-all cursor-pointer ${
+            className={`p-2 rounded-lg border transition-all cursor-pointer flex-shrink-0 ${
               !isAudioMuted
                 ? 'bg-[#00F0C0]/10 border-[#00F0C0]/40 text-[#00F0C0] shadow-[0_0_12px_rgba(0,240,192,0.2)]'
                 : 'bg-white/[0.03] border-white/10 text-slate-400 hover:text-white'
@@ -326,7 +331,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => cyberSound.playClick()}
-            className="p-2 text-slate-400 hover:text-[#00F0C0] hover:bg-white/5 rounded-lg transition-colors"
+            className="p-2 text-slate-400 hover:text-[#00F0C0] hover:bg-white/5 rounded-lg transition-colors flex-shrink-0"
             title="GitHub Repositories"
           >
             <GithubIcon className="w-4 h-4" />
@@ -338,7 +343,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               cyberSound.playClick();
               setMobileMenuOpen(!mobileMenuOpen);
             }}
-            className="lg:hidden p-2 text-slate-400 hover:text-white rounded-lg cursor-pointer"
+            className="lg:hidden p-2 text-slate-400 hover:text-white rounded-lg cursor-pointer flex-shrink-0"
             aria-label="Toggle navigation menu"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
