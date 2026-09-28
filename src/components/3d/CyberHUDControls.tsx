@@ -17,16 +17,16 @@ export const CyberHUDControls: React.FC<CyberHUDControlsProps> = ({
   incident,
 }) => {
   const [voiceActive, setVoiceActive] = useState(cyberSound.voiceEnabled);
-  const modes: { id: SceneMode; label: string; icon: React.ReactNode; color: string }[] = [
-    { id: 'globe', label: 'Defense Globe', icon: <Globe className="w-4 h-4" />, color: 'text-[#00F0C0]' },
-    { id: 'server', label: 'Lab Blades', icon: <Server className="w-4 h-4" />, color: 'text-[#A855F7]' },
-    { id: 'mesh', label: 'Security Mesh', icon: <Network className="w-4 h-4" />, color: 'text-[#38BDF8]' },
-    { id: 'free', label: 'Free Orbit', icon: <Compass className="w-4 h-4" />, color: 'text-[#00E5BE]' },
+  const modes: { id: SceneMode; shortLabel: string; fullLabel: string; icon: React.ReactNode; color: string }[] = [
+    { id: 'globe', shortLabel: 'Globe', fullLabel: 'Defense Globe', icon: <Globe className="w-3.5 h-3.5" />, color: 'text-[#00F0C0]' },
+    { id: 'server', shortLabel: 'Blades', fullLabel: 'Lab Blades', icon: <Server className="w-3.5 h-3.5" />, color: 'text-[#A855F7]' },
+    { id: 'mesh', shortLabel: 'Mesh', fullLabel: 'Security Mesh', icon: <Network className="w-3.5 h-3.5" />, color: 'text-[#38BDF8]' },
+    { id: 'free', shortLabel: 'Orbit', fullLabel: 'Free Orbit', icon: <Compass className="w-3.5 h-3.5" />, color: 'text-[#00E5BE]' },
   ];
 
   return (
-    <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-xl bg-[#06101e]/90 border border-white/10 backdrop-blur-md shadow-2xl">
-      <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 rounded-xl bg-[#06101e]/90 border border-white/10 backdrop-blur-md shadow-2xl max-w-full overflow-x-auto scrollbar-none">
+      <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
         {modes.map((m) => {
           const isActive = currentMode === m.id;
           return (
@@ -37,21 +37,22 @@ export const CyberHUDControls: React.FC<CyberHUDControlsProps> = ({
                 onModeChange(m.id);
               }}
               onMouseEnter={() => cyberSound.playBlip()}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-mono transition-all duration-200 cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-mono transition-all duration-200 cursor-pointer flex-shrink-0 ${
                 isActive
                   ? 'bg-[#00F0C0]/15 border border-[#00F0C0]/50 text-white shadow-[0_0_12px_rgba(0,240,192,0.25)]'
                   : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
               }`}
-              title={`Switch 3D View to ${m.label}`}
+              title={`Switch 3D View to ${m.fullLabel}`}
             >
               <span className={isActive ? 'text-[#00F0C0]' : m.color}>{m.icon}</span>
-              <span className="hidden sm:inline font-medium">{m.label}</span>
+              <span className="hidden xl:inline font-medium">{m.fullLabel}</span>
+              <span className="inline xl:hidden font-medium">{m.shortLabel}</span>
             </button>
           );
         })}
       </div>
 
-      <div className="h-4 w-[1px] bg-white/10 mx-1 hidden sm:block" />
+      <div className="h-4 w-[1px] bg-white/10 mx-0.5 hidden sm:block flex-shrink-0" />
 
       {/* Hostile Vector Simulation Trigger with Reactive Lifecycle */}
       <button
@@ -63,7 +64,7 @@ export const CyberHUDControls: React.FC<CyberHUDControlsProps> = ({
         }}
         disabled={!!incident}
         onMouseEnter={() => cyberSound.playBlip()}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer ${
+        className={`flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-mono font-semibold transition-all cursor-pointer flex-shrink-0 ${
           incident?.stage === 'inbound'
             ? 'bg-amber-500/20 border border-amber-500/60 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.3)] cursor-wait'
             : incident?.stage === 'incident_generated'
@@ -78,33 +79,34 @@ export const CyberHUDControls: React.FC<CyberHUDControlsProps> = ({
       >
         {incident?.stage === 'inbound' ? (
           <>
-            <RotateCcw className="w-3.5 h-3.5 text-amber-400 animate-spin" />
+            <RotateCcw className="w-3 h-3 text-amber-400 animate-spin" />
             <span>INBOUND ({incident.progress}%)</span>
           </>
         ) : incident?.stage === 'incident_generated' ? (
           <>
-            <ShieldAlert className="w-3.5 h-3.5 text-rose-400 animate-bounce" />
-            <span>INCIDENT ACTIVE</span>
+            <ShieldAlert className="w-3 h-3 text-rose-400 animate-bounce" />
+            <span>ALERT ACTIVE</span>
           </>
         ) : incident?.stage === 'containing' ? (
           <>
-            <RotateCcw className="w-3.5 h-3.5 text-sky-400 animate-spin" />
+            <RotateCcw className="w-3 h-3 text-sky-400 animate-spin" />
             <span>CONTAINING ({incident.progress}%)</span>
           </>
         ) : incident?.stage === 'resolved' ? (
           <>
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
             <span>CONTAINED</span>
           </>
         ) : (
           <>
-            <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
-            <span>SIMULATE ATTACK</span>
+            <ShieldAlert className="w-3 h-3 text-rose-400" />
+            <span className="hidden sm:inline">SIMULATE ATTACK</span>
+            <span className="sm:hidden">ATTACK</span>
           </>
         )}
       </button>
 
-      <div className="h-4 w-[1px] bg-white/10 mx-0.5 hidden sm:block" />
+      <div className="h-4 w-[1px] bg-white/10 mx-0.5 hidden sm:block flex-shrink-0" />
 
       {/* Quick Voice Synthesizer Toggle */}
       <button
@@ -119,7 +121,7 @@ export const CyberHUDControls: React.FC<CyberHUDControlsProps> = ({
           }
         }}
         onMouseEnter={() => cyberSound.playBlip()}
-        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
+        className={`flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-mono font-medium transition-all cursor-pointer flex-shrink-0 ${
           voiceActive
             ? 'bg-purple-500/20 text-purple-300 border border-purple-500/50 shadow-[0_0_12px_rgba(168,85,247,0.25)]'
             : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
@@ -127,9 +129,9 @@ export const CyberHUDControls: React.FC<CyberHUDControlsProps> = ({
         title="Toggle Tactical AI Voice Synthesizer & Speech Narration"
       >
         {voiceActive ? (
-          <Mic className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
+          <Mic className="w-3 h-3 text-purple-400 animate-pulse" />
         ) : (
-          <MicOff className="w-3.5 h-3.5 text-slate-500" />
+          <MicOff className="w-3 h-3 text-slate-500" />
         )}
         <span className="hidden sm:inline">{voiceActive ? 'Voice' : 'Voice Off'}</span>
       </button>

@@ -116,7 +116,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   return (
     <section
       id="home"
-      className="relative min-h-[calc(100vh-3.5rem)] flex flex-col justify-center pt-24 pb-16 sm:pt-28 md:pt-32 md:pb-20 overflow-hidden"
+      className="relative min-h-[calc(100vh-4rem)] flex flex-col justify-center pt-16 pb-6 sm:pt-20 sm:pb-8 lg:pt-16 lg:pb-6 overflow-x-clip"
       aria-label="Cyberforage Hero"
     >
       {/* Background Cyber Ambient Lights */}
@@ -132,7 +132,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full my-auto">
         {/* Global Emergency Alert Banner (Controlled via Admin Panel) */}
         {content.telemetry?.isAlertActive && (
-          <div className="mb-8 p-3 sm:p-4 rounded-xl bg-gradient-to-r from-rose-950/80 via-red-950/70 to-rose-950/80 border border-rose-500/60 shadow-[0_0_35px_rgba(244,63,94,0.3)] backdrop-blur-md animate-fadeIn flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="mb-4 sm:mb-5 p-2.5 sm:p-3 rounded-xl bg-gradient-to-r from-rose-950/80 via-red-950/70 to-rose-950/80 border border-rose-500/60 shadow-[0_0_35px_rgba(244,63,94,0.3)] backdrop-blur-md animate-fadeIn flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <span className="relative flex h-3 w-3 flex-shrink-0">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
@@ -154,11 +154,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12 xl:gap-16 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 xl:gap-10 items-center">
           {/* Left Column: Hero Content */}
           <div className="flex flex-col items-start z-10 w-full max-w-xl mx-auto lg:mx-0">
             {/* Top Chip */}
-            <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-[#00F0C0]/5 border border-[#00F0C0]/25 backdrop-blur-sm">
+            <div className="inline-flex items-center gap-2 mb-2 sm:mb-3 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-[#00F0C0]/5 border border-[#00F0C0]/25 backdrop-blur-sm">
               <span className="w-2 h-2 rounded-full bg-[#00F0C0] animate-pulse" />
               <span className="text-[10px] sm:text-xs md:text-sm font-mono tracking-[0.14em] sm:tracking-[0.22em] text-[#00E5BE] font-semibold uppercase">
                 {content.hero?.badge || 'CYBERSECURITY / RESEARCH / AI / AUTOMATION'}
@@ -166,7 +166,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </div>
 
             {/* Title */}
-            <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight mb-3 font-mono">
+            <h1 className="text-3xl sm:text-5xl lg:text-5xl xl:text-6xl font-extrabold tracking-tight mb-1.5 sm:mb-2 font-mono">
               <span className="text-white">{content.hero?.brandPrefix || 'CYBER'}</span>
               <span className="text-[#00F0C0] drop-shadow-[0_0_20px_rgba(0,240,192,0.4)]">
                 {content.hero?.brandSuffix || 'FORAGE'}
@@ -174,30 +174,30 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </h1>
 
             {/* Motto */}
-            <p className="text-2xl sm:text-3xl font-bold text-slate-100 mb-4 tracking-tight">
+            <p className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-100 mb-2 sm:mb-2.5 tracking-tight">
               {content.hero?.motto || 'Explore. Build. Defend.'}
             </p>
 
             {/* Subtext */}
-            <p className="text-base sm:text-lg text-slate-300 max-w-xl mb-8 leading-relaxed font-normal">
+            <p className="text-xs sm:text-sm lg:text-base text-slate-300 max-w-lg mb-4 sm:mb-5 leading-relaxed font-normal">
               {content.hero?.description || 'A technology ecosystem for cybersecurity, security research, intelligent automation and defensive engineering.'}
             </p>
 
             {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-4 mb-8">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 mb-4 sm:mb-5">
               <a
                 href="#projects"
                 onClick={() => cyberSound.playClick()}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#00E5BE] text-[#04131E] font-bold text-sm sm:text-base transition-all duration-200 hover:bg-[#00F0C0] shadow-[0_0_25px_rgba(0,229,190,0.35)] hover:shadow-[0_0_35px_rgba(0,240,192,0.55)] cursor-pointer group hover:scale-105 active:scale-95"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-lg bg-[#00E5BE] text-[#04131E] font-bold text-xs sm:text-sm transition-all duration-200 hover:bg-[#00F0C0] shadow-[0_0_25px_rgba(0,229,190,0.35)] hover:shadow-[0_0_35px_rgba(0,240,192,0.55)] cursor-pointer group hover:scale-105 active:scale-95"
               >
                 <span>Explore Projects</span>
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
               </a>
 
               <a
                 href="#labs"
                 onClick={() => cyberSound.playClick()}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#06101E]/80 hover:bg-[#09172B] text-slate-200 hover:text-white border border-slate-700/80 hover:border-[#00E5BE]/60 text-sm sm:text-base font-semibold transition-all duration-200 cursor-pointer hover:scale-105 active:scale-95"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-lg bg-[#06101E]/80 hover:bg-[#09172B] text-slate-200 hover:text-white border border-slate-700/80 hover:border-[#00E5BE]/60 text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer hover:scale-105 active:scale-95"
               >
                 <span>Explore Labs</span>
               </a>
@@ -207,10 +207,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   cyberSound.playClick();
                   onOpenTerminal();
                 }}
-                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] text-[#00F0C0] border border-white/10 hover:border-[#00F0C0]/40 text-sm font-mono transition-all cursor-pointer hover:scale-105 active:scale-95"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] text-[#00F0C0] border border-white/10 hover:border-[#00F0C0]/40 text-xs font-mono transition-all cursor-pointer hover:scale-105 active:scale-95"
                 title="Launch Tactical Terminal (Ctrl+K or `~`)"
               >
-                <Terminal className="w-4 h-4" />
+                <Terminal className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">CLI Console</span>
               </button>
 
@@ -220,10 +220,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     cyberSound.playClick();
                     onOpenNmap();
                   }}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-[#10B981]/10 hover:bg-[#10B981]/25 text-emerald-300 border border-[#10B981]/40 text-sm font-mono transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-lg bg-[#10B981]/10 hover:bg-[#10B981]/25 text-emerald-300 border border-[#10B981]/40 text-xs font-mono transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
                   title="Launch Live Nmap Network Port Scanner"
                 >
-                  <Network className="w-4 h-4 text-emerald-400" />
+                  <Network className="w-3.5 h-3.5 text-emerald-400" />
                   <span>Live Nmap</span>
                 </button>
               )}
@@ -231,7 +231,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               {/* Tactical AI Voice Control & Synthesizer Button */}
               <button
                 onClick={handleToggleVoice}
-                className={`inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border text-sm font-mono transition-all cursor-pointer hover:scale-105 active:scale-95 ${
+                className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-lg border text-xs font-mono transition-all cursor-pointer hover:scale-105 active:scale-95 ${
                   isListening
                     ? 'bg-rose-500/20 text-rose-300 border-rose-500/60 shadow-[0_0_20px_rgba(244,63,94,0.35)] animate-pulse'
                     : voiceActive
@@ -242,17 +242,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               >
                 {isListening ? (
                   <>
-                    <Mic className="w-4 h-4 text-rose-400 animate-bounce" />
+                    <Mic className="w-3.5 h-3.5 text-rose-400 animate-bounce" />
                     <span>Listening...</span>
                   </>
                 ) : voiceActive ? (
                   <>
-                    <Mic className="w-4 h-4 text-purple-400" />
+                    <Mic className="w-3.5 h-3.5 text-purple-400" />
                     <span>Voice: ON</span>
                   </>
                 ) : (
                   <>
-                    <MicOff className="w-4 h-4 text-slate-500" />
+                    <MicOff className="w-3.5 h-3.5 text-slate-500" />
                     <span>Voice: OFF</span>
                   </>
                 )}
@@ -265,10 +265,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     cyberSound.playClick();
                     onOpenAudioConsole();
                   }}
-                  className="inline-flex items-center justify-center gap-2 px-3 py-3 rounded-lg bg-[#38BDF8]/10 hover:bg-[#38BDF8]/20 text-sky-300 border border-[#38BDF8]/30 hover:border-[#38BDF8]/60 text-sm font-mono transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(56,189,248,0.15)]"
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-lg bg-[#38BDF8]/10 hover:bg-[#38BDF8]/20 text-sky-300 border border-[#38BDF8]/30 hover:border-[#38BDF8]/60 text-xs font-mono transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(56,189,248,0.15)]"
                   title="Open Tactical Soundscape & Audio Console"
                 >
-                  <Volume2 className="w-4 h-4 text-sky-400" />
+                  <Volume2 className="w-3.5 h-3.5 text-sky-400" />
                   <span className="hidden sm:inline">Audio HUD</span>
                 </button>
               )}
@@ -387,7 +387,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           {/* Right Column: 3D Interactive Canvas & Orbital Badges */}
           <div className="relative flex flex-col items-center justify-center w-full">
             {/* Free-Floating 3D Globe Wrapper - Zero square bounding box */}
-            <div className="relative w-full aspect-square max-w-[420px] sm:max-w-[460px] lg:max-w-[500px] xl:max-w-[520px] mx-auto flex items-center justify-center select-none">
+            <div className="relative w-full aspect-square max-w-[280px] sm:max-w-[340px] md:max-w-[370px] lg:max-w-[390px] xl:max-w-[430px] max-h-[42vh] sm:max-h-[45vh] mx-auto flex items-center justify-center select-none">
               {/* Soft Ambient Holographic Energy Halo (Diffused, zero hard edges) */}
               <div
                 className="absolute inset-0 pointer-events-none -z-10"
@@ -476,7 +476,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </div>
 
             {/* 3D Mode & Simulation Controls */}
-            <div className="mt-4 w-full flex justify-center">
+            <div className="mt-2.5 sm:mt-3 w-full flex justify-center">
               <CyberHUDControls
                 currentMode={sceneMode}
                 onModeChange={onSceneModeChange}
@@ -484,7 +484,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 incident={incident}
               />
             </div>
-            <p className="mt-2 text-[11px] font-mono text-slate-400 text-center">
+            <p className="mt-1 text-[10px] sm:text-[11px] font-mono text-slate-400 text-center">
               Drag to orbit 360° | Ctrl + Scroll to zoom | Click nodes to inspect
             </p>
           </div>
@@ -492,17 +492,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       </div>
 
       {/* Cyber Scroll-Down Indicator */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center">
+      <div className="hidden md:flex absolute bottom-1.5 sm:bottom-2 left-1/2 -translate-x-1/2 z-20 flex-col items-center">
         <a
           href="#ecosystem"
           onClick={() => cyberSound.playBlip()}
-          className="group flex flex-col items-center gap-1 text-slate-400 hover:text-[#00F0C0] transition-colors cursor-pointer py-1 px-3 rounded-full hover:bg-white/[0.04]"
+          className="group flex flex-col items-center gap-0.5 text-slate-400 hover:text-[#00F0C0] transition-colors cursor-pointer py-0.5 px-3 rounded-full hover:bg-white/[0.04]"
           aria-label="Scroll to explore ecosystem"
         >
-          <span className="text-[10px] font-mono tracking-[0.2em] uppercase opacity-70 group-hover:opacity-100 transition-opacity">
+          <span className="text-[9px] font-mono tracking-[0.2em] uppercase opacity-70 group-hover:opacity-100 transition-opacity">
             Scroll to explore
           </span>
-          <ChevronDown className="w-4 h-4 text-[#00F0C0] animate-bounce" />
+          <ChevronDown className="w-3.5 h-3.5 text-[#00F0C0] animate-bounce" />
         </a>
       </div>
     </section>
