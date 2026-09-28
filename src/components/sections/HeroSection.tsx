@@ -60,7 +60,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
             recognition.onresult = (event: any) => {
               const transcript = event.results[0][0].transcript.toLowerCase();
-              if (transcript.includes('terminal') || transcript.includes('console') || transcript.includes('cli')) {
+              if (transcript.includes('welcome') || transcript.includes('greet') || transcript.includes('hello')) {
+                cyberSound.replayWelcome();
+              } else if (transcript.includes('terminal') || transcript.includes('console') || transcript.includes('cli')) {
                 cyberSound.speakVoice('Launching terminal console');
                 onOpenTerminal();
               } else if (transcript.includes('scan') || transcript.includes('nmap') || transcript.includes('network')) {

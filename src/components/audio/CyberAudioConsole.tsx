@@ -138,7 +138,7 @@ export const CyberAudioConsole: React.FC<CyberAudioConsoleProps> = ({ isOpen, on
         <button
           onClick={() => {
             cyberSound.playClick();
-            cyberSound.playWelcome();
+            cyberSound.replayWelcome();
           }}
           className="w-full flex items-center justify-center gap-2 p-2 rounded-lg bg-[#00F0C0]/10 hover:bg-[#00F0C0]/20 border border-[#00F0C0]/40 text-[#00F0C0] text-xs font-mono font-semibold transition-all cursor-pointer shadow-[0_0_15px_rgba(0,240,192,0.15)] mt-1"
         >

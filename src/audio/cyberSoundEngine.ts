@@ -3,12 +3,33 @@ class CyberSoundEngine {
   private ambientOsc1: OscillatorNode | null = null;
   private ambientOsc2: OscillatorNode | null = null;
   private ambientGain: GainNode | null = null;
-  public isMuted: boolean = false; // Enabled by default as requested
+  public isMuted: boolean = false; // Enabled by default
   public isDroneActive: boolean = false;
   public voiceEnabled: boolean = true;
-  private hasWelcomed: boolean = false;
+  public hasWelcomed: boolean = false;
+  private cachedVoices: SpeechSynthesisVoice[] = [];
+  private isWelcoming: boolean = false;
 
-  public initCtx() {
+  constructor() {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      const updateVoices = () => {
+        try {
+          const v = window.speechSynthesis.getVoices();
+          if (v && v.length > 0) {
+            this.cachedVoices = v;
+          }
+        } catch {
+          // Ignored
+        }
+      };
+      updateVoices();
+      if (window.speechSynthesis.onvoiceschanged !== undefined) {
+        window.speechSynthesis.onvoiceschanged = updateVoices;
+      }
+    }
+  }
+
+  public initCtx(): AudioContext | null {
     if (!this.ctx && typeof window !== 'undefined') {
       const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       if (AudioCtx) {
@@ -16,15 +37,51 @@ class CyberSoundEngine {
       }
     }
     if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume();
+      this.ctx.resume().catch(() => {});
     }
+    return this.ctx;
   }
 
-  public triggerWelcomeSequence(customText?: string) {
-    if (this.hasWelcomed || this.isMuted) return;
-    this.hasWelcomed = true;
+  public async triggerWelcomeSequence(customText?: string): Promise<boolean> {
+    if (this.hasWelcomed || this.isMuted || this.isWelcoming) return false;
+
     this.initCtx();
-    this.playWelcome(customText);
+    if (!this.ctx) return false;
+
+    // Check if AudioContext is running or can be resumed immediately
+    if (this.ctx.state === 'suspended') {
+      try {
+        await this.ctx.resume();
+      } catch {
+        // Autoplay restriction in effect
+      }
+    }
+
+    if (this.ctx.state === 'running') {
+      this.isWelcoming = true;
+      this.hasWelcomed = true;
+      this.playWelcome(customText);
+      setTimeout(() => {
+        this.isWelcoming = false;
+      }, 3500);
+      return true;
+    }
+
+    // Attempt direct voice synthesis if Web Audio is suspended by browser
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window && this.voiceEnabled) {
+      try {
+        this.speakVoice(
+          customText || "Welcome to Cyberforage. Tactical defense systems online.",
+          () => {
+            this.hasWelcomed = true;
+          }
+        );
+      } catch {
+        // Ignored
+      }
+    }
+
+    return this.hasWelcomed;
   }
 
   public setMuted(muted: boolean): boolean {
@@ -120,6 +177,9 @@ class CyberSoundEngine {
     try {
       this.initCtx();
       if (!this.ctx) return;
+      if (this.ctx.state === 'suspended') {
+        this.ctx.resume().catch(() => {});
+      }
 
       const now = this.ctx.currentTime;
 
@@ -130,7 +190,7 @@ class CyberSoundEngine {
       subOsc.frequency.setValueAtTime(55, now);
       subOsc.frequency.exponentialRampToValueAtTime(160, now + 0.6);
       subGain.gain.setValueAtTime(0.001, now);
-      subGain.gain.linearRampToValueAtTime(0.12, now + 0.25);
+      subGain.gain.linearRampToValueAtTime(0.14, now + 0.25);
       subGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.85);
       subOsc.connect(subGain);
       subGain.connect(this.ctx.destination);
@@ -150,7 +210,7 @@ class CyberSoundEngine {
         osc.frequency.exponentialRampToValueAtTime(freq, startTime + 0.15);
 
         gain.gain.setValueAtTime(0.001, startTime);
-        gain.gain.linearRampToValueAtTime(0.06, startTime + 0.06);
+        gain.gain.linearRampToValueAtTime(0.07, startTime + 0.06);
         gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.9);
 
         osc.connect(gain);
@@ -171,7 +231,7 @@ class CyberSoundEngine {
       filter.frequency.setValueAtTime(3200, now);
 
       highGain.gain.setValueAtTime(0.001, now + 0.45);
-      highGain.gain.linearRampToValueAtTime(0.035, now + 0.55);
+      highGain.gain.linearRampToValueAtTime(0.04, now + 0.55);
       highGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
 
       highOsc.connect(filter);
@@ -186,37 +246,71 @@ class CyberSoundEngine {
           this.speakVoice(
             customText || "Welcome to Cyberforage. Tactical defense systems online."
           );
-        }, 650);
+        }, 600);
       }
     } catch {
       // Ignored if browser audio context restricted
     }
   }
 
-  public speakVoice(text: string) {
-    if (this.isMuted || !this.voiceEnabled || typeof window === 'undefined' || !window.speechSynthesis) return;
+  public replayWelcome(customText?: string) {
+    this.hasWelcomed = false;
+    this.isWelcoming = false;
+    this.initCtx();
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
+    }
+    this.playWelcome(customText);
+  }
+
+  public speakVoice(text: string, onStarted?: () => void, onError?: (err: any) => void) {
+    if (this.isMuted || !this.voiceEnabled || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
     try {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.pitch = 0.85;
-      utterance.rate = 1.02;
-      utterance.volume = 0.8;
-
-      const voices = window.speechSynthesis.getVoices();
-      if (voices.length > 0) {
-        const preferred = voices.find(
-          (v) =>
-            v.lang.startsWith('en') &&
-            (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Samantha') || v.name.includes('Daniel') || v.name.includes('David'))
-        );
-        if (preferred) {
-          utterance.voice = preferred;
-        }
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
       }
+      window.speechSynthesis.cancel();
 
-      window.speechSynthesis.speak(utterance);
-    } catch {
-      // Ignored
+      setTimeout(() => {
+        try {
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.pitch = 0.88;
+          utterance.rate = 1.0;
+          utterance.volume = 0.95;
+
+          const voices = this.cachedVoices.length > 0 ? this.cachedVoices : window.speechSynthesis.getVoices();
+          if (voices.length > 0) {
+            const preferred = voices.find(
+              (v) =>
+                v.lang.startsWith('en') &&
+                (v.name.includes('Google') ||
+                  v.name.includes('Natural') ||
+                  v.name.includes('Samantha') ||
+                  v.name.includes('Daniel') ||
+                  v.name.includes('David') ||
+                  v.name.includes('Zira') ||
+                  v.name.includes('Desktop'))
+            );
+            if (preferred) {
+              utterance.voice = preferred;
+            }
+          }
+
+          utterance.onstart = () => {
+            if (onStarted) onStarted();
+          };
+
+          utterance.onerror = (e) => {
+            if (onError) onError(e);
+          };
+
+          window.speechSynthesis.speak(utterance);
+        } catch (e) {
+          if (onError) onError(e);
+        }
+      }, 40);
+    } catch (err) {
+      if (onError) onError(err);
     }
   }
 
@@ -395,19 +489,22 @@ class CyberSoundEngine {
   }
 
   public speak(text: string) {
-    if (this.isMuted || !this.voiceEnabled) return;
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      try {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 1.1;
-        utterance.pitch = 0.9;
-        window.speechSynthesis.speak(utterance);
-      } catch {
-        // Ignored
-      }
-    }
+    this.speakVoice(text);
   }
 }
 
 export const cyberSound = new CyberSoundEngine();
+
+// Auto-trigger welcome sequence at initial document loading
+if (typeof window !== 'undefined') {
+  const tryAutoPlay = () => {
+    cyberSound.triggerWelcomeSequence().catch(() => {});
+  };
+
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    tryAutoPlay();
+  } else {
+    window.addEventListener('DOMContentLoaded', tryAutoPlay, { once: true });
+    window.addEventListener('load', tryAutoPlay, { once: true });
+  }
+}
