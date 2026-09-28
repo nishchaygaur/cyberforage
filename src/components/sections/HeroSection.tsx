@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ArrowRight, Terminal, ShieldAlert, CheckCircle2, ChevronDown, Network, Radio } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { ArrowRight, Terminal, ShieldAlert, CheckCircle2, ChevronDown, Network, Radio, Mic, MicOff, Volume2 } from 'lucide-react';
 import { CyberScene } from '../3d/CyberScene';
 import { CyberHUDControls } from '../3d/CyberHUDControls';
 import { SceneMode, SimulatedIncident } from '../../types';
@@ -16,6 +16,7 @@ interface HeroSectionProps {
   incident?: SimulatedIncident | null;
   onDismissIncident?: () => void;
   onOpenNmap?: () => void;
+  onOpenAudioConsole?: () => void;
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
@@ -27,9 +28,88 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   incident,
   onDismissIncident,
   onOpenNmap,
+  onOpenAudioConsole,
 }) => {
   const { content } = useSiteContent();
   const [selectedNode, setSelectedNode] = useState<OrbitalNodeData | null>(null);
+  const [voiceActive, setVoiceActive] = useState(cyberSound.voiceEnabled);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  const handleToggleVoice = () => {
+    cyberSound.playClick();
+    const nextState = !voiceActive;
+    cyberSound.voiceEnabled = nextState;
+    setVoiceActive(nextState);
+
+    if (nextState) {
+      if (cyberSound.isMuted) {
+        cyberSound.setMuted(false);
+      }
+      cyberSound.speakVoice('Voice synthesizer online. Tactical voice control engaged.');
+
+      const SpeechRecognition =
+        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        try {
+          if (!recognitionRef.current) {
+            const recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = (event: any) => {
+              const transcript = event.results[0][0].transcript.toLowerCase();
+              if (transcript.includes('terminal') || transcript.includes('console') || transcript.includes('cli')) {
+                cyberSound.speakVoice('Launching terminal console');
+                onOpenTerminal();
+              } else if (transcript.includes('scan') || transcript.includes('nmap') || transcript.includes('network')) {
+                if (onOpenNmap) {
+                  cyberSound.speakVoice('Launching network scanner');
+                  onOpenNmap();
+                }
+              } else if (transcript.includes('attack') || transcript.includes('simulate') || transcript.includes('breach')) {
+                cyberSound.speakVoice('Simulating threat vector');
+                onSimulateAttack();
+              } else if (transcript.includes('project')) {
+                cyberSound.speakVoice('Navigating to projects');
+                const el = document.getElementById('projects');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              } else if (transcript.includes('lab')) {
+                cyberSound.speakVoice('Navigating to labs');
+                const el = document.getElementById('labs');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }
+              setIsListening(false);
+            };
+
+            recognition.onerror = () => {
+              setIsListening(false);
+            };
+
+            recognition.onend = () => {
+              setIsListening(false);
+            };
+
+            recognitionRef.current = recognition;
+          }
+
+          setIsListening(true);
+          recognitionRef.current.start();
+        } catch {
+          setIsListening(false);
+        }
+      }
+    } else {
+      if (recognitionRef.current && isListening) {
+        try {
+          recognitionRef.current.stop();
+        } catch {}
+      }
+      setIsListening(false);
+      cyberSound.speakVoice('Voice control offline');
+    }
+  };
 
   return (
     <section
@@ -143,6 +223,51 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 >
                   <Network className="w-4 h-4 text-emerald-400" />
                   <span>Live Nmap</span>
+                </button>
+              )}
+
+              {/* Tactical AI Voice Control & Synthesizer Button */}
+              <button
+                onClick={handleToggleVoice}
+                className={`inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border text-sm font-mono transition-all cursor-pointer hover:scale-105 active:scale-95 ${
+                  isListening
+                    ? 'bg-rose-500/20 text-rose-300 border-rose-500/60 shadow-[0_0_20px_rgba(244,63,94,0.35)] animate-pulse'
+                    : voiceActive
+                    ? 'bg-[#A855F7]/15 hover:bg-[#A855F7]/25 text-purple-300 border-[#A855F7]/50 shadow-[0_0_15px_rgba(168,85,247,0.25)]'
+                    : 'bg-white/[0.03] hover:bg-white/[0.08] text-slate-400 border-white/10 hover:border-white/20'
+                }`}
+                title="Toggle Tactical AI Voice Synthesizer & Speech Recognition"
+              >
+                {isListening ? (
+                  <>
+                    <Mic className="w-4 h-4 text-rose-400 animate-bounce" />
+                    <span>Listening...</span>
+                  </>
+                ) : voiceActive ? (
+                  <>
+                    <Mic className="w-4 h-4 text-purple-400" />
+                    <span>Voice: ON</span>
+                  </>
+                ) : (
+                  <>
+                    <MicOff className="w-4 h-4 text-slate-500" />
+                    <span>Voice: OFF</span>
+                  </>
+                )}
+              </button>
+
+              {/* Audio HUD Console Button */}
+              {onOpenAudioConsole && (
+                <button
+                  onClick={() => {
+                    cyberSound.playClick();
+                    onOpenAudioConsole();
+                  }}
+                  className="inline-flex items-center justify-center gap-2 px-3 py-3 rounded-lg bg-[#38BDF8]/10 hover:bg-[#38BDF8]/20 text-sky-300 border border-[#38BDF8]/30 hover:border-[#38BDF8]/60 text-sm font-mono transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(56,189,248,0.15)]"
+                  title="Open Tactical Soundscape & Audio Console"
+                >
+                  <Volume2 className="w-4 h-4 text-sky-400" />
+                  <span className="hidden sm:inline">Audio HUD</span>
                 </button>
               )}
             </div>

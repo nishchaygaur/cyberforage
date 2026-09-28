@@ -596,6 +596,7 @@ export function App() {
                 incident={incident}
                 onDismissIncident={handleDismissIncident}
                 onOpenNmap={() => setIsNmapOpen(true)}
+                onOpenAudioConsole={() => setIsAudioConsoleOpen(true)}
               />
             </div>
 
@@ -740,6 +741,7 @@ export function App() {
               incident={incident}
               onDismissIncident={handleDismissIncident}
               onOpenNmap={() => setIsNmapOpen(true)}
+              onOpenAudioConsole={() => setIsAudioConsoleOpen(true)}
             />
             <EcosystemSection />
             <ProjectsSection

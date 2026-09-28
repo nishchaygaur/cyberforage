@@ -1,5 +1,5 @@
-import React from 'react';
-import { Globe, Server, Network, Compass, ShieldAlert, RotateCcw, CheckCircle2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Globe, Server, Network, Compass, ShieldAlert, RotateCcw, CheckCircle2, Mic, MicOff } from 'lucide-react';
 import { SceneMode, SimulatedIncident } from '../../types';
 import { cyberSound } from '../../audio/cyberSoundEngine';
 
@@ -16,6 +16,7 @@ export const CyberHUDControls: React.FC<CyberHUDControlsProps> = ({
   onSimulateAttack,
   incident,
 }) => {
+  const [voiceActive, setVoiceActive] = useState(cyberSound.voiceEnabled);
   const modes: { id: SceneMode; label: string; icon: React.ReactNode; color: string }[] = [
     { id: 'globe', label: 'Defense Globe', icon: <Globe className="w-4 h-4" />, color: 'text-[#00F0C0]' },
     { id: 'server', label: 'Lab Blades', icon: <Server className="w-4 h-4" />, color: 'text-[#A855F7]' },
@@ -101,6 +102,36 @@ export const CyberHUDControls: React.FC<CyberHUDControlsProps> = ({
             <span>SIMULATE ATTACK</span>
           </>
         )}
+      </button>
+
+      <div className="h-4 w-[1px] bg-white/10 mx-0.5 hidden sm:block" />
+
+      {/* Quick Voice Synthesizer Toggle */}
+      <button
+        onClick={() => {
+          cyberSound.playClick();
+          const next = !voiceActive;
+          cyberSound.voiceEnabled = next;
+          setVoiceActive(next);
+          if (next) {
+            if (cyberSound.isMuted) cyberSound.setMuted(false);
+            cyberSound.speakVoice('Voice synthesizer online');
+          }
+        }}
+        onMouseEnter={() => cyberSound.playBlip()}
+        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
+          voiceActive
+            ? 'bg-purple-500/20 text-purple-300 border border-purple-500/50 shadow-[0_0_12px_rgba(168,85,247,0.25)]'
+            : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
+        }`}
+        title="Toggle Tactical AI Voice Synthesizer & Speech Narration"
+      >
+        {voiceActive ? (
+          <Mic className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
+        ) : (
+          <MicOff className="w-3.5 h-3.5 text-slate-500" />
+        )}
+        <span className="hidden sm:inline">{voiceActive ? 'Voice' : 'Voice Off'}</span>
       </button>
     </div>
   );
