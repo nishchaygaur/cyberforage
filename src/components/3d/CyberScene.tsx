@@ -41,8 +41,8 @@ export const CyberScene: React.FC<CyberSceneProps> = ({
   const cameraRotation = useRef({ x: 0.2, y: 0 });
   const targetHover = useRef({ x: 0, y: 0 });
   const hoverOffset = useRef({ x: 0, y: 0 });
-  const cameraTargetDistance = useRef(mode === 'server' ? 8.5 : 7.6);
-  const currentCameraDistance = useRef(mode === 'server' ? 8.5 : 7.6);
+  const cameraTargetDistance = useRef(mode === 'server' ? 8.5 : 9.4);
+  const currentCameraDistance = useRef(mode === 'server' ? 8.5 : 9.4);
 
   // Animation Frame
   const animationFrameId = useRef<number | null>(null);
@@ -72,7 +72,7 @@ export const CyberScene: React.FC<CyberSceneProps> = ({
     const scene = new THREE.Scene();
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.set(0, 1.2, 7.6);
+    camera.position.set(0, 1.2, 9.4);
 
     const renderer = new THREE.WebGLRenderer({
       canvas,
@@ -361,7 +361,7 @@ export const CyberScene: React.FC<CyberSceneProps> = ({
       globeRef.current.group.visible = true;
       rackRef.current.group.visible = false;
       meshRef.current.group.visible = false;
-      cameraTargetDistance.current = 7.6;
+      cameraTargetDistance.current = 9.4;
     } else if (mode === 'server') {
       globeRef.current.group.visible = false;
       rackRef.current.group.visible = true;
@@ -382,11 +382,7 @@ export const CyberScene: React.FC<CyberSceneProps> = ({
   return (
     <div
       ref={mountRef}
-      className={`relative w-full h-full ${className}`}
-      style={{
-        maskImage: 'radial-gradient(circle at 50% 50%, black 72%, transparent 100%)',
-        WebkitMaskImage: 'radial-gradient(circle at 50% 50%, black 72%, transparent 100%)',
-      }}
+      className={`relative w-full h-full overflow-visible ${className}`}
     >
       <canvas
         ref={canvasRef}
