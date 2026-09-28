@@ -23,28 +23,16 @@ const SECTIONS: SectionItem[] = [
 interface CyberScrollHUDProps {
   activeSection: string;
   onSectionChange?: (sectionId: string) => void;
-  slideProgress?: number;
-  viewMode?: 'slide' | 'vertical';
-  onToggleViewMode?: () => void;
 }
 
 export const CyberScrollHUD: React.FC<CyberScrollHUDProps> = ({
   activeSection,
   onSectionChange,
-  slideProgress,
-  viewMode = 'slide',
-  onToggleViewMode,
 }) => {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
-    if (viewMode === 'slide' && slideProgress !== undefined) {
-      setScrollProgress(Math.round(slideProgress * 100));
-      setShowScrollTop(activeSection !== 'home');
-      return;
-    }
-
     let rafId: number | null = null;
     let lastProgress = -1;
     let lastShow = false;
@@ -78,32 +66,28 @@ export const CyberScrollHUD: React.FC<CyberScrollHUDProps> = ({
       window.removeEventListener('scroll', handleScroll);
       if (rafId) cancelAnimationFrame(rafId);
     };
-  }, [viewMode, slideProgress, activeSection]);
+  }, []);
 
   const scrollToSection = (id: string) => {
     cyberSound.playClick();
+    if (id === 'home') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
     if (onSectionChange) {
       onSectionChange(id);
-    }
-    if (viewMode === 'vertical') {
-      if (id === 'home') {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        const el = document.getElementById(id);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth' });
-        }
-      }
     }
   };
 
   const scrollToTop = () => {
     cyberSound.playClick();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     if (onSectionChange) {
       onSectionChange('home');
-    }
-    if (viewMode === 'vertical') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 

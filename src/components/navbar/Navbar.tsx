@@ -13,7 +13,6 @@ interface NavbarProps {
   onOpenAdmin?: () => void;
   activeSection?: string;
   onNavigate?: (sectionId: string) => void;
-  slideProgress?: number;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -25,7 +24,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAdmin,
   activeSection = 'home',
   onNavigate,
-  slideProgress,
 }) => {
   const { content } = useSiteContent();
   const defconLevel = content.telemetry?.defconLevel || 5;
@@ -93,17 +91,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     };
   }, []);
 
-  useEffect(() => {
-    if (slideProgress !== undefined) {
-      const scaleStr = `scaleX(${slideProgress})`;
-      if (progressBarRef.current) {
-        progressBarRef.current.style.transform = scaleStr;
-      }
-      if (progressGlowRef.current) {
-        progressGlowRef.current.style.transform = scaleStr;
-      }
-    }
-  }, [slideProgress]);
 
   const handleNavClick = (href: string, e: React.MouseEvent) => {
     if (onNavigate && href.startsWith('#')) {

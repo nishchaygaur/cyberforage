@@ -249,26 +249,3 @@
     animation-timeline: scroll(root);
   }
 }
-
-/* Cyber Slide Deck Panes */
-.cyber-slide-pane {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 240, 192, 0.25) transparent;
-}
-
-.cyber-slide-pane::-webkit-scrollbar {
-  width: 5px;
-}
-
-.cyber-slide-pane::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.cyber-slide-pane::-webkit-scrollbar-thumb {
-  background: rgba(0, 240, 192, 0.2);
-  border-radius: 4px;
-}
-
-.cyber-slide-pane::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 240, 192, 0.5);
-}

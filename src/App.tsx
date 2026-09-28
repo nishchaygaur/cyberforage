@@ -18,34 +18,15 @@ import { ThreatIntelGraphModal } from './components/research/ThreatIntelGraphMod
 import { MatrixBreachOverlay } from './components/easteregg/MatrixBreachOverlay';
 import { CyberAudioConsole } from './components/audio/CyberAudioConsole';
 import { CyberScrollHUD } from './components/navigation/CyberScrollHUD';
-import { CyberSlideControls, SlideSectionItem } from './components/navigation/CyberSlideControls';
 import { LiveNmapModal } from './components/nmap/LiveNmapModal';
 import { AdminPanelModal } from './components/admin/AdminPanelModal';
 import { SceneMode, Lab, SimulatedIncident } from './types';
 import { cyberSound } from './audio/cyberSoundEngine';
 import { Terminal } from 'lucide-react';
 
-const SECTIONS: SlideSectionItem[] = [
-  { id: 'home', shortLabel: 'MISSION', fullLabel: 'Mission Control', code: '01' },
-  { id: 'ecosystem', shortLabel: 'ECOSYSTEM', fullLabel: 'Ecosystem Pillars', code: '02' },
-  { id: 'projects', shortLabel: 'PROJECTS', fullLabel: 'Active Projects', code: '03' },
-  { id: 'labs', shortLabel: 'LABS', fullLabel: 'Virtual Testbeds', code: '04' },
-  { id: 'research', shortLabel: 'RESEARCH', fullLabel: 'Research Vectors', code: '05' },
-  { id: 'technologies', shortLabel: 'TECH STACK', fullLabel: 'Tool Architecture', code: '06' },
-  { id: 'telemetry', shortLabel: 'TELEMETRY', fullLabel: 'Defense Telemetry', code: '07' },
-  { id: 'contact', shortLabel: 'DISPATCH', fullLabel: 'Secure Dispatch', code: '08' },
-];
-
 export function App() {
-  const [viewMode, setViewMode] = useState<'slide' | 'vertical'>('slide');
-  const [activeSectionIndex, setActiveSectionIndex] = useState(0);
-  const [activeSection, setActiveSection] = useState('home');
   const [sceneMode, setSceneMode] = useState<SceneMode>('globe');
-
-  const trackRef = useRef<HTMLDivElement>(null);
-  const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const isTransitioningRef = useRef(false);
-
+  const [activeSection, setActiveSection] = useState('home');
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
   const [isNmapOpen, setIsNmapOpen] = useState(false);
   const [nmapTarget, setNmapTarget] = useState('192.168.1.1');
@@ -68,39 +49,6 @@ export function App() {
   const keyBufferRef = useRef('');
   const konamiIndexRef = useRef(0);
   const konamiSequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
-
-  const slideProgress = activeSectionIndex / (SECTIONS.length - 1);
-
-  const handleNavigateToIndex = (index: number) => {
-    const boundedIndex = Math.min(SECTIONS.length - 1, Math.max(0, index));
-    setActiveSectionIndex(boundedIndex);
-    const targetSection = SECTIONS[boundedIndex];
-    setActiveSection(targetSection.id);
-
-    if (viewMode === 'vertical') {
-      if (targetSection.id === 'home') {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        const el = document.getElementById(targetSection.id);
-        if (el) el.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
-  };
-
-  const handleNavigateToSection = (sectionId: string) => {
-    const idx = SECTIONS.findIndex((s) => s.id === sectionId);
-    if (idx !== -1) {
-      handleNavigateToIndex(idx);
-    }
-  };
-
-  const handleSlideStep = (step: number) => {
-    const nextIdx = activeSectionIndex + step;
-    if (nextIdx >= 0 && nextIdx < SECTIONS.length) {
-      cyberSound.playBlip();
-      handleNavigateToIndex(nextIdx);
-    }
-  };
 
   // Auto-play / Gesture-unlocked Tactical Welcome Sequence
   useEffect(() => {
@@ -183,256 +131,15 @@ export function App() {
       } else {
         konamiIndexRef.current = 0;
       }
-
-      // Slide navigation keys when no modal is open and not typing
-      if (viewMode === 'slide') {
-        const activeEl = document.activeElement;
-        const isInput =
-          activeEl instanceof HTMLInputElement ||
-          activeEl instanceof HTMLTextAreaElement ||
-          (activeEl instanceof HTMLElement && activeEl.isContentEditable);
-
-        const isAnyModalOpen =
-          isTerminalOpen ||
-          isAdminOpen ||
-          isCtfOpen ||
-          isAiScannerOpen ||
-          isBinaryInspectorOpen ||
-          isThreatGraphOpen ||
-          isMatrixOpen ||
-          isAudioConsoleOpen ||
-          isNmapOpen ||
-          selectedLab !== null;
-
-        if (!isInput && !isAnyModalOpen) {
-          if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown') {
-            e.preventDefault();
-            handleSlideStep(1);
-          } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') {
-            e.preventDefault();
-            handleSlideStep(-1);
-          } else if (e.key === 'Home') {
-            e.preventDefault();
-            handleNavigateToIndex(0);
-          } else if (e.key === 'End') {
-            e.preventDefault();
-            handleNavigateToIndex(SECTIONS.length - 1);
-          }
-        }
-      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [
-    viewMode,
-    activeSectionIndex,
-    isTerminalOpen,
-    isAdminOpen,
-    isCtfOpen,
-    isAiScannerOpen,
-    isBinaryInspectorOpen,
-    isThreatGraphOpen,
-    isMatrixOpen,
-    isAudioConsoleOpen,
-    isNmapOpen,
-    selectedLab,
-  ]);
+  }, []);
 
-  // Wheel listener: Slides to left on scrolling down while viewport stays in the same place
+  // Section Spy via IntersectionObserver for Smooth HUD and Navigation Sync
   useEffect(() => {
-    if (viewMode !== 'slide') return;
-
-    let wheelAccumulator = 0;
-    let transitionTimeout: number | null = null;
-
-    const handleWheel = (e: WheelEvent) => {
-      // Don't intercept if any modal is open
-      if (
-        isTerminalOpen ||
-        isAdminOpen ||
-        isCtfOpen ||
-        isAiScannerOpen ||
-        isBinaryInspectorOpen ||
-        isThreatGraphOpen ||
-        isMatrixOpen ||
-        isAudioConsoleOpen ||
-        isNmapOpen ||
-        selectedLab !== null
-      ) {
-        return;
-      }
-
-      const currentSlideEl = slideRefs.current[activeSectionIndex];
-      const deltaY = e.deltaY;
-
-      // Check if current slide has internal scrollable space
-      if (currentSlideEl) {
-        const hasScrollableContent = currentSlideEl.scrollHeight > currentSlideEl.clientHeight + 10;
-        if (hasScrollableContent) {
-          const isAtTop = currentSlideEl.scrollTop <= 8;
-          const isAtBottom =
-            currentSlideEl.scrollTop + currentSlideEl.clientHeight >= currentSlideEl.scrollHeight - 12;
-
-          // If scrolling down and not yet at bottom of section, let it scroll internally
-          if (deltaY > 0 && !isAtBottom) {
-            return;
-          }
-          // If scrolling up and not yet at top of section, let it scroll internally
-          if (deltaY < 0 && !isAtTop) {
-            return;
-          }
-        }
-      }
-
-      // Check boundary conditions:
-      if (activeSectionIndex === 0 && deltaY < 0) {
-        return;
-      }
-      if (activeSectionIndex === SECTIONS.length - 1 && deltaY > 0) {
-        return;
-      }
-
-      if (isTransitioningRef.current) {
-        e.preventDefault();
-        return;
-      }
-
-      wheelAccumulator += deltaY;
-
-      if (Math.abs(wheelAccumulator) > 35) {
-        e.preventDefault();
-        const direction = wheelAccumulator > 0 ? 1 : -1;
-        wheelAccumulator = 0;
-        isTransitioningRef.current = true;
-
-        setActiveSectionIndex((prev) => {
-          const nextIndex = Math.min(SECTIONS.length - 1, Math.max(0, prev + direction));
-          if (nextIndex !== prev) {
-            cyberSound.playBlip();
-            setActiveSection(SECTIONS[nextIndex].id);
-          }
-          return nextIndex;
-        });
-
-        if (transitionTimeout) clearTimeout(transitionTimeout);
-        transitionTimeout = window.setTimeout(() => {
-          isTransitioningRef.current = false;
-        }, 700);
-      }
-    };
-
-    window.addEventListener('wheel', handleWheel, { passive: false });
-    return () => {
-      window.removeEventListener('wheel', handleWheel);
-      if (transitionTimeout) clearTimeout(transitionTimeout);
-    };
-  }, [
-    viewMode,
-    activeSectionIndex,
-    isTerminalOpen,
-    isAdminOpen,
-    isCtfOpen,
-    isAiScannerOpen,
-    isBinaryInspectorOpen,
-    isThreatGraphOpen,
-    isMatrixOpen,
-    isAudioConsoleOpen,
-    isNmapOpen,
-    selectedLab,
-  ]);
-
-  // Touch Swipe Gesture Listener
-  useEffect(() => {
-    if (viewMode !== 'slide') return;
-
-    let touchStartX = 0;
-    let touchStartY = 0;
-
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-    };
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      if (
-        isTerminalOpen ||
-        isAdminOpen ||
-        isCtfOpen ||
-        isAiScannerOpen ||
-        isBinaryInspectorOpen ||
-        isThreatGraphOpen ||
-        isMatrixOpen ||
-        isAudioConsoleOpen ||
-        isNmapOpen ||
-        selectedLab !== null
-      ) {
-        return;
-      }
-
-      const touchEndX = e.changedTouches[0].clientX;
-      const touchEndY = e.changedTouches[0].clientY;
-      const diffX = touchEndX - touchStartX;
-      const diffY = touchEndY - touchStartY;
-
-      // Horizontal swipe (dominant)
-      if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
-        if (diffX < 0) {
-          handleSlideStep(1);
-        } else {
-          handleSlideStep(-1);
-        }
-      }
-      // Vertical swipe on sections that don't need scroll
-      else if (Math.abs(diffY) > 75) {
-        const currentSlideEl = slideRefs.current[activeSectionIndex];
-        if (currentSlideEl) {
-          const isAtTop = currentSlideEl.scrollTop <= 5;
-          const isAtBottom =
-            currentSlideEl.scrollTop + currentSlideEl.clientHeight >= currentSlideEl.scrollHeight - 10;
-          if (diffY < 0 && isAtBottom) {
-            handleSlideStep(1);
-          } else if (diffY > 0 && isAtTop) {
-            handleSlideStep(-1);
-          }
-        }
-      }
-    };
-
-    window.addEventListener('touchstart', handleTouchStart, { passive: true });
-    window.addEventListener('touchend', handleTouchEnd, { passive: true });
-    return () => {
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [viewMode, activeSectionIndex, isTerminalOpen, isAdminOpen, isCtfOpen, isAiScannerOpen, isBinaryInspectorOpen, isThreatGraphOpen, isMatrixOpen, isAudioConsoleOpen, isNmapOpen, selectedLab]);
-
-  // Global Anchor Click Interceptor (smoothly slides to target section)
-  useEffect(() => {
-    const handleAnchorClick = (e: MouseEvent) => {
-      const target = (e.target as HTMLElement).closest('a');
-      if (!target) return;
-      const href = target.getAttribute('href');
-      if (href && href.startsWith('#') && href.length > 1) {
-        const id = href.slice(1);
-        const sectionIdx = SECTIONS.findIndex((s) => s.id === id);
-        if (sectionIdx !== -1) {
-          e.preventDefault();
-          cyberSound.playClick();
-          handleNavigateToIndex(sectionIdx);
-        }
-      }
-    };
-
-    document.addEventListener('click', handleAnchorClick);
-    return () => document.removeEventListener('click', handleAnchorClick);
-  }, [viewMode]);
-
-  // Section Spy in Vertical Mode
-  useEffect(() => {
-    if (viewMode !== 'vertical') return;
-
-    const sectionIds = SECTIONS.map((s) => s.id);
+    const sectionIds = ['home', 'ecosystem', 'projects', 'labs', 'research', 'technologies', 'telemetry', 'contact'];
     const elements = sectionIds
       .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => el !== null);
@@ -446,8 +153,6 @@ export function App() {
           visibleEntries.sort((a, b) => b.intersectionRatio - a.intersectionRatio);
           const topVisible = visibleEntries[0].target.id;
           setActiveSection(topVisible);
-          const foundIdx = SECTIONS.findIndex((s) => s.id === topVisible);
-          if (foundIdx !== -1) setActiveSectionIndex(foundIdx);
         }
       },
       {
@@ -461,7 +166,6 @@ export function App() {
     const handleScroll = () => {
       if (window.scrollY < 120) {
         setActiveSection('home');
-        setActiveSectionIndex(0);
       }
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -470,7 +174,7 @@ export function App() {
       observer.disconnect();
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [viewMode]);
+  }, []);
 
   // Cleanup incident timers on unmount
   useEffect(() => {
@@ -565,18 +269,28 @@ export function App() {
 
   const handleFocusBlade3D = (labId: string) => {
     setSceneMode('server');
-    handleNavigateToIndex(0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     cyberSound.playLaser();
   };
 
   const handleFocusMesh3D = () => {
     setSceneMode('mesh');
-    handleNavigateToIndex(0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     cyberSound.playLaser();
   };
 
+  const handleSectionNavigate = (sectionId: string) => {
+    setActiveSection(sectionId);
+    if (sectionId === 'home') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      const el = document.getElementById(sectionId);
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#040812] text-white flex flex-col relative selection:bg-[#00F0C0]/20 selection:text-[#00F0C0] overflow-x-hidden">
+    <div className="min-h-screen bg-[#040812] text-white flex flex-col relative selection:bg-[#00F0C0]/20 selection:text-[#00F0C0]">
       {/* Background Cyber Grid */}
       <div className="fixed inset-0 cyber-grid-bg opacity-30 pointer-events-none" />
 
@@ -589,229 +303,64 @@ export function App() {
         onOpenAudioConsole={() => setIsAudioConsoleOpen((prev) => !prev)}
         onOpenAdmin={() => setIsAdminOpen(true)}
         activeSection={activeSection}
-        onNavigate={handleNavigateToSection}
-        slideProgress={viewMode === 'slide' ? slideProgress : undefined}
+        onNavigate={handleSectionNavigate}
       />
 
-      {/* Main Content Sections: Horizontal Slide Deck or Classic Vertical */}
-      {viewMode === 'slide' ? (
-        <main className="flex-1 w-full h-screen overflow-hidden relative">
-          {/* Horizontal Slide Track */}
-          <div
-            ref={trackRef}
-            className="flex flex-row h-full will-change-transform transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
-            style={{
-              width: `${SECTIONS.length * 100}vw`,
-              transform: `translateX(-${activeSectionIndex * 100}vw)`,
-            }}
-          >
-            {/* Section 0: Home */}
-            <div
-              id="home"
-              ref={(el) => {
-                slideRefs.current[0] = el;
-              }}
-              className={`w-screen h-screen flex-shrink-0 relative overflow-y-auto overflow-x-hidden cyber-slide-pane transition-all duration-700 ${
-                activeSectionIndex === 0 ? 'opacity-100 scale-100' : 'opacity-30 scale-[0.98] pointer-events-none'
-              }`}
-            >
-              <HeroSection
-                onOpenTerminal={() => setIsTerminalOpen(true)}
-                sceneMode={sceneMode}
-                onSceneModeChange={(mode) => setSceneMode(mode)}
-                attackTrigger={attackTrigger}
-                onSimulateAttack={handleSimulateAttack}
-                incident={incident}
-                onDismissIncident={handleDismissIncident}
-                onOpenNmap={() => setIsNmapOpen(true)}
-                onOpenAudioConsole={() => setIsAudioConsoleOpen(true)}
-              />
-            </div>
+      {/* Main Content Sections (Standard Vertical Scroll) */}
+      <main className="flex-1 flex flex-col">
+        {/* Hero Section with 3D Cyber Defense Globe & Satellite Intercepts */}
+        <HeroSection
+          onOpenTerminal={() => setIsTerminalOpen(true)}
+          sceneMode={sceneMode}
+          onSceneModeChange={(mode) => setSceneMode(mode)}
+          attackTrigger={attackTrigger}
+          onSimulateAttack={handleSimulateAttack}
+          incident={incident}
+          onDismissIncident={handleDismissIncident}
+          onOpenNmap={() => setIsNmapOpen(true)}
+          onOpenAudioConsole={() => setIsAudioConsoleOpen(true)}
+        />
 
-            {/* Section 1: Ecosystem */}
-            <div
-              id="ecosystem"
-              ref={(el) => {
-                slideRefs.current[1] = el;
-              }}
-              className={`w-screen h-screen flex-shrink-0 relative overflow-y-auto overflow-x-hidden cyber-slide-pane transition-all duration-700 ${
-                activeSectionIndex === 1 ? 'opacity-100 scale-100' : 'opacity-30 scale-[0.98] pointer-events-none'
-              }`}
-            >
-              <div className="min-h-full flex flex-col justify-center">
-                <EcosystemSection />
-              </div>
-            </div>
+        {/* The Cyberforage Ecosystem (Security, AI, Automation) */}
+        <EcosystemSection />
 
-            {/* Section 2: Projects */}
-            <div
-              id="projects"
-              ref={(el) => {
-                slideRefs.current[2] = el;
-              }}
-              className={`w-screen h-screen flex-shrink-0 relative overflow-y-auto overflow-x-hidden cyber-slide-pane transition-all duration-700 ${
-                activeSectionIndex === 2 ? 'opacity-100 scale-100' : 'opacity-30 scale-[0.98] pointer-events-none'
-              }`}
-            >
-              <div className="min-h-full flex flex-col justify-center">
-                <ProjectsSection
-                  onInspectBinary={(binName) => {
-                    setSelectedBinary(binName);
-                    setIsBinaryInspectorOpen(true);
-                  }}
-                />
-              </div>
-            </div>
+        {/* Featured Projects with Binary Hex Inspector Integration */}
+        <ProjectsSection
+          onInspectBinary={(binName) => {
+            setSelectedBinary(binName);
+            setIsBinaryInspectorOpen(true);
+          }}
+        />
 
-            {/* Section 3: Labs */}
-            <div
-              id="labs"
-              ref={(el) => {
-                slideRefs.current[3] = el;
-              }}
-              className={`w-screen h-screen flex-shrink-0 relative overflow-y-auto overflow-x-hidden cyber-slide-pane transition-all duration-700 ${
-                activeSectionIndex === 3 ? 'opacity-100 scale-100' : 'opacity-30 scale-[0.98] pointer-events-none'
-              }`}
-            >
-              <div className="min-h-full flex flex-col justify-center">
-                <LabsSection
-                  onRunLabSimulation={(lab) => setSelectedLab(lab)}
-                  onFocusBlade3D={handleFocusBlade3D}
-                />
-              </div>
-            </div>
+        {/* Cyberforage Labs (5 interactive simulation testbeds) */}
+        <LabsSection
+          onRunLabSimulation={(lab) => setSelectedLab(lab)}
+          onFocusBlade3D={handleFocusBlade3D}
+        />
 
-            {/* Section 4: Research */}
-            <div
-              id="research"
-              ref={(el) => {
-                slideRefs.current[4] = el;
-              }}
-              className={`w-screen h-screen flex-shrink-0 relative overflow-y-auto overflow-x-hidden cyber-slide-pane transition-all duration-700 ${
-                activeSectionIndex === 4 ? 'opacity-100 scale-100' : 'opacity-30 scale-[0.98] pointer-events-none'
-              }`}
-            >
-              <div className="min-h-full flex flex-col justify-center">
-                <ResearchSection onOpenThreatGraph={() => setIsThreatGraphOpen(true)} />
-              </div>
-            </div>
+        {/* Research Disciplines & MITRE ATT&CK Threat Intel Graph */}
+        <ResearchSection onOpenThreatGraph={() => setIsThreatGraphOpen(true)} />
 
-            {/* Section 5: Technologies */}
-            <div
-              id="technologies"
-              ref={(el) => {
-                slideRefs.current[5] = el;
-              }}
-              className={`w-screen h-screen flex-shrink-0 relative overflow-y-auto overflow-x-hidden cyber-slide-pane transition-all duration-700 ${
-                activeSectionIndex === 5 ? 'opacity-100 scale-100' : 'opacity-30 scale-[0.98] pointer-events-none'
-              }`}
-            >
-              <div className="min-h-full flex flex-col justify-center">
-                <TechStackSection onFocusMesh3D={handleFocusMesh3D} />
-              </div>
-            </div>
+        {/* Tech Stack & Interconnected Security Mesh */}
+        <TechStackSection onFocusMesh3D={handleFocusMesh3D} />
 
-            {/* Section 6: Telemetry */}
-            <div
-              id="telemetry"
-              ref={(el) => {
-                slideRefs.current[6] = el;
-              }}
-              className={`w-screen h-screen flex-shrink-0 relative overflow-y-auto overflow-x-hidden cyber-slide-pane transition-all duration-700 ${
-                activeSectionIndex === 6 ? 'opacity-100 scale-100' : 'opacity-30 scale-[0.98] pointer-events-none'
-              }`}
-            >
-              <div className="min-h-full flex flex-col justify-center">
-                <TelemetryHUDSection
-                  onSimulateAttack={handleSimulateAttack}
-                  incident={incident}
-                />
-              </div>
-            </div>
+        {/* Real-Time Defense Telemetry HUD with Wireshark Live Packet Sniffer */}
+        <TelemetryHUDSection
+          onSimulateAttack={handleSimulateAttack}
+          incident={incident}
+        />
 
-            {/* Section 7: Contact & Transmission + Footer */}
-            <div
-              id="contact"
-              ref={(el) => {
-                slideRefs.current[7] = el;
-              }}
-              className={`w-screen h-screen flex-shrink-0 relative overflow-y-auto overflow-x-hidden cyber-slide-pane transition-all duration-700 ${
-                activeSectionIndex === 7 ? 'opacity-100 scale-100' : 'opacity-30 scale-[0.98] pointer-events-none'
-              }`}
-            >
-              <div className="min-h-full flex flex-col justify-between">
-                <ContactSection />
-                <Footer onNavigate={handleNavigateToSection} />
-              </div>
-            </div>
-          </div>
+        {/* Open Source Channels & Encrypted Transmission Terminal */}
+        <ContactSection />
+      </main>
 
-          {/* Tactical On-Screen Slide HUD & Controls */}
-          <CyberSlideControls
-            sections={SECTIONS}
-            activeIndex={activeSectionIndex}
-            onPrev={() => handleSlideStep(-1)}
-            onNext={() => handleSlideStep(1)}
-            onSelectIndex={(idx) => handleNavigateToIndex(idx)}
-            viewMode={viewMode}
-            onToggleViewMode={() => setViewMode((prev) => (prev === 'slide' ? 'vertical' : 'slide'))}
-          />
-        </main>
-      ) : (
-        <>
-          <main className="flex-1 flex flex-col pb-20">
-            <HeroSection
-              onOpenTerminal={() => setIsTerminalOpen(true)}
-              sceneMode={sceneMode}
-              onSceneModeChange={(mode) => setSceneMode(mode)}
-              attackTrigger={attackTrigger}
-              onSimulateAttack={handleSimulateAttack}
-              incident={incident}
-              onDismissIncident={handleDismissIncident}
-              onOpenNmap={() => setIsNmapOpen(true)}
-              onOpenAudioConsole={() => setIsAudioConsoleOpen(true)}
-            />
-            <EcosystemSection />
-            <ProjectsSection
-              onInspectBinary={(binName) => {
-                setSelectedBinary(binName);
-                setIsBinaryInspectorOpen(true);
-              }}
-            />
-            <LabsSection
-              onRunLabSimulation={(lab) => setSelectedLab(lab)}
-              onFocusBlade3D={handleFocusBlade3D}
-            />
-            <ResearchSection onOpenThreatGraph={() => setIsThreatGraphOpen(true)} />
-            <TechStackSection onFocusMesh3D={handleFocusMesh3D} />
-            <TelemetryHUDSection
-              onSimulateAttack={handleSimulateAttack}
-              incident={incident}
-            />
-            <ContactSection />
-          </main>
-          <Footer onNavigate={handleNavigateToSection} />
-
-          {/* Tactical Mode Switcher & Navigation when in vertical view */}
-          <CyberSlideControls
-            sections={SECTIONS}
-            activeIndex={activeSectionIndex}
-            onPrev={() => handleSlideStep(-1)}
-            onNext={() => handleSlideStep(1)}
-            onSelectIndex={(idx) => handleNavigateToIndex(idx)}
-            viewMode={viewMode}
-            onToggleViewMode={() => setViewMode((prev) => (prev === 'slide' ? 'vertical' : 'slide'))}
-          />
-        </>
-      )}
+      {/* Footer */}
+      <Footer onNavigate={handleSectionNavigate} />
 
       {/* Tactical Floating Scroll-To-Top and Desktop Quick-Scroll Rail */}
       <CyberScrollHUD
         activeSection={activeSection}
-        onSectionChange={handleNavigateToSection}
-        slideProgress={slideProgress}
-        viewMode={viewMode}
-        onToggleViewMode={() => setViewMode((prev) => (prev === 'slide' ? 'vertical' : 'slide'))}
+        onSectionChange={handleSectionNavigate}
       />
 
       {/* Floating Tactical Terminal Button (Quick Launch) */}
