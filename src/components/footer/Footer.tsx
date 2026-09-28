@@ -4,13 +4,29 @@ import { GithubIcon, LinkedinIcon, TwitterIcon, DiscordIcon, TelegramIcon } from
 import { cyberSound } from '../../audio/cyberSoundEngine';
 import { useSiteContent } from '../../context/SiteContentContext';
 
-export const Footer: React.FC = () => {
+interface FooterProps {
+  onNavigate?: (sectionId: string) => void;
+}
+
+export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   const { content } = useSiteContent();
   const contact = content.contact;
 
   const scrollToTop = () => {
     cyberSound.playClick();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (onNavigate) {
+      onNavigate('home');
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleNavClick = (href: string, e: React.MouseEvent) => {
+    if (onNavigate && href.startsWith('#')) {
+      e.preventDefault();
+      cyberSound.playClick();
+      onNavigate(href.slice(1));
+    }
   };
 
   const navLinks = [
@@ -18,8 +34,8 @@ export const Footer: React.FC = () => {
     { label: 'Labs', href: '#labs' },
     { label: 'Research', href: '#research' },
     { label: 'Tools', href: '#technologies' },
-    { label: 'Architecture', href: '#architecture' },
-    { label: 'About', href: '#about' },
+    { label: 'Architecture', href: '#technologies' },
+    { label: 'About', href: '#ecosystem' },
     { label: 'Contact', href: '#contact' },
   ];
 
@@ -30,7 +46,7 @@ export const Footer: React.FC = () => {
           {/* Logo & Brand */}
           <a
             href="#home"
-            onClick={() => cyberSound.playClick()}
+            onClick={(e) => handleNavClick('#home', e)}
             className="group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00F0C0] rounded"
           >
             <div className="inline-flex items-center gap-2.5 select-none">
@@ -74,7 +90,7 @@ export const Footer: React.FC = () => {
               <a
                 key={link.label}
                 href={link.href}
-                onClick={() => cyberSound.playClick()}
+                onClick={(e) => handleNavClick(link.href, e)}
                 className="text-xs sm:text-sm font-mono text-slate-400 hover:text-white transition-colors"
               >
                 {link.label}

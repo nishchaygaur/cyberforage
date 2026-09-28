@@ -12,6 +12,8 @@ interface NavbarProps {
   onOpenAudioConsole?: () => void;
   onOpenAdmin?: () => void;
   activeSection?: string;
+  onNavigate?: (sectionId: string) => void;
+  slideProgress?: number;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -22,6 +24,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAudioConsole,
   onOpenAdmin,
   activeSection = 'home',
+  onNavigate,
+  slideProgress,
 }) => {
   const { content } = useSiteContent();
   const defconLevel = content.telemetry?.defconLevel || 5;
@@ -89,6 +93,27 @@ export const Navbar: React.FC<NavbarProps> = ({
     };
   }, []);
 
+  useEffect(() => {
+    if (slideProgress !== undefined) {
+      const scaleStr = `scaleX(${slideProgress})`;
+      if (progressBarRef.current) {
+        progressBarRef.current.style.transform = scaleStr;
+      }
+      if (progressGlowRef.current) {
+        progressGlowRef.current.style.transform = scaleStr;
+      }
+    }
+  }, [slideProgress]);
+
+  const handleNavClick = (href: string, e: React.MouseEvent) => {
+    if (onNavigate && href.startsWith('#')) {
+      e.preventDefault();
+      cyberSound.playClick();
+      onNavigate(href.slice(1));
+      setMobileMenuOpen(false);
+    }
+  };
+
   const handleAudioToggle = () => {
     if (onOpenAudioConsole) {
       onOpenAudioConsole();
@@ -121,7 +146,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Brand Logo */}
         <a
           href="#home"
-          onClick={() => cyberSound.playClick()}
+          onClick={(e) => handleNavClick('#home', e)}
           className="group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00F0C0] rounded"
         >
           <div className="inline-flex items-center gap-2.5 select-none">
@@ -171,7 +196,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <a
                 key={link.label}
                 href={link.href}
-                onClick={() => cyberSound.playClick()}
+                onClick={(e) => handleNavClick(link.href, e)}
                 onMouseEnter={() => cyberSound.playBlip()}
                 className={`relative px-3 py-1.5 text-xs font-mono font-medium transition-colors ${
                   isActive ? 'text-[#00F0C0]' : 'text-slate-400 hover:text-slate-100'
@@ -342,10 +367,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <a
                 key={link.label}
                 href={link.href}
-                onClick={() => {
-                  cyberSound.playClick();
-                  setMobileMenuOpen(false);
-                }}
+                onClick={(e) => handleNavClick(link.href, e)}
                 className="px-3 py-2 rounded-lg bg-white/[0.03] border border-white/5 text-xs font-mono text-slate-200 hover:text-[#00F0C0] hover:border-[#00F0C0]/30 transition-colors"
               >
                 {link.label}
