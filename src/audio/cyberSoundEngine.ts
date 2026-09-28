@@ -3,9 +3,9 @@ class CyberSoundEngine {
   private ambientOsc1: OscillatorNode | null = null;
   private ambientOsc2: OscillatorNode | null = null;
   private ambientGain: GainNode | null = null;
-  public isMuted: boolean = false; // Enabled by default
-  public isDroneActive: boolean = false;
-  public voiceEnabled: boolean = true;
+  public isMuted: boolean = false; // Master audio enabled by default
+  public isDroneActive: boolean = true; // Ambient drone active by default
+  public voiceEnabled: boolean = true; // Tactical voice synthesizer enabled by default
   public hasWelcomed: boolean = false;
   private cachedVoices: SpeechSynthesisVoice[] = [];
   private isWelcoming: boolean = false;
@@ -51,18 +51,27 @@ class CyberSoundEngine {
 
     this.isWelcoming = true;
 
+    // 1. In modern browsers, SpeechSynthesis can speak immediately on page load
+    let voiceTriggered = false;
+    if (this.voiceEnabled) {
+      this.speakVoice(
+        customText || "Welcome to Cyberforage. Tactical defense systems online."
+      );
+      voiceTriggered = true;
+    }
+
     this.initCtx();
     if (!this.ctx) {
       this.isWelcoming = false;
-      return false;
+      return voiceTriggered;
     }
 
-    // Attempt to resume audio context
+    // 2. Attempt to resume audio context
     if (this.ctx.state === 'suspended') {
       try {
         await this.ctx.resume();
       } catch {
-        // Autoplay restriction in effect; will trigger on first user interaction
+        // Handled via immediate pointer motion / interaction
       }
     }
 
@@ -71,7 +80,10 @@ class CyberSoundEngine {
       if (typeof window !== 'undefined') {
         (window as unknown as { __CYBERFORAGE_PAGE_WELCOMED?: boolean }).__CYBERFORAGE_PAGE_WELCOMED = true;
       }
-      this.playWelcome(customText);
+      this.playWelcome(customText, !voiceTriggered);
+      if (this.isDroneActive) {
+        this.startAmbientDrone();
+      }
       setTimeout(() => {
         this.isWelcoming = false;
       }, 3500);
@@ -79,7 +91,7 @@ class CyberSoundEngine {
     }
 
     this.isWelcoming = false;
-    return false;
+    return voiceTriggered;
   }
 
   public setMuted(muted: boolean): boolean {
@@ -89,6 +101,9 @@ class CyberSoundEngine {
     } else {
       this.initCtx();
       this.playBlip();
+      if (this.isDroneActive) {
+        this.startAmbientDrone();
+      }
     }
     return this.isMuted;
   }
@@ -111,10 +126,11 @@ class CyberSoundEngine {
   }
 
   public startAmbientDrone() {
-    if (this.isMuted || this.isDroneActive) return;
+    if (this.isMuted) return;
     try {
       this.initCtx();
       if (!this.ctx) return;
+      if (this.ambientOsc1) return; // Already running
 
       const filter = this.ctx.createBiquadFilter();
       filter.type = 'lowpass';
@@ -122,7 +138,7 @@ class CyberSoundEngine {
 
       this.ambientGain = this.ctx.createGain();
       this.ambientGain.gain.setValueAtTime(0.001, this.ctx.currentTime);
-      this.ambientGain.gain.exponentialRampToValueAtTime(0.025, this.ctx.currentTime + 2.0);
+      this.ambientGain.gain.exponentialRampToValueAtTime(0.025, this.ctx.currentTime + 1.5);
 
       this.ambientOsc1 = this.ctx.createOscillator();
       this.ambientOsc1.type = 'sawtooth';
@@ -170,7 +186,7 @@ class CyberSoundEngine {
     }
   }
 
-  public playWelcome(customText?: string) {
+  public playWelcome(customText?: string, speakVoiceNow: boolean = true) {
     if (this.isMuted) return;
     try {
       this.initCtx();
@@ -264,12 +280,17 @@ class CyberSoundEngine {
       pulseOsc.stop(now + 0.65);
 
       // 4. Tactical Welcome Voice Synthesizer (Starts cleanly as chimes settle)
-      if (this.voiceEnabled) {
+      if (this.voiceEnabled && speakVoiceNow) {
         setTimeout(() => {
           this.speakVoice(
             customText || "Welcome to Cyberforage. Tactical defense systems online."
           );
-        }, 800);
+        }, 300);
+      }
+
+      // 5. Automatic Sub-Bass Ambient Drone
+      if (this.isDroneActive) {
+        this.startAmbientDrone();
       }
     } catch {
       // Ignored if browser audio context restricted
@@ -282,7 +303,7 @@ class CyberSoundEngine {
     if (this.ctx && this.ctx.state === 'suspended') {
       this.ctx.resume().catch(() => {});
     }
-    this.playWelcome(customText);
+    this.playWelcome(customText, true);
   }
 
   public speakVoice(text: string, onStarted?: () => void, onError?: (err: any) => void) {
@@ -293,44 +314,42 @@ class CyberSoundEngine {
       }
       window.speechSynthesis.cancel();
 
-      setTimeout(() => {
-        try {
-          const utterance = new SpeechSynthesisUtterance(text);
-          utterance.pitch = 0.88;
-          utterance.rate = 1.0;
-          utterance.volume = 0.95;
+      try {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.pitch = 0.88;
+        utterance.rate = 1.0;
+        utterance.volume = 0.95;
 
-          const voices = this.cachedVoices.length > 0 ? this.cachedVoices : window.speechSynthesis.getVoices();
-          if (voices.length > 0) {
-            const preferred = voices.find(
-              (v) =>
-                v.lang.startsWith('en') &&
-                (v.name.includes('Google') ||
-                  v.name.includes('Natural') ||
-                  v.name.includes('Samantha') ||
-                  v.name.includes('Daniel') ||
-                  v.name.includes('David') ||
-                  v.name.includes('Zira') ||
-                  v.name.includes('Desktop'))
-            );
-            if (preferred) {
-              utterance.voice = preferred;
-            }
+        const voices = this.cachedVoices.length > 0 ? this.cachedVoices : window.speechSynthesis.getVoices();
+        if (voices.length > 0) {
+          const preferred = voices.find(
+            (v) =>
+              v.lang.startsWith('en') &&
+              (v.name.includes('Google') ||
+                v.name.includes('Natural') ||
+                v.name.includes('Samantha') ||
+                v.name.includes('Daniel') ||
+                v.name.includes('David') ||
+                v.name.includes('Zira') ||
+                v.name.includes('Desktop'))
+          );
+          if (preferred) {
+            utterance.voice = preferred;
           }
-
-          utterance.onstart = () => {
-            if (onStarted) onStarted();
-          };
-
-          utterance.onerror = (e) => {
-            if (onError) onError(e);
-          };
-
-          window.speechSynthesis.speak(utterance);
-        } catch (e) {
-          if (onError) onError(e);
         }
-      }, 40);
+
+        utterance.onstart = () => {
+          if (onStarted) onStarted();
+        };
+
+        utterance.onerror = (e) => {
+          if (onError) onError(e);
+        };
+
+        window.speechSynthesis.speak(utterance);
+      } catch (e) {
+        if (onError) onError(e);
+      }
     } catch (err) {
       if (onError) onError(err);
     }

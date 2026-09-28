@@ -45,7 +45,6 @@ export function App() {
   const [isThreatGraphOpen, setIsThreatGraphOpen] = useState(false);
   const [isMatrixOpen, setIsMatrixOpen] = useState(false);
   const [isAudioConsoleOpen, setIsAudioConsoleOpen] = useState(false);
-  const [showAudioUnlockPrompt, setShowAudioUnlockPrompt] = useState(false);
 
   // Easter Egg tracking buffers (Matrix keywords and Konami code)
   const keyBufferRef = useRef('');
@@ -56,21 +55,31 @@ export function App() {
   useEffect(() => {
     let triggered = false;
 
+    const userEventTypes = [
+      'pointermove',
+      'mousemove',
+      'wheel',
+      'scroll',
+      'focus',
+      'pointerdown',
+      'click',
+      'keydown',
+      'touchstart'
+    ];
+
     const cleanupGestureListeners = () => {
-      window.removeEventListener('pointerdown', handleUserGesture);
-      window.removeEventListener('click', handleUserGesture);
-      window.removeEventListener('keydown', handleUserGesture);
-      window.removeEventListener('touchstart', handleUserGesture);
+      userEventTypes.forEach((type) => {
+        window.removeEventListener(type, handleEarlyInteraction);
+      });
     };
 
-    const handleUserGesture = () => {
+    const handleEarlyInteraction = () => {
       if (triggered || cyberSound.hasWelcomed) {
         cleanupGestureListeners();
         return;
       }
-      // Detach immediately on the very first touch/click/press to prevent double firing
-      cleanupGestureListeners();
       runWelcome();
+      cleanupGestureListeners();
     };
 
     const runWelcome = async () => {
@@ -78,37 +87,27 @@ export function App() {
       const success = await cyberSound.triggerWelcomeSequence();
       if (success) {
         triggered = true;
-        setShowAudioUnlockPrompt(false);
         cleanupGestureListeners();
       }
     };
 
-    // 1. Attempt immediate auto-play on initial render
+    // 1. Attempt immediate auto-play on initial render (zero delay!)
     runWelcome();
 
-    // 2. Micro-staggered fallback (for browsers where audio engine initializes slightly after mount)
-    const t1 = window.setTimeout(() => {
-      if (!triggered && !cyberSound.hasWelcomed) {
-        runWelcome();
-      }
-    }, 250);
+    // 2. Micro-staggered fallback triggers to catch the instant audio engine is ready
+    const t1 = window.setTimeout(runWelcome, 60);
+    const t2 = window.setTimeout(runWelcome, 180);
+    const t3 = window.setTimeout(runWelcome, 400);
 
-    // 3. Fallback prompt only if audio is still blocked after 1.8s
-    const promptTimer = window.setTimeout(() => {
-      if (!triggered && !cyberSound.hasWelcomed) {
-        setShowAudioUnlockPrompt(true);
-      }
-    }, 1800);
-
-    // 4. Fallback listener for the first interaction if browser blocked initial autoplay
-    window.addEventListener('pointerdown', handleUserGesture, { passive: true });
-    window.addEventListener('click', handleUserGesture, { passive: true });
-    window.addEventListener('keydown', handleUserGesture, { passive: true });
-    window.addEventListener('touchstart', handleUserGesture, { passive: true });
+    // 3. Ultra-sensitive interaction listeners: ANY pointer movement, scroll, or keypress instantly unlocks audio
+    userEventTypes.forEach((type) => {
+      window.addEventListener(type, handleEarlyInteraction, { passive: true, once: true });
+    });
 
     return () => {
       window.clearTimeout(t1);
-      window.clearTimeout(promptTimer);
+      window.clearTimeout(t2);
+      window.clearTimeout(t3);
       cleanupGestureListeners();
     };
   }, []);
@@ -415,20 +414,7 @@ export function App() {
         </span>
       </button>
 
-      {/* Floating Tactical Audio Unlock Notification if browser policy requires user activation */}
-      {showAudioUnlockPrompt && !cyberSound.hasWelcomed && (
-        <button
-          onClick={() => {
-            setShowAudioUnlockPrompt(false);
-            cyberSound.triggerWelcomeSequence();
-          }}
-          className="fixed bottom-6 left-28 z-40 flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-[#071322]/95 hover:bg-[#0c1f38] border border-[#00F0C0]/60 hover:border-[#00F0C0] text-[#00F0C0] font-mono text-xs font-semibold backdrop-blur-md shadow-[0_0_25px_rgba(0,240,192,0.35)] animate-pulse transition-all cursor-pointer group"
-          title="Click to engage Tactical Cyber Audio"
-        >
-          <Volume2 className="w-4 h-4 text-[#00F0C0] animate-bounce" />
-          <span>INITIALIZE AUDIO [CLICK ANYWHERE]</span>
-        </button>
-      )}
+
 
       {/* Interactive Cyber Terminal Console Modal */}
       <CyberTerminalModal
