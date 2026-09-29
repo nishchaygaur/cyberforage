@@ -216,110 +216,37 @@ export class CyberGlobeController {
   }
 
   private createContinentMatrix() {
-    // Full isotropic Fibonacci Golden Spiral coverage guaranteeing dots ALL OVER THE ENTIRE GLOBE
-    // Base lattice covers 100% of the sphere (land + oceans) with vibrant, clearly visible glowing dots
-    const baseCount = 22000;
-    const extraLandCount = 4000;
-    const totalCount = baseCount + extraLandCount;
+    // Pure, uniform holographic cyber dot matrix matching media_1790701417568.png
+    // Removed all dark dots, random pseudo-random dots, white sparkles, and mismatched colors.
+    // 100% of dots are identical vibrant cyber cyan glowing beads in a clean Fibonacci lattice.
+    const count = 12000;
+    const positions = new Float32Array(count * 3);
+    const colors = new Float32Array(count * 3);
 
-    const positions = new Float32Array(totalCount * 3);
-    const colors = new Float32Array(totalCount * 3);
-
-    const landColor1 = new THREE.Color(0x00f0c0); // Radiant neon cyber cyan
-    const landColor2 = new THREE.Color(0x38bdf8); // Sky blue cyber glow
-    const landColor3 = new THREE.Color(0xa5f3fc); // Soft luminous ice cyan (replaces harsh white)
-    const oceanColor1 = new THREE.Color(0x00f0ff); // Electric vivid cyber cyan
-    const oceanColor2 = new THREE.Color(0x38bdf8); // Luminous electric cyber blue
-    const oceanColor3 = new THREE.Color(0x67e8f9); // High-luminance sky cyan
-    const diamondAccent = new THREE.Color(0xbae6fd); // Gentle sky glow accent
-
+    const cyanColor = new THREE.Color(0x00f0c0); // Signature Cyberforage neon cyan
     const goldenAngle = Math.PI * (3 - Math.sqrt(5)); // ~2.399963 rad (Golden Angle)
+    const radius = 2.50;
 
     let idx = 0;
-
-    // 1. Base Layer: Uniform high-density dots all over the entire globe (100% spherical coverage)
-    for (let i = 0; i < baseCount; i++) {
-      const yNorm = 1 - (i / (baseCount - 1)) * 2; // from 1 to -1
+    for (let i = 0; i < count; i++) {
+      const yNorm = 1 - (i / (count - 1)) * 2; // from 1 to -1
       const theta = goldenAngle * i;
 
       const lat = Math.asin(Math.max(-1, Math.min(1, yNorm))) * (180 / Math.PI);
       const lon = ((((theta % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)) - Math.PI) * (180 / Math.PI);
 
-      const isLand = this.isLandCoordinates(lat, lon);
-      // Continents are slightly elevated for 3D relief, oceans form a crisp base sphere
-      const radius = isLand ? 2.535 : 2.50;
-
-      // Canonical 3D spherical projection matching latLonToVector3
       const pos = this.latLonToVector3(lat, lon, radius);
 
       positions[idx] = pos.x;
       positions[idx + 1] = pos.y;
       positions[idx + 2] = pos.z;
 
-      if (isLand) {
-        // High-contrast neon gradients for continents
-        const latMix = (Math.sin(lat * 0.08) + 1) * 0.5;
-        const ptColor = landColor1.clone().lerp(landColor2, latMix);
-        if (i % 6 === 0) {
-          ptColor.lerp(landColor3, 0.55); // Soft icy cyan accent
-        } else if (i % 3 === 0) {
-          ptColor.lerp(oceanColor3, 0.35);
-        }
-        colors[idx] = ptColor.r;
-        colors[idx + 1] = ptColor.g;
-        colors[idx + 2] = ptColor.b;
-      } else {
-        // Vibrant, luminous cyber ocean dots spanning the entire globe
-        const oceanMix = (Math.sin(lat * 0.06 + theta * 1.2) + 1) * 0.5;
-        const ptColor = oceanColor1.clone().lerp(oceanColor2, oceanMix);
-        if (i % 7 === 0) {
-          ptColor.lerp(diamondAccent, 0.45); // Subtle sky blue accent
-        } else if (i % 3 === 0) {
-          ptColor.lerp(oceanColor3, 0.35); // Radiant icy cyan accent
-        } else {
-          ptColor.lerp(landColor1, 0.3); // Electric cyber turquoise
-        }
-        colors[idx] = ptColor.r;
-        colors[idx + 1] = ptColor.g;
-        colors[idx + 2] = ptColor.b;
-      }
+      // Pure uniform cyan across 100% of dots
+      colors[idx] = cyanColor.r;
+      colors[idx + 1] = cyanColor.g;
+      colors[idx + 2] = cyanColor.b;
 
       idx += 3;
-    }
-
-    // 2. Extra Continent Layer: Adds intense high-definition detail to all continents
-    let landPointsFound = 0;
-    let seed = 42;
-    const pseudoRandom = () => {
-      seed = (seed * 9301 + 49297) % 233280;
-      return seed / 233280;
-    };
-
-    while (landPointsFound < extraLandCount) {
-      const u = pseudoRandom();
-      const v = pseudoRandom();
-      const theta = 2 * Math.PI * u;
-      const phi = Math.acos(2 * v - 1); // 0 to PI
-
-      const lat = 90 - (phi * 180) / Math.PI;
-      const lon = (theta * 180) / Math.PI - 180;
-
-      if (this.isLandCoordinates(lat, lon)) {
-        const radius = 2.54;
-        const pos = this.latLonToVector3(lat, lon, radius);
-
-        positions[idx] = pos.x;
-        positions[idx + 1] = pos.y;
-        positions[idx + 2] = pos.z;
-
-        const ptColor = landColor1.clone().lerp(landColor3, pseudoRandom() * 0.5);
-        colors[idx] = ptColor.r;
-        colors[idx + 1] = ptColor.g;
-        colors[idx + 2] = ptColor.b;
-
-        idx += 3;
-        landPointsFound++;
-      }
     }
 
     const geo = new THREE.BufferGeometry();
@@ -334,9 +261,9 @@ export class CyberGlobeController {
     if (ctx) {
       const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
       grad.addColorStop(0, 'rgba(255, 255, 255, 1.0)');
-      grad.addColorStop(0.28, 'rgba(255, 255, 255, 0.95)'); // Crisp refined bead core
-      grad.addColorStop(0.55, 'rgba(255, 255, 255, 0.45)'); // Smooth cyber glow
-      grad.addColorStop(0.85, 'rgba(255, 255, 255, 0.08)');
+      grad.addColorStop(0.24, 'rgba(255, 255, 255, 0.95)'); // Crisp uniform bead core
+      grad.addColorStop(0.52, 'rgba(255, 255, 255, 0.42)'); // Gentle cyber glow
+      grad.addColorStop(0.80, 'rgba(255, 255, 255, 0.08)');
       grad.addColorStop(1.0, 'rgba(255, 255, 255, 0)');
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 64, 64);
@@ -344,35 +271,35 @@ export class CyberGlobeController {
     const texture = new THREE.CanvasTexture(canvas);
 
     const mat = new THREE.PointsMaterial({
-      size: 0.070,
+      size: 0.066,
       vertexColors: true,
       map: texture,
       transparent: true,
-      opacity: 0.95,
+      opacity: 1.0,
       blending: THREE.NormalBlending,
       depthWrite: false
     });
 
-    // View-angle limb attenuation: prevents points from bunching into a solid white silhouette circle
+    // Clean back-face culling with zero dark dots across 99% of visible sphere
     mat.onBeforeCompile = (shader) => {
-      shader.vertexShader = 'varying float vLimbAlpha;\n' + shader.vertexShader;
+      shader.vertexShader = 'varying float vFrontFace;\n' + shader.vertexShader;
       shader.vertexShader = shader.vertexShader.replace(
         'gl_PointSize = size;',
         'vec3 vSphereNorm = normalize(mat3(modelViewMatrix) * transformed);\n' +
         'vec3 vViewDir = -normalize(mvPosition.xyz);\n' +
         'float NdotV = dot(vSphereNorm, vViewDir);\n' +
-        'vLimbAlpha = smoothstep(0.08, 0.35, NdotV);\n' +
-        'gl_PointSize = size * (0.60 + 0.40 * vLimbAlpha);'
+        'vFrontFace = smoothstep(0.01, 0.08, NdotV);\n' +
+        'gl_PointSize = size * (0.80 + 0.20 * vFrontFace);'
       );
-      shader.fragmentShader = 'varying float vLimbAlpha;\n' + shader.fragmentShader;
+      shader.fragmentShader = 'varying float vFrontFace;\n' + shader.fragmentShader;
       shader.fragmentShader = shader.fragmentShader.replace(
         '#include <color_fragment>',
         '#include <color_fragment>\n' +
-        'diffuseColor.a *= vLimbAlpha;\n' +
+        'diffuseColor.a *= vFrontFace;\n' +
         'if (diffuseColor.a < 0.02) discard;'
       );
     };
-    mat.customProgramCacheKey = () => 'cyber-globe-limb-attenuation';
+    mat.customProgramCacheKey = () => 'cyber-globe-uniform-cyan-dots';
 
     this.continentPoints = new THREE.Points(geo, mat);
     this.continentPoints.renderOrder = 10;
