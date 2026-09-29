@@ -203,8 +203,8 @@ export class CyberGlobeController {
   }
 
   private createCoreGlobe() {
-    // Dark cyber core - rendered in opaque pass to reliably occlude back hemisphere dots
-    const coreGeo = new THREE.SphereGeometry(2.45, 48, 48);
+    // Dark cyber core - snug radius under points to occlude back hemisphere dots
+    const coreGeo = new THREE.SphereGeometry(2.485, 48, 48);
     const coreMat = new THREE.MeshBasicMaterial({
       color: 0x020814,
       depthWrite: true,
@@ -227,11 +227,11 @@ export class CyberGlobeController {
 
     const landColor1 = new THREE.Color(0x00f0c0); // Radiant neon cyber cyan
     const landColor2 = new THREE.Color(0x38bdf8); // Sky blue cyber glow
-    const landColor3 = new THREE.Color(0xffffff); // Brilliant diamond pearl white
+    const landColor3 = new THREE.Color(0xa5f3fc); // Soft luminous ice cyan (replaces harsh white)
     const oceanColor1 = new THREE.Color(0x00f0ff); // Electric vivid cyber cyan
     const oceanColor2 = new THREE.Color(0x38bdf8); // Luminous electric cyber blue
     const oceanColor3 = new THREE.Color(0x67e8f9); // High-luminance sky cyan
-    const diamondWhite = new THREE.Color(0xffffff); // Brilliant diamond sparkle
+    const diamondAccent = new THREE.Color(0xbae6fd); // Gentle sky glow accent
 
     const goldenAngle = Math.PI * (3 - Math.sqrt(5)); // ~2.399963 rad (Golden Angle)
 
@@ -261,9 +261,9 @@ export class CyberGlobeController {
         const latMix = (Math.sin(lat * 0.08) + 1) * 0.5;
         const ptColor = landColor1.clone().lerp(landColor2, latMix);
         if (i % 6 === 0) {
-          ptColor.lerp(landColor3, 0.75); // Radiant diamond pearl sparkle
+          ptColor.lerp(landColor3, 0.55); // Soft icy cyan accent
         } else if (i % 3 === 0) {
-          ptColor.lerp(oceanColor3, 0.4);
+          ptColor.lerp(oceanColor3, 0.35);
         }
         colors[idx] = ptColor.r;
         colors[idx + 1] = ptColor.g;
@@ -273,11 +273,11 @@ export class CyberGlobeController {
         const oceanMix = (Math.sin(lat * 0.06 + theta * 1.2) + 1) * 0.5;
         const ptColor = oceanColor1.clone().lerp(oceanColor2, oceanMix);
         if (i % 7 === 0) {
-          ptColor.lerp(diamondWhite, 0.7); // Diamond white sparkle accent
+          ptColor.lerp(diamondAccent, 0.45); // Subtle sky blue accent
         } else if (i % 3 === 0) {
-          ptColor.lerp(oceanColor3, 0.5); // Radiant icy cyan accent
+          ptColor.lerp(oceanColor3, 0.35); // Radiant icy cyan accent
         } else {
-          ptColor.lerp(landColor1, 0.4); // Electric cyber turquoise
+          ptColor.lerp(landColor1, 0.3); // Electric cyber turquoise
         }
         colors[idx] = ptColor.r;
         colors[idx + 1] = ptColor.g;
@@ -312,7 +312,7 @@ export class CyberGlobeController {
         positions[idx + 1] = pos.y;
         positions[idx + 2] = pos.z;
 
-        const ptColor = landColor1.clone().lerp(landColor3, pseudoRandom() * 0.65);
+        const ptColor = landColor1.clone().lerp(landColor3, pseudoRandom() * 0.5);
         colors[idx] = ptColor.r;
         colors[idx + 1] = ptColor.g;
         colors[idx + 2] = ptColor.b;
@@ -334,9 +334,9 @@ export class CyberGlobeController {
     if (ctx) {
       const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
       grad.addColorStop(0, 'rgba(255, 255, 255, 1.0)');
-      grad.addColorStop(0.42, 'rgba(255, 255, 255, 1.0)'); // Solid sharp bead core
-      grad.addColorStop(0.72, 'rgba(255, 255, 255, 0.55)'); // Subtle cyber halo
-      grad.addColorStop(0.95, 'rgba(255, 255, 255, 0.08)');
+      grad.addColorStop(0.28, 'rgba(255, 255, 255, 0.95)'); // Crisp refined bead core
+      grad.addColorStop(0.55, 'rgba(255, 255, 255, 0.45)'); // Smooth cyber glow
+      grad.addColorStop(0.85, 'rgba(255, 255, 255, 0.08)');
       grad.addColorStop(1.0, 'rgba(255, 255, 255, 0)');
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 64, 64);
@@ -344,7 +344,7 @@ export class CyberGlobeController {
     const texture = new THREE.CanvasTexture(canvas);
 
     const mat = new THREE.PointsMaterial({
-      size: 0.078,
+      size: 0.070,
       vertexColors: true,
       map: texture,
       transparent: true,
@@ -352,6 +352,27 @@ export class CyberGlobeController {
       blending: THREE.NormalBlending,
       depthWrite: false
     });
+
+    // View-angle limb attenuation: prevents points from bunching into a solid white silhouette circle
+    mat.onBeforeCompile = (shader) => {
+      shader.vertexShader = 'varying float vLimbAlpha;\n' + shader.vertexShader;
+      shader.vertexShader = shader.vertexShader.replace(
+        'gl_PointSize = size;',
+        'vec3 vSphereNorm = normalize(mat3(modelViewMatrix) * transformed);\n' +
+        'vec3 vViewDir = -normalize(mvPosition.xyz);\n' +
+        'float NdotV = dot(vSphereNorm, vViewDir);\n' +
+        'vLimbAlpha = smoothstep(0.08, 0.35, NdotV);\n' +
+        'gl_PointSize = size * (0.60 + 0.40 * vLimbAlpha);'
+      );
+      shader.fragmentShader = 'varying float vLimbAlpha;\n' + shader.fragmentShader;
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <color_fragment>',
+        '#include <color_fragment>\n' +
+        'diffuseColor.a *= vLimbAlpha;\n' +
+        'if (diffuseColor.a < 0.02) discard;'
+      );
+    };
+    mat.customProgramCacheKey = () => 'cyber-globe-limb-attenuation';
 
     this.continentPoints = new THREE.Points(geo, mat);
     this.continentPoints.renderOrder = 10;
