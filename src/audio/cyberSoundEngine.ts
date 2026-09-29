@@ -43,55 +43,49 @@ class CyberSoundEngine {
   }
 
   public async triggerWelcomeSequence(customText?: string): Promise<boolean> {
-    if (typeof window !== 'undefined' && (window as unknown as { __CYBERFORAGE_PAGE_WELCOMED?: boolean }).__CYBERFORAGE_PAGE_WELCOMED) {
-      this.hasWelcomed = true;
-      return true;
-    }
-    if (this.hasWelcomed || this.isMuted || this.isWelcoming) return false;
+    if (this.hasWelcomed || this.isMuted || this.isWelcoming) return this.hasWelcomed;
 
     this.isWelcoming = true;
 
-    // 1. In modern browsers, SpeechSynthesis can speak immediately on page load
-    let voiceTriggered = false;
-    if (this.voiceEnabled) {
-      this.speakVoice(
-        customText || "Welcome to Cyberforage. Tactical defense systems online."
-      );
-      voiceTriggered = true;
-    }
-
-    this.initCtx();
-    if (!this.ctx) {
+    const ctx = this.initCtx();
+    if (!ctx) {
       this.isWelcoming = false;
-      return voiceTriggered;
+      return false;
     }
 
-    // 2. Attempt to resume audio context
-    if (this.ctx.state === 'suspended') {
+    // Attempt to resume audio context immediately
+    if (ctx.state === 'suspended') {
       try {
-        await this.ctx.resume();
+        await ctx.resume();
       } catch {
-        // Handled via immediate pointer motion / interaction
+        // Autoplay policy prevented immediate resume; will unlock on first gesture
       }
     }
 
-    if (this.ctx.state === 'running') {
+    if (ctx.state === 'running') {
       this.hasWelcomed = true;
       if (typeof window !== 'undefined') {
         (window as unknown as { __CYBERFORAGE_PAGE_WELCOMED?: boolean }).__CYBERFORAGE_PAGE_WELCOMED = true;
       }
-      this.playWelcome(customText, !voiceTriggered);
-      if (this.isDroneActive) {
-        this.startAmbientDrone();
-      }
+      this.playWelcome(customText, true);
       setTimeout(() => {
         this.isWelcoming = false;
       }, 3500);
       return true;
     }
 
+    // SpeechSynthesis is often allowed by browsers even when AudioContext is suspended
+    if (this.voiceEnabled) {
+      try {
+        this.speakVoice(
+          customText || "Welcome to Cyberforage. Tactical defense systems online."
+        );
+      } catch {}
+    }
+
     this.isWelcoming = false;
-    return voiceTriggered;
+    // Return false so gesture listeners remain armed to trigger the full audio chime
+    return false;
   }
 
   public setMuted(muted: boolean): boolean {
@@ -316,25 +310,42 @@ class CyberSoundEngine {
 
       try {
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.pitch = 0.88;
-        utterance.rate = 1.0;
-        utterance.volume = 0.95;
+        utterance.pitch = 0.85;
+        utterance.rate = 1.02;
+        utterance.volume = 1.0;
 
         const voices = this.cachedVoices.length > 0 ? this.cachedVoices : window.speechSynthesis.getVoices();
         if (voices.length > 0) {
-          const preferred = voices.find(
-            (v) =>
-              v.lang.startsWith('en') &&
-              (v.name.includes('Google') ||
-                v.name.includes('Natural') ||
-                v.name.includes('Samantha') ||
-                v.name.includes('Daniel') ||
-                v.name.includes('David') ||
-                v.name.includes('Zira') ||
-                v.name.includes('Desktop'))
-          );
-          if (preferred) {
-            utterance.voice = preferred;
+          // Explicitly prioritize the previous authentic English MALE voices
+          const maleVoice =
+            voices.find(
+              (v) =>
+                v.lang.startsWith('en') &&
+                (v.name.includes('David') ||
+                 v.name.includes('Mark') ||
+                 v.name.includes('George') ||
+                 v.name.includes('Daniel') ||
+                 v.name.includes('Alex') ||
+                 v.name.includes('Guy') ||
+                 v.name.includes('Christopher') ||
+                 v.name.includes('UK English Male') ||
+                 (v.name.toLowerCase().includes('male') && !v.name.toLowerCase().includes('female')))
+            ) ||
+            voices.find(
+              (v) =>
+                v.lang.startsWith('en') &&
+                !v.name.toLowerCase().includes('zira') &&
+                !v.name.toLowerCase().includes('samantha') &&
+                !v.name.toLowerCase().includes('jenny') &&
+                !v.name.toLowerCase().includes('eva') &&
+                !v.name.toLowerCase().includes('victoria') &&
+                !v.name.toLowerCase().includes('karen') &&
+                !v.name.toLowerCase().includes('female')
+            ) ||
+            voices.find((v) => v.lang.startsWith('en'));
+
+          if (maleVoice) {
+            utterance.voice = maleVoice;
           }
         }
 
@@ -535,4 +546,18 @@ class CyberSoundEngine {
 }
 
 export const cyberSound = new CyberSoundEngine();
+
+// Auto-trigger welcome sequence at initial document loading
+if (typeof window !== 'undefined') {
+  const tryAutoPlay = () => {
+    cyberSound.triggerWelcomeSequence().catch(() => {});
+  };
+
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    tryAutoPlay();
+  } else {
+    window.addEventListener('DOMContentLoaded', tryAutoPlay, { once: true });
+    window.addEventListener('load', tryAutoPlay, { once: true });
+  }
+}
 
