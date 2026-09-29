@@ -138,7 +138,7 @@ export const LabsSection: React.FC<LabsSectionProps> = ({
                       {lab.category}
                     </span>
                     <h3 className="text-lg font-bold text-white tracking-tight mb-2 group-hover:text-[#00F0C0] transition-colors">
-                      {lab.name}
+                      {lab.name || (lab as any).title || 'Lab Environment'}
                     </h3>
                   </div>
 
@@ -160,7 +160,7 @@ export const LabsSection: React.FC<LabsSectionProps> = ({
                       <span className="text-[9px] font-mono" style={{ color: colorHex }}>READY</span>
                     </div>
                     <div className="text-[11px] font-mono text-slate-300 truncate">
-                      {lab.attackVectors[0]}
+                      {(Array.isArray(lab.attackVectors) && lab.attackVectors[0]) || 'Adversary Emulation Vector'}
                     </div>
                   </div>
                 </div>

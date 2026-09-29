@@ -203,7 +203,7 @@ export const LabSimulationModal: React.FC<LabSimulationModalProps> = ({ lab, onC
                 <span>Simulated Attack Vectors</span>
               </div>
               <ul className="space-y-1.5">
-                {lab.attackVectors.map((v) => (
+                {(Array.isArray(lab.attackVectors) ? lab.attackVectors : []).map((v) => (
                   <li key={v} className="text-xs text-slate-300 font-mono flex items-start gap-2">
                     <span className="text-rose-500 font-bold">•</span>
                     <span>{v}</span>
@@ -218,7 +218,7 @@ export const LabSimulationModal: React.FC<LabSimulationModalProps> = ({ lab, onC
                 <span>Defensive Countermeasures</span>
               </div>
               <ul className="space-y-1.5">
-                {lab.defenseTechniques.map((d) => (
+                {(Array.isArray(lab.defenseTechniques) ? lab.defenseTechniques : []).map((d) => (
                   <li key={d} className="text-xs text-slate-300 font-mono flex items-start gap-2">
                     <span className="text-[#00F0C0] font-bold">✓</span>
                     <span>{d}</span>

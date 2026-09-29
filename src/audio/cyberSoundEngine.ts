@@ -90,7 +90,8 @@ class CyberSoundEngine {
     if (typeof window === 'undefined') return null;
 
     if (!this.ctx) {
-      if (!force && !this.userHasInteracted && !this.isUserGestureAvailable()) {
+      // Chrome Autoplay Policy: only create AudioContext after user gesture
+      if (!this.userHasInteracted && !this.isUserGestureAvailable()) {
         return null;
       }
 
@@ -134,10 +135,28 @@ class CyberSoundEngine {
     this.userHasInteracted = true;
     if (typeof window === 'undefined') return null;
 
-    const ctx = this.initCtx(true);
-    if (ctx && ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
+    if (!this.ctx) {
+      try {
+        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        if (AudioCtx) {
+          this.ctx = new AudioCtx();
+          this.ctx.addEventListener('statechange', () => {
+            this.notifyStateListeners();
+            if (this.ctx && this.ctx.state === 'running' && this.isDroneActive && !this.ambientOsc1) {
+              this.startAmbientDrone();
+            }
+          });
+        }
+      } catch {
+        return null;
+      }
     }
+
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
+    }
+
+    this.notifyStateListeners();
 
     // If welcome chimes were queued waiting for browser activation, trigger them now
     if (this.pendingWelcomeChime && !this.isMuted) {
@@ -147,17 +166,18 @@ class CyberSoundEngine {
         (window as unknown as { __CYBERFORAGE_PAGE_WELCOMED?: boolean }).__CYBERFORAGE_PAGE_WELCOMED = true;
       }
       this.playWelcome(this.pendingWelcomeText, !this.voiceHasSpoken);
+    } else if (this.isDroneActive && !this.ambientOsc1) {
+      this.startAmbientDrone();
     }
 
-    return ctx;
+    return this.ctx;
   }
 
   /**
    * Triggers the welcome sequence following Google Chrome's Web Audio Autoplay specification:
    * 1. Speaks tactical male voice synthesizer on page load.
-   * 2. Instantiates AudioContext and checks .state ('running' vs 'suspended').
-   * 3. Attempts immediate resume() if MEI permits automatic playback.
-   * 4. Arms statechange & interaction listeners to fire harmonic chimes and ambient drone instantly.
+   * 2. Defers Web Audio instantiation until user interaction to eliminate console autoplay warnings.
+   * 3. Arms gesture listeners so the first touch/click/key automatically unrolls harmonic chimes and ambient drone.
    */
   public async triggerWelcomeSequence(customText?: string): Promise<boolean> {
     if (this.hasWelcomed || this.isMuted || this.isWelcoming) return this.hasWelcomed;
@@ -165,7 +185,7 @@ class CyberSoundEngine {
     this.isWelcoming = true;
     this.pendingWelcomeText = customText;
 
-    // 1. Tactical Welcome Voice (SpeechSynthesis)
+    // 1. Tactical Welcome Voice (SpeechSynthesis) plays on page load
     if (this.voiceEnabled && !this.voiceHasSpoken) {
       try {
         this.speakVoice(
@@ -177,43 +197,24 @@ class CyberSoundEngine {
       } catch {}
     }
 
-    // 2. Initialize AudioContext on page load per Chrome Autoplay Guide
-    const ctx = this.initCtx(true);
-
-    if (ctx) {
-      // If allowed by Chrome Media Engagement Index (MEI), state is already 'running'
-      if (ctx.state === 'running') {
-        this.hasWelcomed = true;
-        if (typeof window !== 'undefined') {
-          (window as unknown as { __CYBERFORAGE_PAGE_WELCOMED?: boolean }).__CYBERFORAGE_PAGE_WELCOMED = true;
-        }
-        this.playWelcome(customText, false);
-        setTimeout(() => {
-          this.isWelcoming = false;
-        }, 3500);
-        return true;
-      }
-
-      // Attempt resume on page load in case browser permits it
-      try {
-        await ctx.resume();
-        if ((ctx.state as AudioContextState) === 'running') {
-          this.hasWelcomed = true;
-          if (typeof window !== 'undefined') {
-            (window as unknown as { __CYBERFORAGE_PAGE_WELCOMED?: boolean }).__CYBERFORAGE_PAGE_WELCOMED = true;
-          }
-          this.playWelcome(customText, false);
-          setTimeout(() => {
-            this.isWelcoming = false;
-          }, 3500);
-          return true;
-        }
-      } catch {
-        // Suspended pending user interaction; statechange listener and gesture fallback are active
-      }
+    // 2. Set up gesture listener so the first tap/click/key automatically unlocks Web Audio
+    if (typeof window !== 'undefined' && !this.userHasInteracted) {
+      const gestureEvents = ['click', 'pointerdown', 'keydown', 'touchstart'];
+      const onUserGesture = () => {
+        gestureEvents.forEach((evt) => window.removeEventListener(evt, onUserGesture));
+        this.unlockAudio();
+      };
+      gestureEvents.forEach((evt) => window.addEventListener(evt, onUserGesture, { passive: true, once: true }));
     }
 
-    // 3. Mark pending so that as soon as user interacts or state transitions to running, chimes trigger
+    // 3. If user gesture is already available (e.g. navigation within page or active user activation):
+    if (this.isUserGestureAvailable()) {
+      const ctx = this.unlockAudio();
+      this.isWelcoming = false;
+      return !!ctx;
+    }
+
+    // Defer AudioContext creation until first user gesture to comply with Chrome Web Audio Autoplay policy (prevents console warnings)
     this.pendingWelcomeChime = true;
     this.isWelcoming = false;
     this.notifyStateListeners();

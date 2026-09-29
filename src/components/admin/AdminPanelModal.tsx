@@ -900,7 +900,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
                             {proj.description}
                           </p>
                           <div className="flex flex-wrap gap-1.5 mb-2">
-                            {proj.tags.map((tag) => (
+                            {(proj.tags || []).map((tag) => (
                               <span
                                 key={tag}
                                 className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#00F0C0]/10 text-[#00F0C0] border border-[#00F0C0]/20"

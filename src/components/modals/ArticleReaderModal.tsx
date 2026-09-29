@@ -56,7 +56,7 @@ export const ArticleReaderModal: React.FC<ArticleReaderModalProps> = ({ article,
 
           {/* Body Paragraphs */}
           <div className="space-y-4 text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
-            {article.content.map((p, i) => (
+            {(Array.isArray(article.content) ? article.content : []).map((p, i) => (
               <p key={i}>{p}</p>
             ))}
           </div>
@@ -68,7 +68,7 @@ export const ArticleReaderModal: React.FC<ArticleReaderModalProps> = ({ article,
               <span>Key Defensive Takeaways</span>
             </h4>
             <ul className="space-y-2">
-              {article.keyTakeaways.map((point, idx) => (
+              {(Array.isArray(article.keyTakeaways) ? article.keyTakeaways : []).map((point, idx) => (
                 <li key={idx} className="text-xs sm:text-sm text-slate-300 flex items-start gap-2.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#00F0C0] mt-1.5 flex-shrink-0" />
                   <span>{point}</span>
@@ -78,7 +78,7 @@ export const ArticleReaderModal: React.FC<ArticleReaderModalProps> = ({ article,
           </div>
 
           {/* Threat Indicators / IOCs if present */}
-          {article.threatIndicators && (
+          {Array.isArray(article.threatIndicators) && article.threatIndicators.length > 0 && (
             <div className="p-5 rounded-xl bg-[#12070c] border border-rose-500/20 space-y-3">
               <h4 className="text-xs font-mono font-bold text-rose-400 uppercase tracking-wider flex items-center gap-2">
                 <ShieldAlert className="w-4 h-4 text-rose-400" />

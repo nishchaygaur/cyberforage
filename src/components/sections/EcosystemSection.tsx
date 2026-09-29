@@ -39,10 +39,18 @@ export const EcosystemSection: React.FC = () => {
           {/* Right 3 Pillar 3D Cards */}
           <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-5">
             {pillars.map((pillar) => {
+              const pillarColor = pillar.color || (pillar as any).accentColor || '#00F0C0';
+              const pillarTagline = pillar.tagline || (pillar as any).subtitle || 'Defensive Engineering & Research';
+              const pillarStats = pillar.stats || (pillar as any).stat || 'Nominal';
+              const rawItems = Array.isArray(pillar.items) && pillar.items.length > 0
+                ? pillar.items
+                : [(pillar as any).subtitle, (pillar as any).badge, (pillar as any).stat, pillarStats].filter(Boolean);
+              const items = rawItems.length > 0 ? rawItems : ['Defensive Engineering', 'Threat Detection', 'Security Research'];
+
               return (
                 <Cyber3DCard
                   key={pillar.id}
-                  customColor={pillar.color}
+                  customColor={pillarColor}
                   maxTilt={18}
                   lift={22}
                   className="p-6 group flex flex-col justify-between"
@@ -53,10 +61,10 @@ export const EcosystemSection: React.FC = () => {
                       className="w-12 h-12 rounded-xl border flex items-center justify-center mb-5 transition-transform group-hover:scale-110 shadow-lg"
                       style={{
                         transform: 'translateZ(38px)',
-                        backgroundColor: `${pillar.color}15`,
-                        borderColor: `${pillar.color}40`,
-                        color: pillar.color,
-                        boxShadow: `0 0 20px ${pillar.color}25`
+                        backgroundColor: `${pillarColor}15`,
+                        borderColor: `${pillarColor}40`,
+                        color: pillarColor,
+                        boxShadow: `0 0 20px ${pillarColor}25`
                       }}
                     >
                       {pillar.id === 'security' && <Shield className="w-6 h-6" />}
@@ -70,7 +78,7 @@ export const EcosystemSection: React.FC = () => {
                       <h3 className="text-lg font-bold text-white tracking-tight mb-1 group-hover:text-white transition-colors">
                         {pillar.title}
                       </h3>
-                      <p className="text-[11px] font-mono text-slate-400 mb-4">{pillar.tagline}</p>
+                      <p className="text-[11px] font-mono text-slate-400 mb-4">{pillarTagline}</p>
                     </div>
 
                     {/* Feature List */}
@@ -78,11 +86,11 @@ export const EcosystemSection: React.FC = () => {
                       style={{ transform: 'translateZ(24px)' }}
                       className="space-y-2.5 mt-auto pt-2 border-t border-white/[0.05]"
                     >
-                      {pillar.items.map((item) => (
-                        <li key={item} className="flex items-center text-xs sm:text-sm text-slate-300 tracking-wide">
+                      {items.map((item, idx) => (
+                        <li key={item + idx} className="flex items-center text-xs sm:text-sm text-slate-300 tracking-wide">
                           <span
                             className="w-1.5 h-1.5 rounded-full mr-2.5 flex-shrink-0 shadow-sm"
-                            style={{ backgroundColor: pillar.color, boxShadow: `0 0 6px ${pillar.color}` }}
+                            style={{ backgroundColor: pillarColor, boxShadow: `0 0 6px ${pillarColor}` }}
                           />
                           <span>{item}</span>
                         </li>
@@ -97,10 +105,10 @@ export const EcosystemSection: React.FC = () => {
                   >
                     <span>Performance</span>
                     <span
-                      style={{ color: pillar.color }}
+                      style={{ color: pillarColor }}
                       className="font-bold px-2 py-0.5 rounded bg-white/[0.03] border border-white/5"
                     >
-                      {pillar.stats}
+                      {pillarStats}
                     </span>
                   </div>
                 </Cyber3DCard>

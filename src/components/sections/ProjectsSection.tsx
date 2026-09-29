@@ -152,7 +152,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ onInspect3D, o
                   </p>
 
                   {/* Metrics Badges (Popping out) */}
-                  {project.metrics && (
+                  {Array.isArray(project.metrics) && project.metrics.length > 0 && (
                     <div
                       style={{ transform: 'translateZ(30px)' }}
                       className="grid grid-cols-3 gap-2 mb-5 p-3 rounded-xl bg-[#050D18]/90 border border-white/10 shadow-inner"
@@ -171,7 +171,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ onInspect3D, o
                     style={{ transform: 'translateZ(24px)' }}
                     className="flex items-center flex-wrap gap-1.5 mb-6"
                   >
-                    {project.tags.map((tag) => (
+                    {(Array.isArray(project.tags) ? project.tags : []).map((tag) => (
                       <span
                         key={tag}
                         className="px-2 py-0.5 rounded bg-[#060D17] text-slate-300 border border-white/10 text-[10px] sm:text-[11px] font-mono"
@@ -187,9 +187,9 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ onInspect3D, o
                   style={{ transform: 'translateZ(45px)' }}
                   className="pt-4 border-t border-white/[0.06] mt-auto flex flex-wrap items-center gap-3"
                 >
-                  {(project.demo_url || project.project_url) && (
+                  {(project.demo_url || project.project_url || (project as any).demoUrl) && (
                     <a
-                      href={project.demo_url || project.project_url}
+                      href={project.demo_url || project.project_url || (project as any).demoUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={() => cyberSound.playClick()}
@@ -205,9 +205,9 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ onInspect3D, o
                     </a>
                   )}
 
-                  {project.github_url && (
+                  {(project.github_url || (project as any).githubUrl) && (
                     <a
-                      href={project.github_url}
+                      href={project.github_url || (project as any).githubUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={() => cyberSound.playClick()}

@@ -112,7 +112,7 @@ export const ResearchSection: React.FC<ResearchSectionProps> = ({ onOpenThreatGr
                   style={{ transform: 'translateZ(26px)' }}
                   className="mt-auto pt-3 border-t border-white/[0.04] space-y-1"
                 >
-                  {domain.topics.slice(0, 3).map((t) => (
+                  {(Array.isArray(domain.topics) ? domain.topics : []).slice(0, 3).map((t) => (
                     <div key={t} className="text-[10px] font-mono text-slate-400 truncate flex items-center gap-1.5">
                       <span className="w-1 h-1 rounded-full flex-shrink-0" style={{ backgroundColor: domain.color }} />
                       <span className="truncate">{t}</span>
