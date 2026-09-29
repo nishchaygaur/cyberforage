@@ -61,7 +61,6 @@ export const ORBITAL_NODES: OrbitalNodeData[] = [
 
 export class CyberGlobeController {
   public group: THREE.Group;
-  private coreSphere!: THREE.Mesh;
   private continentPoints!: THREE.Points;
   private ring1!: THREE.Line;
   private ring2!: THREE.Line;
@@ -82,7 +81,6 @@ export class CyberGlobeController {
   }[] = [];
   private lastAttackTime: number = 0;
   private satellitesGroup: THREE.Group;
-  private radarSweepMesh: THREE.Mesh | null = null;
   private radarBeamLine: THREE.Line | null = null;
   private satelliteMeshes: {
     mesh: THREE.Mesh;
@@ -99,7 +97,6 @@ export class CyberGlobeController {
     this.arcsGroup = new THREE.Group();
     this.satellitesGroup = new THREE.Group();
 
-    this.createCoreGlobe();
     this.createContinentMatrix();
     this.createOrbitRings();
     this.createOrbitalNodes();
@@ -200,19 +197,6 @@ export class CyberGlobeController {
     if (lat >= -22 && lat <= 0 && lon >= 140 && lon <= 180) return true; // Melanesia / Fiji
 
     return false;
-  }
-
-  private createCoreGlobe() {
-    // Dark cyber core - snug radius under points to occlude back hemisphere dots
-    const coreGeo = new THREE.SphereGeometry(2.485, 48, 48);
-    const coreMat = new THREE.MeshBasicMaterial({
-      color: 0x020814,
-      depthWrite: true,
-      depthTest: true
-    });
-    this.coreSphere = new THREE.Mesh(coreGeo, coreMat);
-    this.coreSphere.renderOrder = 0;
-    this.group.add(this.coreSphere);
   }
 
   private createContinentMatrix() {
@@ -398,20 +382,6 @@ export class CyberGlobeController {
   }
 
   private createRadarSweep() {
-    // 60-degree radar fan sector
-    const sweepGeo = new THREE.CircleGeometry(3.4, 32, 0, Math.PI / 3);
-    const sweepMat = new THREE.MeshBasicMaterial({
-      color: 0x00f0c0,
-      transparent: true,
-      opacity: 0.12,
-      side: THREE.DoubleSide,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    });
-    this.radarSweepMesh = new THREE.Mesh(sweepGeo, sweepMat);
-    this.radarSweepMesh.rotation.x = Math.PI / 2; // Flat on equator XZ plane
-    this.group.add(this.radarSweepMesh);
-
     // Leading edge tactical beam line
     const beamGeo = new THREE.BufferGeometry().setFromPoints([
       new THREE.Vector3(0, 0, 0),
@@ -598,7 +568,6 @@ export class CyberGlobeController {
   public update(delta: number, elapsed: number) {
     // Synchronized gentle rotation across all elements
     const rotSpeed = 0.0020;
-    this.coreSphere.rotation.y += rotSpeed;
     this.continentPoints.rotation.y += rotSpeed;
     this.nodesGroup.rotation.y += rotSpeed;
     this.arcsGroup.rotation.y += rotSpeed;
@@ -659,10 +628,7 @@ export class CyberGlobeController {
       }
     }
 
-    // Radar sweep rotation
-    if (this.radarSweepMesh) {
-      this.radarSweepMesh.rotation.z -= 0.02;
-    }
+    // Radar beam rotation
     if (this.radarBeamLine) {
       this.radarBeamLine.rotation.y += 0.02;
     }
@@ -691,8 +657,6 @@ export class CyberGlobeController {
   }
 
   public dispose() {
-    this.coreSphere.geometry.dispose();
-    (this.coreSphere.material as THREE.Material).dispose();
     this.continentPoints.geometry.dispose();
     (this.continentPoints.material as THREE.Material).dispose();
     this.ring1.geometry.dispose();

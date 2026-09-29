@@ -388,16 +388,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           <div className="relative flex flex-col items-center justify-center w-full overflow-visible">
             {/* Free-Floating 3D Globe Wrapper - Zero square bounding box */}
             <div className="relative w-full aspect-square max-w-[340px] sm:max-w-[400px] md:max-w-[450px] lg:max-w-[480px] xl:max-w-[520px] max-h-[55vh] sm:max-h-[60vh] mx-auto flex items-center justify-center select-none overflow-visible">
-              {/* Soft Ambient Holographic Energy Halo (Diffused, zero hard edges) */}
-              <div
-                className="absolute -inset-4 sm:-inset-8 pointer-events-none -z-10"
-                style={{
-                  background: 'radial-gradient(circle at 50% 50%, rgba(0, 240, 192, 0.16) 0%, rgba(56, 189, 248, 0.06) 45%, transparent 72%)',
-                  filter: 'blur(40px)',
-                }}
-                aria-hidden="true"
-              />
-
               {/* Zero-G Anti-Gravity Levitation Shadow / Energy Field */}
               <div
                 className="absolute -bottom-3 left-1/2 w-[70%] h-8 bg-gradient-to-r from-transparent via-[#00F0C0]/35 to-transparent blur-xl rounded-full pointer-events-none transform -translate-x-1/2 scale-y-50 animate-float-shadow"
