@@ -3,7 +3,6 @@ import { Mail, Globe, Send, Shield, CheckCircle2, Lock, ArrowRight, Copy, Check,
 import { GithubIcon, LinkedinIcon, TwitterIcon, DiscordIcon, TelegramIcon, MatrixIcon } from '../icons/BrandIcons';
 import { cyberSound } from '../../audio/cyberSoundEngine';
 import { Cyber3DCard } from '../ui/Cyber3DCard';
-import { LinkedInProfileEmbed } from '../ui/LinkedInProfileEmbed';
 import { useSiteContent } from '../../context/SiteContentContext';
 
 export const ContactSection: React.FC = () => {
@@ -27,8 +26,6 @@ export const ContactSection: React.FC = () => {
     matrix: true,
     ...(contact?.socialsVisible || {}),
   };
-
-  const [showLinkedInModal, setShowLinkedInModal] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -396,31 +393,22 @@ export const ContactSection: React.FC = () => {
                 </a>
 
                 {linkedinUrl && socialsVisible.linkedin && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowLinkedInModal(true);
-                      cyberSound.playClick();
-                    }}
+                  <a
+                    href={linkedinUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => cyberSound.playClick()}
                     className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#0077B5]/15 hover:bg-[#0077B5]/25 border border-[#0077B5]/40 hover:border-[#38BDF8] text-xs font-mono font-bold text-[#38BDF8] transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95"
                   >
                     <LinkedinIcon className="w-3.5 h-3.5 text-[#38BDF8]" />
-                    <span>View LinkedIn Profile Iframe</span>
-                  </button>
+                    <span>Connect on LinkedIn</span>
+                    <ExternalLink className="w-3.5 h-3.5 text-[#38BDF8]" />
+                  </a>
                 )}
               </div>
             </Cyber3DCard>
           </div>
         </div>
-
-        {/* Live LinkedIn Profile Iframe Component (Controlled by Admin Panel Toggle) */}
-        {linkedinUrl && socialsVisible.linkedin && (
-          <LinkedInProfileEmbed
-            url={linkedinUrl}
-            onExpandModal={() => setShowLinkedInModal(true)}
-            className="w-full"
-          />
-        )}
 
         {/* Encrypted Transmission Terminal Form Card */}
         <div className="relative rounded-2xl bg-[#071324]/90 border border-[#00F0C0]/30 backdrop-blur-xl p-6 sm:p-10 shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden">
@@ -682,105 +670,6 @@ export const ContactSection: React.FC = () => {
           )}
         </div>
       </div>
-
-      {/* LinkedIn Profile Iframe / Embed Interactive Modal */}
-      {showLinkedInModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-6 animate-fadeIn"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowLinkedInModal(false);
-              cyberSound.playClick();
-            }
-          }}
-        >
-          <div className="relative w-full max-w-3xl bg-[#061222] border border-[#0077B5]/60 rounded-2xl shadow-[0_0_60px_rgba(0,119,181,0.35)] overflow-hidden flex flex-col max-h-[92vh]">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 sm:px-6 border-b border-white/10 bg-[#040C18]">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-[#0077B5]/20 border border-[#0077B5]/40 flex items-center justify-center text-[#38BDF8] shadow-[0_0_15px_rgba(0,119,181,0.3)]">
-                  <LinkedinIcon className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h4 className="text-sm sm:text-base font-bold text-white font-mono">
-                      Nishchay Gaur
-                    </h4>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#0077B5]/25 text-[#38BDF8] border border-[#0077B5]/40 font-mono">
-                      LinkedIn Profile
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-400 font-mono">
-                    https://www.linkedin.com/in/nishchay-gaur/
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <a
-                  href={linkedinUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0077B5]/20 hover:bg-[#0077B5]/35 text-[#38BDF8] border border-[#0077B5]/40 text-xs font-mono font-medium transition-all"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Open in Tab</span>
-                </a>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowLinkedInModal(false);
-                    cyberSound.playClick();
-                  }}
-                  className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
-                  title="Close Modal"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-
-            {/* Iframe Container */}
-            <div className="relative flex-1 min-h-[420px] sm:min-h-[500px] bg-[#02060E] overflow-hidden flex flex-col">
-              <iframe
-                src={linkedinUrl}
-                title="Nishchay Gaur LinkedIn Profile Frame"
-                className="w-full flex-1 border-0 min-h-[360px]"
-                loading="lazy"
-                sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-              />
-
-              {/* LinkedIn CSP / Security Direct Access Card */}
-              <div className="p-4 sm:p-5 border-t border-white/10 bg-[#051122]/95 backdrop-blur-md">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-[#00F0C0] animate-pulse" />
-                      <span className="text-xs font-mono font-bold text-white">Nishchay Gaur</span>
-                      <span className="text-[10px] font-mono text-[#00F0C0]">• Cyberforage Founder</span>
-                    </div>
-                    <p className="text-xs text-slate-300 font-mono leading-relaxed">
-                      Defensive Security Engineering • Adversary Emulation • Autonomous Threat Triage
-                    </p>
-                  </div>
-
-                  <a
-                    href={linkedinUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => cyberSound.playClick()}
-                    className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#0077B5] hover:bg-[#0088D1] text-white text-xs font-mono font-bold transition-all shadow-[0_0_20px_rgba(0,119,181,0.4)] flex-shrink-0 hover:scale-105 active:scale-95"
-                  >
-                    <LinkedinIcon className="w-4 h-4" />
-                    <span>Connect with Nishchay</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </section>
   );
 };
