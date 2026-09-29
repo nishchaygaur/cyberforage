@@ -83,19 +83,24 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     return sessionStorage.getItem('cyberforage_admin_auth') === 'true';
   });
-  const [email, setEmail] = useState<string>(() => {
-    return sessionStorage.getItem('cyberforage_admin_email') || '';
-  });
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
   const [authError, setAuthError] = useState('');
-  const [adminEmail, setAdminEmail] = useState<string>(() => {
-    return sessionStorage.getItem('cyberforage_admin_email') || AUTHORIZED_ADMIN_EMAIL;
-  });
   const [isMaximized, setIsMaximized] = useState(false);
+
+  // Clear all credential fields whenever modal opens or closes
+  React.useEffect(() => {
+    if (!isOpen) {
+      setEmail('');
+      setPassword('');
+      setAuthError('');
+      setShowPassword(false);
+    }
+  }, [isOpen]);
 
   // Cloud Sync State
   const [isSyncingCloud, setIsSyncingCloud] = useState(false);
@@ -152,13 +157,17 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
       if (result.success) {
         setIsAuthenticated(true);
         sessionStorage.setItem('cyberforage_admin_auth', 'true');
-        sessionStorage.setItem('cyberforage_admin_email', result.email || AUTHORIZED_ADMIN_EMAIL);
-        setAdminEmail(result.email || AUTHORIZED_ADMIN_EMAIL);
+        // Instantly zero out credentials from memory & DOM (no caching)
+        setEmail('');
+        setPassword('');
+        setShowPassword(false);
         setFailedAttempts(0);
         setLockoutUntil(null);
         cyberSound.playClick();
         cyberSound.speak('Administrator verified. Central command online.');
       } else {
+        // Clear password immediately on failed attempt
+        setPassword('');
         const nextFails = failedAttempts + 1;
         setFailedAttempts(nextFails);
         if (nextFails >= 5) {
@@ -170,6 +179,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
         cyberSound.playAlert();
       }
     } catch (err: unknown) {
+      setPassword('');
       const msg = err instanceof Error ? err.message : 'Authentication system error';
       setAuthError(msg);
       cyberSound.playAlert();
@@ -183,9 +193,19 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
     setIsAuthenticated(false);
     sessionStorage.removeItem('cyberforage_admin_auth');
     sessionStorage.removeItem('cyberforage_admin_email');
+    setEmail('');
     setPassword('');
     setAuthError('');
+    setShowPassword(false);
     cyberSound.playClick();
+  };
+
+  const handleClose = () => {
+    setEmail('');
+    setPassword('');
+    setAuthError('');
+    setShowPassword(false);
+    onClose();
   };
 
   const handleManualCloudSync = async () => {
@@ -278,7 +298,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
                 {isAuthenticated && (
                   <span className="hidden lg:inline-flex items-center gap-1.5 text-[10px] font-mono text-[#00F0C0] bg-[#00F0C0]/10 border border-[#00F0C0]/30 px-2.5 py-0.5 rounded-full">
                     <ShieldCheck className="w-3 h-3" />
-                    <span>{adminEmail}</span>
+                    <span>SUPERADMIN</span>
                   </span>
                 )}
               </div>
@@ -315,7 +335,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
             </button>
 
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="p-1.5 rounded-lg bg-white/5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-transparent hover:border-rose-500/30 transition-colors cursor-pointer"
               title="Close Admin Panel"
             >
@@ -340,17 +360,20 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
                 </p>
               </div>
 
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form onSubmit={handleLogin} autoComplete="off" className="space-y-4">
                 <div>
                   <label className="text-[11px] font-mono text-slate-300 block mb-1">
                     ADMINISTRATOR EMAIL
                   </label>
                   <input
                     type="email"
+                    name="cyber_admin_identity"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="nishchay.gaur.official@gmail.com"
-                    autoComplete="username"
+                    autoComplete="off"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     className="w-full px-3 py-2 rounded-lg bg-[#07172C] border border-white/10 focus:border-[#00F0C0] text-sm font-mono text-white focus:outline-none"
                   />
                 </div>
@@ -372,10 +395,13 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
                   <div className="relative">
                     <input
                       type={showPassword ? 'text' : 'password'}
+                      name="cyber_admin_pass"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Enter master password"
-                      autoComplete="current-password"
+                      autoComplete="new-password"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
                       className="w-full px-3 py-2 rounded-lg bg-[#07172C] border border-white/10 focus:border-[#00F0C0] text-sm font-mono text-white focus:outline-none pr-10"
                     />
                     <div className="absolute right-3 top-2.5 text-slate-400">
@@ -414,9 +440,9 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
 
               <div className="p-3 rounded-lg bg-black/40 border border-white/5 text-[10px] font-mono text-slate-500 flex items-center justify-between">
                 <span className="flex items-center gap-1.5 text-slate-400">
-                  <Lock className="w-3 h-3 text-[#00F0C0]" /> Authorized Operator:
+                  <Lock className="w-3 h-3 text-[#00F0C0]" /> Security Clearance:
                 </span>
-                <span className="text-[#00F0C0] font-semibold">{AUTHORIZED_ADMIN_EMAIL}</span>
+                <span className="text-[#00F0C0] font-semibold">Strict Single-Admin Access</span>
               </div>
             </div>
           </div>
@@ -2226,7 +2252,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
                     <div className="pt-2 border-t border-white/10 grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px]">
                       <div>
                         <span className="text-slate-400 block text-[10px]">AUTHORIZED SUPERADMIN:</span>
-                        <span className="text-[#00F0C0] font-semibold">{AUTHORIZED_ADMIN_EMAIL}</span>
+                        <span className="text-[#00F0C0] font-semibold">Single Master Identity (Enforced)</span>
                       </div>
                       <div>
                         <span className="text-slate-400 block text-[10px]">SUPABASE ENDPOINT:</span>
@@ -2387,7 +2413,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
 
           <div className="flex items-center gap-4">
             <span className="hidden sm:inline">
-              Superadmin: <span className="text-[#00F0C0] font-semibold">{adminEmail}</span>
+              Clearance: <span className="text-[#00F0C0] font-semibold">SUPERADMIN VERIFIED</span>
             </span>
             <span>Version: <span className="text-[#00F0C0]">3.0-SEC</span></span>
           </div>

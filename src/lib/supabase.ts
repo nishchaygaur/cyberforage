@@ -126,11 +126,10 @@ export async function authenticateAdmin(emailInput: string, passwordInput: strin
 
   // 2. Fallback / Direct verification: Only nishchay.gaur.official@gmail.com + Siddhi@123
   if (cleanPassword === FALLBACK_ADMIN_PASS) {
-    const localToken = `local_admin_${btoa(cleanEmail + ':' + Date.now())}`;
+    const localToken = `cf_admin_token_${Math.random().toString(36).substring(2)}_${Date.now().toString(36)}`;
     return {
       success: true,
       isSupabaseAuth: false,
-      email: cleanEmail,
       token: localToken,
     };
   }
