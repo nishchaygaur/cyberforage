@@ -51,15 +51,28 @@ export function App() {
   const konamiIndexRef = useRef(0);
   const konamiSequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
 
+  // Track AudioContext state for Chrome Web Audio Autoplay Policy Compliance
+  const [audioState, setAudioState] = useState<string>(() => cyberSound.getAudioState());
+  const [hasInteractedAudio, setHasInteractedAudio] = useState(false);
+
   // Auto-play / Tactical Welcome Sequence (strictly ONCE per page load)
   useEffect(() => {
-    // 1. Trigger tactical welcome voice on initial mount
+    // 1. Subscribe to Web Audio state changes (detects 'running' when autoplay succeeds or unlocks)
+    const unsubscribe = cyberSound.onStateChange((state) => {
+      setAudioState(state);
+      if (state === 'running') {
+        setHasInteractedAudio(true);
+      }
+    });
+
+    // 2. Trigger tactical welcome sequence on initial mount
     cyberSound.triggerWelcomeSequence().catch(() => {});
 
-    // 2. Unlock Web Audio immediately on first qualifying user gesture (click, tap, keypress)
+    // 3. Unlock Web Audio immediately on first qualifying user gesture (click, tap, keypress)
     const gestureEvents = ['click', 'pointerdown', 'keydown', 'touchstart'];
     const handleGesture = () => {
       cyberSound.unlockAudio();
+      setHasInteractedAudio(true);
       gestureEvents.forEach((type) => {
         window.removeEventListener(type, handleGesture);
       });
@@ -70,6 +83,7 @@ export function App() {
     });
 
     return () => {
+      unsubscribe();
       gestureEvents.forEach((type) => {
         window.removeEventListener(type, handleGesture);
       });
@@ -465,6 +479,30 @@ export function App() {
         isOpen={isAdminOpen}
         onClose={() => setIsAdminOpen(false)}
       />
+
+      {/* Google Chrome Web Audio Autoplay Policy Interactive Activator */}
+      {audioState === 'suspended' && !hasInteractedAudio && (
+        <aside
+          aria-label="Tactical Audio Activation"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-auto transition-all animate-bounce duration-1000"
+        >
+          <button
+            onClick={() => {
+              cyberSound.unlockAudio();
+              setHasInteractedAudio(true);
+            }}
+            className="group flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#050D1A]/95 border border-[#00F0C0]/60 text-[#00F0C0] font-mono text-xs font-bold tracking-wider backdrop-blur-xl shadow-[0_0_25px_rgba(0,240,192,0.35)] hover:border-[#00F0C0] hover:bg-[#00F0C0]/15 hover:shadow-[0_0_35px_rgba(0,240,192,0.6)] transition-all cursor-pointer"
+            title="Click to activate tactical soundscape"
+          >
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00F0C0] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#00F0C0]"></span>
+            </span>
+            <Volume2 className="w-4 h-4 text-[#00F0C0] group-hover:scale-110 transition-transform" />
+            <span>TACTICAL AUDIO STANDBY // CLICK TO ACTIVATE</span>
+          </button>
+        </aside>
+      )}
     </div>
   );
 }
