@@ -68,11 +68,12 @@ interface OrbitRingData {
   speed: number;
 }
 
-interface BeaconNode {
-  ring: THREE.Mesh;
-  core: THREE.Mesh;
+interface PulsingNode {
+  mesh: THREE.Mesh;
+  baseColor: THREE.Color;
+  glowColor: THREE.Color;
   phase: number;
-  baseRadius: number;
+  speed: number;
 }
 
 export class CyberGlobeController {
@@ -80,7 +81,6 @@ export class CyberGlobeController {
 
   // Visual Groups
   private spherePoints!: THREE.Points;
-  private constellationLines!: THREE.LineSegments;
   private beaconsGroup: THREE.Group;
   private nodesGroup: THREE.Group;
   private arcsGroup: THREE.Group;
@@ -88,13 +88,10 @@ export class CyberGlobeController {
   private coreAtmosphereMesh!: THREE.Mesh;
   private coreGlowSprite!: THREE.Sprite;
 
-  // Interactive Nodes & Beacons
+  // Interactive Nodes & Pulsing Dots
   private nodeMeshes: { mesh: THREE.Mesh; data: OrbitalNodeData; beacon: THREE.Mesh }[] = [];
-  private allBeacons: BeaconNode[] = [];
+  private pulsingNodes: PulsingNode[] = [];
   private orbitRings: OrbitRingData[] = [];
-
-  // Constellation Line Material
-  private constellationMat!: THREE.LineBasicMaterial;
 
   // Arc & Missile Simulation
   private activeArcs: { line: THREE.Line; progress: number; speed: number; curve: THREE.QuadraticBezierCurve3 }[] = [];
@@ -123,13 +120,10 @@ export class CyberGlobeController {
     // 2. High-precision Fibonacci sphere dot cloud
     this.createSpherePointMatrix();
 
-    // 3. Constellation cluster interconnect lines
-    this.createConstellationLines();
+    // 3. Dynamic larger, darker pulsing cyber node dots (glow and dim, zero rings)
+    this.createPulsingNodes();
 
-    // 4. Concentric beacon nodes (◎) matching reference
-    this.createBeaconNodes();
-
-    // 5. 3 Sleek orbital rings with traveling photon beads
+    // 4. 3 Sleek orbital rings with traveling photon beads
     this.createOrbitRings();
 
     // Add children to master group
@@ -305,122 +299,41 @@ export class CyberGlobeController {
   }
 
   /**
-   * Creates constellation interconnect line segments in localized cyber clusters
+   * Creates larger, darker cyber telemetry node dots that smoothly pulse and glow/dim (zero concentric rings)
    */
-  private createConstellationLines() {
-    const count = 2200;
-    const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-    const radius = 2.50;
-
-    // Reconstruct point positions
-    const pts: THREE.Vector3[] = [];
-    for (let i = 0; i < count; i++) {
-      const y = 1 - (i / (count - 1)) * 2;
-      const r = Math.sqrt(Math.max(0, 1 - y * y));
-      const theta = goldenAngle * i;
-      pts.push(new THREE.Vector3(
-        Math.cos(theta) * r * radius,
-        y * radius,
-        Math.sin(theta) * r * radius
-      ));
-    }
-
-    // 16 localized cluster centers across the sphere
-    const clusterSeeds: THREE.Vector3[] = [];
-    for (let s = 0; s < 16; s++) {
-      clusterSeeds.push(pts[Math.floor(s * (count / 16))]);
-    }
-
-    const linePoints: THREE.Vector3[] = [];
-    const connectedPairs = new Set<string>();
-
-    for (const seed of clusterSeeds) {
-      // Find nearby points within cluster radius
-      const clusterIndices: number[] = [];
-      for (let i = 0; i < count; i++) {
-        if (seed.distanceTo(pts[i]) < 0.50) {
-          clusterIndices.push(i);
-        }
-      }
-
-      // Connect neighbor pairs within distance threshold
-      for (let a = 0; a < clusterIndices.length; a++) {
-        let connections = 0;
-        for (let b = a + 1; b < clusterIndices.length; b++) {
-          const idxA = clusterIndices[a];
-          const idxB = clusterIndices[b];
-          const dist = pts[idxA].distanceTo(pts[idxB]);
-          const pairKey = idxA < idxB ? `${idxA}-${idxB}` : `${idxB}-${idxA}`;
-
-          if (dist > 0.16 && dist < 0.36 && !connectedPairs.has(pairKey)) {
-            connectedPairs.add(pairKey);
-            linePoints.push(pts[idxA], pts[idxB]);
-            connections++;
-            if (connections >= 2) break;
-          }
-        }
-        if (linePoints.length >= 320) break; // Limit to ~160 clean line segments
-      }
-      if (linePoints.length >= 320) break;
-    }
-
-    const geo = new THREE.BufferGeometry().setFromPoints(linePoints);
-    this.constellationMat = new THREE.LineBasicMaterial({
-      color: 0x00f0c0,
-      transparent: true,
-      opacity: 0.35,
-      blending: THREE.AdditiveBlending
-    });
-
-    this.constellationLines = new THREE.LineSegments(geo, this.constellationMat);
-    this.group.add(this.constellationLines);
-  }
-
-  /**
-   * Creates the prominent concentric halo ring beacon nodes (◎)
-   */
-  private createBeaconNodes() {
+  private createPulsingNodes() {
     // 1. The 4 primary interactive orbital nodes (Security, AI, Research, Automation)
     ORBITAL_NODES.forEach((node) => {
       const pos = this.latLonToVector3(node.lat, node.lon, 2.50);
 
-      // Inner glowing core bead
-      const coreGeo = new THREE.SphereGeometry(0.052, 16, 16);
+      // Prominent larger sphere dot
+      const coreGeo = new THREE.SphereGeometry(0.092, 16, 16);
+      const isAi = node.id === 'node-ai';
+      const baseColor = isAi ? new THREE.Color(0x3b0764) : new THREE.Color(0x012e26);
+      const glowColor = new THREE.Color(node.color);
+
       const coreMat = new THREE.MeshBasicMaterial({
-        color: node.color,
+        color: baseColor.clone(),
         transparent: true,
-        opacity: 0.95
+        opacity: 0.65
       });
       const coreMesh = new THREE.Mesh(coreGeo, coreMat);
       coreMesh.position.copy(pos);
       coreMesh.userData = { isNode: true, ...node };
 
-      // Outer concentric halo ring (◎)
-      const ringGeo = new THREE.RingGeometry(0.088, 0.118, 32);
-      const ringMat = new THREE.MeshBasicMaterial({
-        color: node.color,
-        transparent: true,
-        opacity: 0.80,
-        side: THREE.DoubleSide,
-        blending: THREE.AdditiveBlending
-      });
-      const ringMesh = new THREE.Mesh(ringGeo, ringMat);
-      ringMesh.position.copy(pos);
-      ringMesh.lookAt(new THREE.Vector3(0, 0, 0));
-
       this.nodesGroup.add(coreMesh);
-      this.beaconsGroup.add(ringMesh);
 
-      this.nodeMeshes.push({ mesh: coreMesh, data: node, beacon: ringMesh });
-      this.allBeacons.push({
-        ring: ringMesh,
-        core: coreMesh,
+      this.nodeMeshes.push({ mesh: coreMesh, data: node, beacon: coreMesh });
+      this.pulsingNodes.push({
+        mesh: coreMesh,
+        baseColor,
+        glowColor,
         phase: Math.random() * Math.PI * 2,
-        baseRadius: 0.10
+        speed: 1.8 + Math.random() * 0.8
       });
     });
 
-    // 2. ~20 prominent decorative beacon nodes distributed across the sphere
+    // 2. ~24 prominent decorative larger dark pulsing dots distributed across the sphere
     const beaconCoords = [
       { lat: 55, lon: -20 },
       { lat: 60, lon: 95 },
@@ -441,44 +354,38 @@ export class CyberGlobeController {
       { lat: -25, lon: -35 },
       { lat: 30, lon: -175 },
       { lat: -15, lon: 175 },
-      { lat: 50, lon: -85 }
+      { lat: 50, lon: -85 },
+      { lat: -60, lon: 30 },
+      { lat: 72, lon: -50 },
+      { lat: -10, lon: -70 },
+      { lat: 20, lon: 55 }
     ];
 
-    const cyanColor = 0x00f0c0;
-    const ringGeo = new THREE.RingGeometry(0.082, 0.112, 32);
-    const ringMat = new THREE.MeshBasicMaterial({
-      color: cyanColor,
-      transparent: true,
-      opacity: 0.72,
-      side: THREE.DoubleSide,
-      blending: THREE.AdditiveBlending
-    });
-
-    const coreGeo = new THREE.SphereGeometry(0.045, 16, 16);
-    const coreMat = new THREE.MeshBasicMaterial({
-      color: cyanColor,
-      transparent: true,
-      opacity: 0.90
-    });
+    const darkBaseColor = new THREE.Color(0x012c24); // Deeper, darker cyan/teal
+    const brightGlowColor = new THREE.Color(0x00f0c0); // Luminous glowing cyan
 
     beaconCoords.forEach((coord, idx) => {
       const pos = this.latLonToVector3(coord.lat, coord.lon, 2.50);
+      const dotRadius = 0.075 + (idx % 3) * 0.012; // Visibly larger than background dots
 
-      const coreMesh = new THREE.Mesh(coreGeo, coreMat);
-      coreMesh.position.copy(pos);
+      const geo = new THREE.SphereGeometry(dotRadius, 16, 16);
+      const mat = new THREE.MeshBasicMaterial({
+        color: darkBaseColor.clone(),
+        transparent: true,
+        opacity: 0.55
+      });
 
-      const ringMesh = new THREE.Mesh(ringGeo, ringMat);
-      ringMesh.position.copy(pos);
-      ringMesh.lookAt(new THREE.Vector3(0, 0, 0));
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.copy(pos);
 
-      this.beaconsGroup.add(coreMesh);
-      this.beaconsGroup.add(ringMesh);
+      this.beaconsGroup.add(mesh);
 
-      this.allBeacons.push({
-        ring: ringMesh,
-        core: coreMesh,
-        phase: idx * 0.45,
-        baseRadius: 0.095
+      this.pulsingNodes.push({
+        mesh,
+        baseColor: darkBaseColor,
+        glowColor: brightGlowColor,
+        phase: idx * 0.38,
+        speed: 1.6 + (idx % 4) * 0.35
       });
     });
   }
@@ -683,15 +590,9 @@ export class CyberGlobeController {
 
     // Rotate core sphere elements synchronously
     this.spherePoints.rotation.y += rotSpeed;
-    this.constellationLines.rotation.y += rotSpeed;
     this.beaconsGroup.rotation.y += rotSpeed;
     this.nodesGroup.rotation.y += rotSpeed;
     this.arcsGroup.rotation.y += rotSpeed;
-
-    // Subtle breathing pulse on constellation lines
-    if (this.constellationMat) {
-      this.constellationMat.opacity = 0.25 + 0.12 * Math.sin(elapsed * 2.2);
-    }
 
     // Advance traveling photon beads along orbital rings
     this.orbitRings.forEach((ring) => {
@@ -703,10 +604,15 @@ export class CyberGlobeController {
       );
     });
 
-    // Animate concentric beacon rings (breathing pulse ◎)
-    this.allBeacons.forEach((beacon) => {
-      const scale = 1.0 + 0.16 * Math.sin(elapsed * 2.8 + beacon.phase);
-      beacon.ring.scale.set(scale, scale, 1);
+    // Animate larger dark dots: smooth breathing glow and dim cycle
+    this.pulsingNodes.forEach((node) => {
+      const wave = 0.5 + 0.5 * Math.sin(elapsed * node.speed + node.phase);
+      const s = 0.88 + 0.44 * wave;
+      node.mesh.scale.set(s, s, s);
+
+      const mat = node.mesh.material as THREE.MeshBasicMaterial;
+      mat.opacity = 0.35 + 0.60 * wave;
+      mat.color.copy(node.baseColor).lerp(node.glowColor, wave);
     });
 
     // Animate normal arc brightness pulses
@@ -762,11 +668,14 @@ export class CyberGlobeController {
   public dispose() {
     this.spherePoints.geometry.dispose();
     (this.spherePoints.material as THREE.Material).dispose();
-    this.constellationLines.geometry.dispose();
-    (this.constellationLines.material as THREE.Material).dispose();
     this.coreAtmosphereMesh.geometry.dispose();
     (this.coreAtmosphereMesh.material as THREE.Material).dispose();
     this.coreGlowSprite.material.dispose();
+
+    this.pulsingNodes.forEach((p) => {
+      p.mesh.geometry.dispose();
+      (p.mesh.material as THREE.Material).dispose();
+    });
 
     this.orbitRings.forEach((r) => {
       r.line.geometry.dispose();
