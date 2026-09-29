@@ -394,6 +394,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 aria-hidden="true"
               />
 
+              {/* Soft Radial Ambient Luminous Glow matching reference image */}
+              <div
+                className="absolute inset-2 sm:inset-4 rounded-full bg-[radial-gradient(circle_at_center,rgba(0,240,192,0.18)_0%,rgba(4,38,52,0.12)_45%,transparent_72%)] blur-2xl pointer-events-none"
+                aria-hidden="true"
+              />
+
               {/* Floating Globe Body (Zero-G Levitation Animation) */}
               <div className="relative w-full h-full flex items-center justify-center animate-float-levitate overflow-visible">
                 {/* Master 3D WebGL Canvas */}
@@ -404,38 +410,42 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   className="relative z-10 w-full h-full"
                 />
 
-                {/* Floating Holographic Cyber Badges with Individual Floating Offsets */}
-                <div className="absolute top-[16%] left-[22%] z-20 pointer-events-none transform -translate-x-1/2 animate-badge-float-1">
-                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#071322]/85 border border-[#00F0C0]/35 backdrop-blur-md shadow-[0_0_18px_rgba(0,240,192,0.25)]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#00F0C0] shadow-[0_0_6px_#00F0C0]" />
-                    <span className="text-[11px] font-mono font-semibold tracking-wider text-slate-200">
+                {/* Floating Holographic Cyber Badges - Exact styling from reference image */}
+                {/* 1. SECURITY Badge (Top-Left) */}
+                <div className="absolute top-[14%] left-[14%] sm:left-[16%] z-20 pointer-events-none animate-badge-float-1">
+                  <div className="flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-lg bg-[#061220]/90 border border-[#163354] backdrop-blur-md shadow-[0_0_20px_rgba(0,240,192,0.16)]">
+                    <span className="w-2 h-2 rounded-full bg-[#00F0C0] shadow-[0_0_8px_#00F0C0]" />
+                    <span className="text-[11px] sm:text-xs font-mono font-bold tracking-widest text-slate-100">
                       SECURITY
                     </span>
                   </div>
                 </div>
 
-                <div className="absolute top-[24%] right-[7%] z-20 pointer-events-none animate-badge-float-2">
-                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#071322]/85 border border-[#A855F7]/35 backdrop-blur-md shadow-[0_0_18px_rgba(168,85,247,0.25)]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#A855F7] shadow-[0_0_6px_#A855F7]" />
-                    <span className="text-[11px] font-mono font-semibold tracking-wider text-slate-200">
+                {/* 2. AI Badge (Top-Right, Neon Purple Dot) */}
+                <div className="absolute top-[24%] right-[4%] sm:right-[6%] z-20 pointer-events-none animate-badge-float-2">
+                  <div className="flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-lg bg-[#061220]/90 border border-[#2b1b42] backdrop-blur-md shadow-[0_0_20px_rgba(192,132,252,0.18)]">
+                    <span className="w-2 h-2 rounded-full bg-[#C084FC] shadow-[0_0_8px_#C084FC]" />
+                    <span className="text-[11px] sm:text-xs font-mono font-bold tracking-widest text-slate-100">
                       AI
                     </span>
                   </div>
                 </div>
 
-                <div className="absolute bottom-[26%] left-[10%] z-20 pointer-events-none animate-badge-float-3">
-                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#071322]/85 border border-[#38BDF8]/35 backdrop-blur-md shadow-[0_0_18px_rgba(56,189,248,0.25)]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#38BDF8] shadow-[0_0_6px_#38BDF8]" />
-                    <span className="text-[11px] font-mono font-semibold tracking-wider text-slate-200">
+                {/* 3. RESEARCH Badge (Bottom-Left) */}
+                <div className="absolute bottom-[26%] left-[6%] sm:left-[8%] z-20 pointer-events-none animate-badge-float-3">
+                  <div className="flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-lg bg-[#061220]/90 border border-[#163354] backdrop-blur-md shadow-[0_0_20px_rgba(0,240,192,0.16)]">
+                    <span className="w-2 h-2 rounded-full bg-[#00F0C0] shadow-[0_0_8px_#00F0C0]" />
+                    <span className="text-[11px] sm:text-xs font-mono font-bold tracking-widest text-slate-100">
                       RESEARCH
                     </span>
                   </div>
                 </div>
 
-                <div className="absolute bottom-[18%] right-[6%] z-20 pointer-events-none animate-badge-float-4">
-                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#071322]/85 border border-[#00E5BE]/35 backdrop-blur-md shadow-[0_0_18px_rgba(0,229,190,0.25)]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#00E5BE] shadow-[0_0_6px_#00E5BE]" />
-                    <span className="text-[11px] font-mono font-semibold tracking-wider text-slate-200">
+                {/* 4. AUTOMATION Badge (Bottom-Right) */}
+                <div className="absolute bottom-[18%] right-[5%] sm:right-[7%] z-20 pointer-events-none animate-badge-float-4">
+                  <div className="flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-lg bg-[#061220]/90 border border-[#163354] backdrop-blur-md shadow-[0_0_20px_rgba(0,240,192,0.16)]">
+                    <span className="w-2 h-2 rounded-full bg-[#00F0C0] shadow-[0_0_8px_#00F0C0]" />
+                    <span className="text-[11px] sm:text-xs font-mono font-bold tracking-widest text-slate-100">
                       AUTOMATION
                     </span>
                   </div>

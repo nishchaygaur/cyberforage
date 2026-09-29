@@ -84,8 +84,8 @@ export const CyberScene: React.FC<CyberSceneProps> = ({
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    // Starfield Background Particles
-    const starCount = 650;
+    // Subtle Deep Space Starfield
+    const starCount = 200;
     const starGeo = new THREE.BufferGeometry();
     const starPos = new Float32Array(starCount * 3);
     for (let i = 0; i < starCount * 3; i += 3) {
@@ -95,10 +95,10 @@ export const CyberScene: React.FC<CyberSceneProps> = ({
     }
     starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
     const starMat = new THREE.PointsMaterial({
-      size: 0.06,
+      size: 0.032,
       color: 0x38bdf8,
       transparent: true,
-      opacity: 0.6,
+      opacity: 0.20,
       blending: THREE.AdditiveBlending
     });
     const starField = new THREE.Points(starGeo, starMat);
