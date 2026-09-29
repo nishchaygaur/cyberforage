@@ -4,6 +4,7 @@ import { projectsData as defaultProjects } from '../data/projectsData';
 import { labsData as defaultLabs } from '../data/labsData';
 import { researchDomains as defaultDomains, researchArticles as defaultArticles } from '../data/researchData';
 import { techTools as defaultTools, ecosystemPillars as defaultPillars } from '../data/techStackData';
+import { isSupabaseConfigured, loadContentFromSupabase, saveContentToSupabase } from '../lib/supabase';
 
 export interface HeroContent {
   brandPrefix: string;
@@ -163,6 +164,8 @@ interface SiteContentContextValue {
   resetToDefaults: () => void;
   exportConfigJson: () => string;
   importConfigJson: (jsonStr: string) => boolean;
+  isCloudSyncActive: boolean;
+  syncToSupabase: () => Promise<{ success: boolean; error?: string }>;
 }
 
 const SiteContentContext = createContext<SiteContentContextValue | null>(null);
@@ -196,14 +199,38 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
     return DEFAULT_CONTENT;
   });
 
-  // Save to localStorage whenever content changes
+  const isCloudSyncActive = isSupabaseConfigured();
+
+  // Load latest content from Supabase if configured
+  useEffect(() => {
+    if (isSupabaseConfigured()) {
+      loadContentFromSupabase().then((remoteData) => {
+        if (remoteData) {
+          setContent((prev) => ({
+            ...prev,
+            ...remoteData,
+          }));
+        }
+      });
+    }
+  }, []);
+
+  // Save to localStorage and auto-sync to Supabase if authenticated
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(content));
     } catch (err) {
       console.error('Failed to save site content to localStorage', err);
     }
+
+    if (isSupabaseConfigured() && sessionStorage.getItem('cyberforage_admin_auth') === 'true') {
+      saveContentToSupabase(content);
+    }
   }, [content]);
+
+  const syncToSupabase = async () => {
+    return await saveContentToSupabase(content);
+  };
 
   const updateHero = (data: Partial<HeroContent>) => {
     setContent((prev) => ({
@@ -409,6 +436,8 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
         resetToDefaults,
         exportConfigJson,
         importConfigJson,
+        isCloudSyncActive,
+        syncToSupabase,
       }}
     >
       {children}

@@ -29,11 +29,23 @@ import {
   EyeOff,
   LogOut,
   Terminal,
+  Database,
+  Cloud,
+  CheckCircle2,
+  RefreshCw,
+  Key,
+  ShieldCheck,
 } from 'lucide-react';
 import { useSiteContent } from '../../context/SiteContentContext';
 import { cyberSound } from '../../audio/cyberSoundEngine';
 import { Project, Lab, ResearchArticle, TechTool } from '../../types';
 import { GithubIcon, LinkedinIcon, TwitterIcon, DiscordIcon, TelegramIcon, MatrixIcon } from '../icons/BrandIcons';
+import {
+  authenticateAdmin,
+  logoutAdmin,
+  isSupabaseConfigured,
+  AUTHORIZED_ADMIN_EMAIL,
+} from '../../lib/supabase';
 
 interface AdminPanelModalProps {
   isOpen: boolean;
@@ -63,20 +75,35 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
     resetToDefaults,
     exportConfigJson,
     importConfigJson,
+    isCloudSyncActive,
+    syncToSupabase,
   } = useSiteContent();
 
   // Authentication State
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     return sessionStorage.getItem('cyberforage_admin_auth') === 'true';
   });
-  const [callsign, setCallsign] = useState('root');
-  const [passphrase, setPassphrase] = useState('');
+  const [email, setEmail] = useState<string>(() => {
+    return sessionStorage.getItem('cyberforage_admin_email') || '';
+  });
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
   const [authError, setAuthError] = useState('');
+  const [adminEmail, setAdminEmail] = useState<string>(() => {
+    return sessionStorage.getItem('cyberforage_admin_email') || AUTHORIZED_ADMIN_EMAIL;
+  });
   const [isMaximized, setIsMaximized] = useState(false);
+
+  // Cloud Sync State
+  const [isSyncingCloud, setIsSyncingCloud] = useState(false);
+  const [cloudSyncStatus, setCloudSyncStatus] = useState<string>('');
 
   // Active Admin Tab
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'hero' | 'ecosystem' | 'projects' | 'labs' | 'research' | 'tools' | 'contact' | 'backup'
+    'overview' | 'hero' | 'ecosystem' | 'projects' | 'labs' | 'research' | 'tools' | 'contact' | 'database' | 'backup'
   >('overview');
 
   // Sub-modal / Inline Edit States
@@ -101,32 +128,84 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
     setTimeout(() => setSaveSuccessMsg(''), 2500);
   };
 
-  const handleLogin = (e?: React.FormEvent) => {
+  const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (passphrase === 'cyberforage-sec-2026' || passphrase === 'admin' || passphrase === 'root') {
-      setIsAuthenticated(true);
-      sessionStorage.setItem('cyberforage_admin_auth', 'true');
-      setAuthError('');
-      cyberSound.playClick();
-      cyberSound.speak('Root credentials verified. Central command online.');
-    } else {
-      setAuthError('Access Denied: Invalid Security Passkey.');
+
+    if (lockoutUntil && Date.now() < lockoutUntil) {
+      const remainingSec = Math.ceil((lockoutUntil - Date.now()) / 1000);
+      setAuthError(`Security Cooldown Active: Too many failed attempts. Please retry in ${remainingSec}s.`);
       cyberSound.playAlert();
+      return;
+    }
+
+    if (!email.trim() || !password) {
+      setAuthError('Please enter both administrator email and master password.');
+      cyberSound.playAlert();
+      return;
+    }
+
+    setIsAuthenticating(true);
+    setAuthError('');
+
+    try {
+      const result = await authenticateAdmin(email, password);
+      if (result.success) {
+        setIsAuthenticated(true);
+        sessionStorage.setItem('cyberforage_admin_auth', 'true');
+        sessionStorage.setItem('cyberforage_admin_email', result.email || AUTHORIZED_ADMIN_EMAIL);
+        setAdminEmail(result.email || AUTHORIZED_ADMIN_EMAIL);
+        setFailedAttempts(0);
+        setLockoutUntil(null);
+        cyberSound.playClick();
+        cyberSound.speak('Administrator verified. Central command online.');
+      } else {
+        const nextFails = failedAttempts + 1;
+        setFailedAttempts(nextFails);
+        if (nextFails >= 5) {
+          setLockoutUntil(Date.now() + 30000);
+          setAuthError('Security Alert: 5 failed attempts detected. System locked for 30 seconds.');
+        } else {
+          setAuthError(result.error || 'Access Denied: Invalid administrator credentials.');
+        }
+        cyberSound.playAlert();
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Authentication system error';
+      setAuthError(msg);
+      cyberSound.playAlert();
+    } finally {
+      setIsAuthenticating(false);
     }
   };
 
-  const handleQuickDemoLogin = () => {
-    setIsAuthenticated(true);
-    sessionStorage.setItem('cyberforage_admin_auth', 'true');
-    setAuthError('');
-    cyberSound.playClick();
-    cyberSound.speak('Demo operator access granted.');
-  };
-
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await logoutAdmin();
     setIsAuthenticated(false);
     sessionStorage.removeItem('cyberforage_admin_auth');
+    sessionStorage.removeItem('cyberforage_admin_email');
+    setPassword('');
+    setAuthError('');
     cyberSound.playClick();
+  };
+
+  const handleManualCloudSync = async () => {
+    setIsSyncingCloud(true);
+    setCloudSyncStatus('Synchronizing content with Supabase database...');
+    try {
+      const res = await syncToSupabase();
+      if (res.success) {
+        setCloudSyncStatus('Successfully synchronized with Supabase!');
+        triggerSaveNotification('Cloud database updated.');
+      } else {
+        setCloudSyncStatus(`Sync error: ${res.error || 'Unknown error'}`);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to sync with Supabase';
+      setCloudSyncStatus(`Sync error: ${msg}`);
+    } finally {
+      setIsSyncingCloud(false);
+      setTimeout(() => setCloudSyncStatus(''), 4000);
+    }
   };
 
   const handleExport = () => {
@@ -188,15 +267,23 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
                 <span
                   className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
                     isAuthenticated
-                      ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
+                      ? isCloudSyncActive
+                        ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
+                        : 'bg-cyan-500/15 border-cyan-500/40 text-cyan-300'
                       : 'bg-amber-500/15 border-amber-500/40 text-amber-300'
                   }`}
                 >
-                  {isAuthenticated ? 'ROOT ACCESS' : 'AUTH REQUIRED'}
+                  {isAuthenticated ? (isCloudSyncActive ? 'SUPABASE LIVE' : 'LOCAL ADMIN') : 'AUTH REQUIRED'}
                 </span>
+                {isAuthenticated && (
+                  <span className="hidden lg:inline-flex items-center gap-1.5 text-[10px] font-mono text-[#00F0C0] bg-[#00F0C0]/10 border border-[#00F0C0]/30 px-2.5 py-0.5 rounded-full">
+                    <ShieldCheck className="w-3 h-3" />
+                    <span>{adminEmail}</span>
+                  </span>
+                )}
               </div>
               <p className="text-[11px] font-mono text-slate-400 hidden sm:block">
-                Full Frontend Content Management, Telemetry DEFCON Control, & Live Persistence
+                Authenticated Admin Console: DEFCON Telemetry, Live Content Management & Supabase Sync
               </p>
             </div>
           </div>
@@ -213,7 +300,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
               <button
                 onClick={handleLogout}
                 className="p-1.5 rounded-lg bg-white/5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-transparent hover:border-rose-500/30 transition-colors cursor-pointer"
-                title="Log out"
+                title="Log out of Admin Session"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -246,63 +333,90 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
                   <Shield className="w-6 h-6" />
                 </div>
                 <h3 className="font-mono text-lg font-bold text-white tracking-wide">
-                  CENTRAL COMMAND AUTHENTICATION
+                  CENTRAL COMMAND // MASTER ADMIN GATE
                 </h3>
                 <p className="text-xs font-mono text-slate-400">
-                  Authenticate with security passkey to edit site content and trigger broadcast bulletins.
+                  Strict Access Control: Only authorized security administrator may authenticate.
                 </p>
               </div>
 
               <form onSubmit={handleLogin} className="space-y-4">
                 <div>
-                  <label className="text-[11px] font-mono text-slate-300 block mb-1">OPERATOR CALLSIGN</label>
+                  <label className="text-[11px] font-mono text-slate-300 block mb-1">
+                    ADMINISTRATOR EMAIL
+                  </label>
                   <input
-                    type="text"
-                    value={callsign}
-                    onChange={(e) => setCallsign(e.target.value)}
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="nishchay.gaur.official@gmail.com"
+                    autoComplete="username"
                     className="w-full px-3 py-2 rounded-lg bg-[#07172C] border border-white/10 focus:border-[#00F0C0] text-sm font-mono text-white focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-mono text-slate-300 block mb-1">SECURITY PASSKEY</label>
-                  <input
-                    type="password"
-                    value={passphrase}
-                    onChange={(e) => setPassphrase(e.target.value)}
-                    placeholder="Enter passkey (e.g. cyberforage-sec-2026)"
-                    className="w-full px-3 py-2 rounded-lg bg-[#07172C] border border-white/10 focus:border-[#00F0C0] text-sm font-mono text-white focus:outline-none"
-                  />
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[11px] font-mono text-slate-300 block">
+                      SECURITY MASTER KEY
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-[11px] font-mono text-[#00F0C0] hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      {showPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                      <span>{showPassword ? 'Hide' : 'Show'}</span>
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter master password"
+                      autoComplete="current-password"
+                      className="w-full px-3 py-2 rounded-lg bg-[#07172C] border border-white/10 focus:border-[#00F0C0] text-sm font-mono text-white focus:outline-none pr-10"
+                    />
+                    <div className="absolute right-3 top-2.5 text-slate-400">
+                      <Key className="w-4 h-4" />
+                    </div>
+                  </div>
                 </div>
 
                 {authError && (
-                  <div className="flex items-center gap-2 p-2 rounded bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs font-mono">
+                  <div className="flex items-center gap-2 p-2.5 rounded-lg bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs font-mono animate-fadeIn">
                     <AlertTriangle className="w-4 h-4 flex-shrink-0" />
                     <span>{authError}</span>
                   </div>
                 )}
 
-                <div className="pt-2 flex flex-col gap-2.5">
+                <div className="pt-2">
                   <button
                     type="submit"
-                    className="w-full py-2.5 rounded-lg bg-[#00F0C0] hover:bg-[#00E5BE] text-[#030914] font-mono font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-[0_0_20px_rgba(0,240,192,0.3)] hover:shadow-[0_0_30px_rgba(0,240,192,0.5)]"
+                    disabled={isAuthenticating || Boolean(lockoutUntil && Date.now() < lockoutUntil)}
+                    className="w-full py-2.5 rounded-lg bg-[#00F0C0] hover:bg-[#00E5BE] disabled:opacity-50 disabled:cursor-not-allowed text-[#030914] font-mono font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-[0_0_20px_rgba(0,240,192,0.3)] hover:shadow-[0_0_30px_rgba(0,240,192,0.5)] flex items-center justify-center gap-2"
                   >
-                    Authenticate Session
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleQuickDemoLogin}
-                    className="w-full py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white font-mono text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-                  >
-                    <Zap className="w-3.5 h-3.5 text-[#38BDF8]" />
-                    <span>Quick Demo 1-Click Access</span>
+                    {isAuthenticating ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Verifying Credentials...</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        <span>Authenticate Session</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </form>
 
-              <div className="p-3 rounded-lg bg-black/40 border border-white/5 text-[10px] font-mono text-slate-500 text-center">
-                Default Credentials: User: <span className="text-slate-300">root</span> | Pass: <span className="text-slate-300">cyberforage-sec-2026</span>
+              <div className="p-3 rounded-lg bg-black/40 border border-white/5 text-[10px] font-mono text-slate-500 flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-slate-400">
+                  <Lock className="w-3 h-3 text-[#00F0C0]" /> Authorized Operator:
+                </span>
+                <span className="text-[#00F0C0] font-semibold">{AUTHORIZED_ADMIN_EMAIL}</span>
               </div>
             </div>
           </div>
@@ -324,6 +438,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
                 { id: 'research', label: 'Research Papers', icon: BookOpen, count: content.researchArticles.length },
                 { id: 'tools', label: 'Tech Stack Tools', icon: Cpu, count: content.techTools.length },
                 { id: 'contact', label: 'Comms & Socials', icon: Mail, count: undefined },
+                { id: 'database', label: 'Database & Cloud Sync', icon: Database, count: undefined },
                 { id: 'backup', label: 'Backup & Restore', icon: Sliders, count: undefined },
               ].map((tab) => {
                 const Icon = tab.icon;
@@ -2062,7 +2177,136 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
                 </div>
               )}
 
-              {/* 9. Backup & Restore Module */}
+              {/* 9. Database & Cloud Sync Module */}
+              {activeTab === 'database' && (
+                <div className="space-y-6 max-w-4xl">
+                  <div>
+                    <h3 className="font-mono text-base font-bold text-white mb-1">
+                      SUPABASE CLOUD DATABASE &amp; LIVE SYNCHRONIZATION
+                    </h3>
+                    <p className="text-xs font-mono text-slate-400">
+                      Manage real-time PostgreSQL database synchronization, connection parameters, and security policies.
+                    </p>
+                  </div>
+
+                  {/* Status Banner */}
+                  <div className={`p-5 rounded-xl border space-y-3 font-mono text-xs ${
+                    isCloudSyncActive
+                      ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-200'
+                      : 'bg-amber-950/20 border-amber-500/40 text-amber-200'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                          isCloudSyncActive ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'
+                        }`}>
+                          <Database className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-white text-sm">
+                            {isCloudSyncActive ? 'SUPABASE CLOUD DATABASE ONLINE' : 'LOCAL CACHE MODE (AWAITING SUPABASE CONFIG)'}
+                          </h4>
+                          <p className="text-[11px] text-slate-400">
+                            {isCloudSyncActive
+                              ? 'Live bidirectional sync enabled between frontend CMS and Supabase PostgreSQL.'
+                              : 'Edits are currently preserved in browser storage. Connect Supabase to publish worldwide.'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <span className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider border ${
+                        isCloudSyncActive
+                          ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
+                          : 'bg-amber-500/10 border-amber-500/40 text-amber-300'
+                      }`}>
+                        {isCloudSyncActive ? 'CONNECTED' : 'STANDBY'}
+                      </span>
+                    </div>
+
+                    <div className="pt-2 border-t border-white/10 grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px]">
+                      <div>
+                        <span className="text-slate-400 block text-[10px]">AUTHORIZED SUPERADMIN:</span>
+                        <span className="text-[#00F0C0] font-semibold">{AUTHORIZED_ADMIN_EMAIL}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[10px]">SUPABASE ENDPOINT:</span>
+                        <span className="text-white font-mono truncate block">
+                          {import.meta.env.VITE_SUPABASE_URL || 'Not specified in environment variables'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Manual Cloud Sync Action */}
+                  <div className="p-5 rounded-xl bg-[#051124] border border-white/10 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-mono text-sm font-bold text-white flex items-center gap-2">
+                          <Cloud className="w-4 h-4 text-[#00F0C0]" />
+                          <span>Push Current CMS State to Supabase</span>
+                        </h4>
+                        <p className="text-xs font-mono text-slate-400 mt-1">
+                          Commits the latest hero copy, projects, virtual labs, research articles, and contact settings to the database.
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={handleManualCloudSync}
+                        disabled={isSyncingCloud}
+                        className="px-4 py-2.5 rounded-lg bg-[#00F0C0] hover:bg-[#00E5BE] disabled:opacity-50 text-black font-mono font-bold text-xs transition-all cursor-pointer flex items-center gap-2 shadow-[0_0_20px_rgba(0,240,192,0.2)]"
+                      >
+                        {isSyncingCloud ? (
+                          <>
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                            <span>Syncing...</span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="w-4 h-4" />
+                            <span>Sync to Database Now</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {cloudSyncStatus && (
+                      <div className="p-3 rounded-lg bg-[#07172C] border border-[#00F0C0]/30 text-xs font-mono text-[#00F0C0] animate-fadeIn flex items-center gap-2">
+                        <Check className="w-4 h-4" />
+                        <span>{cloudSyncStatus}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Environment Configuration Guide */}
+                  <div className="p-5 rounded-xl bg-[#051124] border border-white/10 space-y-3 font-mono text-xs">
+                    <h4 className="font-bold text-white flex items-center gap-2">
+                      <Key className="w-4 h-4 text-[#38BDF8]" />
+                      <span>Configuration Keys (Vercel &amp; Local .env)</span>
+                    </h4>
+                    <p className="text-slate-400">
+                      To connect your Supabase database in production on Vercel, navigate to <strong>Project Settings &gt; Environment Variables</strong> and provide:
+                    </p>
+
+                    <div className="p-3 rounded-lg bg-black/60 border border-white/10 space-y-2 text-[11px]">
+                      <div>
+                        <span className="text-[#38BDF8]">VITE_SUPABASE_URL</span> = <span className="text-slate-300">https://your-project.supabase.co</span>
+                      </div>
+                      <div>
+                        <span className="text-[#38BDF8]">VITE_SUPABASE_ANON_KEY</span> = <span className="text-slate-300">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...</span>
+                      </div>
+                      <div>
+                        <span className="text-[#38BDF8]">VITE_ADMIN_EMAIL</span> = <span className="text-slate-300">nishchay.gaur.official@gmail.com</span>
+                      </div>
+                    </div>
+
+                    <p className="text-[11px] text-slate-400">
+                      A migration file is prepared at <code className="text-[#00F0C0]">supabase/migrations/008_admin_content_sync.sql</code>. Execute it in the Supabase SQL Editor to enforce strict RLS security for <code className="text-white">nishchay.gaur.official@gmail.com</code>.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* 10. Backup & Restore Module */}
               {activeTab === 'backup' && (
                 <div className="space-y-6 max-w-4xl">
                   <div>
@@ -2135,12 +2379,16 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
         {/* Footer Bar */}
         <div className="px-4 sm:px-6 py-2.5 bg-[#050E1C] border-t border-white/[0.08] flex items-center justify-between text-[11px] font-mono text-slate-400">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#00F0C0] shadow-[0_0_6px_#00F0C0]" />
-            <span>STORAGE: LocalStorage CMS Active</span>
+            <span className={`w-2 h-2 rounded-full ${isCloudSyncActive ? 'bg-emerald-400 shadow-[0_0_6px_#34D399]' : 'bg-cyan-400 shadow-[0_0_6px_#22D3EE]'}`} />
+            <span>
+              STORAGE: {isCloudSyncActive ? 'Supabase PostgreSQL + Edge Sync' : 'LocalStorage Cache (Awaiting Supabase)'}
+            </span>
           </div>
 
           <div className="flex items-center gap-4">
-            <span className="hidden sm:inline">Passkey: <span className="text-white">cyberforage-sec-2026</span></span>
+            <span className="hidden sm:inline">
+              Superadmin: <span className="text-[#00F0C0] font-semibold">{adminEmail}</span>
+            </span>
             <span>Version: <span className="text-[#00F0C0]">3.0-SEC</span></span>
           </div>
         </div>
