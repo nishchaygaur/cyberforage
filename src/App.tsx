@@ -51,64 +51,28 @@ export function App() {
   const konamiIndexRef = useRef(0);
   const konamiSequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
 
-  // Auto-play / Immediate Tactical Welcome Sequence (strictly ONCE per page load)
+  // Auto-play / Tactical Welcome Sequence (strictly ONCE per page load)
   useEffect(() => {
-    let triggered = false;
+    // 1. Trigger tactical welcome voice on initial mount
+    cyberSound.triggerWelcomeSequence().catch(() => {});
 
-    const userEventTypes = [
-      'pointermove',
-      'mousemove',
-      'wheel',
-      'scroll',
-      'focus',
-      'pointerdown',
-      'click',
-      'keydown',
-      'touchstart'
-    ];
-
-    const cleanupGestureListeners = () => {
-      userEventTypes.forEach((type) => {
-        window.removeEventListener(type, handleEarlyInteraction);
+    // 2. Unlock Web Audio immediately on first qualifying user gesture (click, tap, keypress)
+    const gestureEvents = ['click', 'pointerdown', 'keydown', 'touchstart'];
+    const handleGesture = () => {
+      cyberSound.unlockAudio();
+      gestureEvents.forEach((type) => {
+        window.removeEventListener(type, handleGesture);
       });
     };
 
-    const handleEarlyInteraction = () => {
-      if (triggered || cyberSound.hasWelcomed) {
-        cleanupGestureListeners();
-        return;
-      }
-      runWelcome();
-      cleanupGestureListeners();
-    };
-
-    const runWelcome = async () => {
-      if (triggered || cyberSound.hasWelcomed) return;
-      const success = await cyberSound.triggerWelcomeSequence();
-      if (success) {
-        triggered = true;
-        cleanupGestureListeners();
-      }
-    };
-
-    // 1. Attempt immediate auto-play on initial render (zero delay!)
-    runWelcome();
-
-    // 2. Micro-staggered fallback triggers to catch the instant audio engine is ready
-    const t1 = window.setTimeout(runWelcome, 60);
-    const t2 = window.setTimeout(runWelcome, 180);
-    const t3 = window.setTimeout(runWelcome, 400);
-
-    // 3. Ultra-sensitive interaction listeners: ANY pointer movement, scroll, or keypress instantly unlocks audio
-    userEventTypes.forEach((type) => {
-      window.addEventListener(type, handleEarlyInteraction, { passive: true, once: true });
+    gestureEvents.forEach((type) => {
+      window.addEventListener(type, handleGesture, { passive: true, once: true });
     });
 
     return () => {
-      window.clearTimeout(t1);
-      window.clearTimeout(t2);
-      window.clearTimeout(t3);
-      cleanupGestureListeners();
+      gestureEvents.forEach((type) => {
+        window.removeEventListener(type, handleGesture);
+      });
     };
   }, []);
 

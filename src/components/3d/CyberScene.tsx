@@ -282,14 +282,16 @@ export const CyberScene: React.FC<CyberSceneProps> = ({
     observer.observe(mount);
 
     // Render Loop
-    const clock = new THREE.Clock();
-    const animate = () => {
+    const timer = new THREE.Timer();
+    timer.connect(document);
+    const animate = (timestamp?: number) => {
       animationFrameId.current = requestAnimationFrame(animate);
 
       if (!isVisibleRef.current || document.hidden) return;
 
-      const delta = clock.getDelta();
-      const elapsed = clock.getElapsedTime();
+      timer.update(timestamp);
+      const delta = timer.getDelta();
+      const elapsed = timer.getElapsed();
 
       // Smooth distance zoom lerp
       currentCameraDistance.current += (cameraTargetDistance.current - currentCameraDistance.current) * 0.08;
@@ -349,6 +351,7 @@ export const CyberScene: React.FC<CyberSceneProps> = ({
       mesh.dispose();
       starGeo.dispose();
       starMat.dispose();
+      timer.dispose();
       renderer.dispose();
     };
   }, [interactive, onSelectBlade, onSelectMeshNode, onSelectNode]);

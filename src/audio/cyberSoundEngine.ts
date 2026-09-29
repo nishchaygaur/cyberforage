@@ -9,6 +9,9 @@ class CyberSoundEngine {
   public hasWelcomed: boolean = false;
   private cachedVoices: SpeechSynthesisVoice[] = [];
   private isWelcoming: boolean = false;
+  private userHasInteracted: boolean = false;
+  private pendingWelcomeChime: boolean = false;
+  private pendingWelcomeText?: string;
 
   constructor() {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -29,52 +32,99 @@ class CyberSoundEngine {
     }
   }
 
+  /**
+   * Checks if user activation has occurred on the page, satisfying browser autoplay policies.
+   */
+  public isUserGestureAvailable(): boolean {
+    if (typeof window === 'undefined') return false;
+    if (this.userHasInteracted) return true;
+    if (
+      typeof navigator !== 'undefined' &&
+      'userActivation' in navigator &&
+      (navigator as unknown as { userActivation?: { hasBeenActive?: boolean } }).userActivation?.hasBeenActive
+    ) {
+      this.userHasInteracted = true;
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Initializes or returns AudioContext only when allowed, preventing Chrome autoplay warnings.
+   */
   public initCtx(): AudioContext | null {
-    if (!this.ctx && typeof window !== 'undefined') {
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      if (AudioCtx) {
-        this.ctx = new AudioCtx();
+    if (typeof window === 'undefined') return null;
+
+    // Do NOT instantiate AudioContext prior to a gesture, as Chrome outputs:
+    // "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page."
+    if (!this.ctx) {
+      if (!this.isUserGestureAvailable()) {
+        return null;
+      }
+      try {
+        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        if (AudioCtx) {
+          this.ctx = new AudioCtx();
+        }
+      } catch {
+        return null;
       }
     }
-    if (this.ctx && this.ctx.state === 'suspended') {
+
+    // Only attempt resume if we have active user activation
+    if (this.ctx && this.ctx.state === 'suspended' && this.isUserGestureAvailable()) {
       this.ctx.resume().catch(() => {});
     }
+
     return this.ctx;
   }
 
+  /**
+   * Unlocks Web Audio synchronously inside a genuine user interaction event (click, keydown, touch).
+   */
+  public unlockAudio(): AudioContext | null {
+    this.userHasInteracted = true;
+    if (typeof window === 'undefined') return null;
+
+    if (!this.ctx) {
+      try {
+        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        if (AudioCtx) {
+          this.ctx = new AudioCtx();
+        }
+      } catch {
+        return null;
+      }
+    }
+
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
+    }
+
+    // If welcome chimes were queued waiting for browser gesture, trigger them now
+    if (this.pendingWelcomeChime && !this.isMuted) {
+      this.pendingWelcomeChime = false;
+      this.hasWelcomed = true;
+      if (typeof window !== 'undefined') {
+        (window as unknown as { __CYBERFORAGE_PAGE_WELCOMED?: boolean }).__CYBERFORAGE_PAGE_WELCOMED = true;
+      }
+      this.playWelcome(this.pendingWelcomeText, false);
+    }
+
+    return this.ctx;
+  }
+
+  /**
+   * Triggers the welcome sequence. The tactical voice plays immediately via SpeechSynthesis,
+   * while Web Audio chimes and ambient drone initialize immediately if permitted or unlock
+   * seamlessly on the user's first gesture without any console warnings.
+   */
   public async triggerWelcomeSequence(customText?: string): Promise<boolean> {
     if (this.hasWelcomed || this.isMuted || this.isWelcoming) return this.hasWelcomed;
 
     this.isWelcoming = true;
 
-    const ctx = this.initCtx();
-    if (!ctx) {
-      this.isWelcoming = false;
-      return false;
-    }
-
-    // Attempt to resume audio context immediately
-    if (ctx.state === 'suspended') {
-      try {
-        await ctx.resume();
-      } catch {
-        // Autoplay policy prevented immediate resume; will unlock on first gesture
-      }
-    }
-
-    if (ctx.state === 'running') {
-      this.hasWelcomed = true;
-      if (typeof window !== 'undefined') {
-        (window as unknown as { __CYBERFORAGE_PAGE_WELCOMED?: boolean }).__CYBERFORAGE_PAGE_WELCOMED = true;
-      }
-      this.playWelcome(customText, true);
-      setTimeout(() => {
-        this.isWelcoming = false;
-      }, 3500);
-      return true;
-    }
-
-    // SpeechSynthesis is often allowed by browsers even when AudioContext is suspended
+    // 1. Tactical Welcome Voice (permitted on page load without AudioContext constraints)
     if (this.voiceEnabled) {
       try {
         this.speakVoice(
@@ -83,8 +133,26 @@ class CyberSoundEngine {
       } catch {}
     }
 
+    // 2. If user activation is already present, unlock and play Web Audio chimes right now
+    if (this.isUserGestureAvailable()) {
+      const ctx = this.unlockAudio();
+      if (ctx && ctx.state === 'running') {
+        this.hasWelcomed = true;
+        if (typeof window !== 'undefined') {
+          (window as unknown as { __CYBERFORAGE_PAGE_WELCOMED?: boolean }).__CYBERFORAGE_PAGE_WELCOMED = true;
+        }
+        this.playWelcome(customText, false);
+        setTimeout(() => {
+          this.isWelcoming = false;
+        }, 3500);
+        return true;
+      }
+    }
+
+    // 3. Queue the chime for the first user gesture without throwing suspended AudioContext errors
+    this.pendingWelcomeChime = true;
+    this.pendingWelcomeText = customText;
     this.isWelcoming = false;
-    // Return false so gesture listeners remain armed to trigger the full audio chime
     return false;
   }
 
@@ -93,7 +161,7 @@ class CyberSoundEngine {
     if (muted) {
       this.stopAmbientDrone();
     } else {
-      this.initCtx();
+      this.unlockAudio();
       this.playBlip();
       if (this.isDroneActive) {
         this.startAmbientDrone();
@@ -114,6 +182,7 @@ class CyberSoundEngine {
       if (this.isMuted) {
         this.setMuted(false);
       }
+      this.unlockAudio();
       this.startAmbientDrone();
       return true;
     }
@@ -122,30 +191,30 @@ class CyberSoundEngine {
   public startAmbientDrone() {
     if (this.isMuted) return;
     try {
-      this.initCtx();
-      if (!this.ctx) return;
+      const ctx = this.initCtx();
+      if (!ctx || ctx.state !== 'running') return;
       if (this.ambientOsc1) return; // Already running
 
-      const filter = this.ctx.createBiquadFilter();
+      const filter = ctx.createBiquadFilter();
       filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(180, this.ctx.currentTime);
+      filter.frequency.setValueAtTime(180, ctx.currentTime);
 
-      this.ambientGain = this.ctx.createGain();
-      this.ambientGain.gain.setValueAtTime(0.001, this.ctx.currentTime);
-      this.ambientGain.gain.exponentialRampToValueAtTime(0.025, this.ctx.currentTime + 1.5);
+      this.ambientGain = ctx.createGain();
+      this.ambientGain.gain.setValueAtTime(0.001, ctx.currentTime);
+      this.ambientGain.gain.exponentialRampToValueAtTime(0.025, ctx.currentTime + 1.5);
 
-      this.ambientOsc1 = this.ctx.createOscillator();
+      this.ambientOsc1 = ctx.createOscillator();
       this.ambientOsc1.type = 'sawtooth';
-      this.ambientOsc1.frequency.setValueAtTime(55, this.ctx.currentTime); // A1 note
+      this.ambientOsc1.frequency.setValueAtTime(55, ctx.currentTime); // A1 note
 
-      this.ambientOsc2 = this.ctx.createOscillator();
+      this.ambientOsc2 = ctx.createOscillator();
       this.ambientOsc2.type = 'sine';
-      this.ambientOsc2.frequency.setValueAtTime(55.8, this.ctx.currentTime); // Slight binaural beat
+      this.ambientOsc2.frequency.setValueAtTime(55.8, ctx.currentTime); // Slight binaural beat
 
       this.ambientOsc1.connect(filter);
       this.ambientOsc2.connect(filter);
       filter.connect(this.ambientGain);
-      this.ambientGain.connect(this.ctx.destination);
+      this.ambientGain.connect(ctx.destination);
 
       this.ambientOsc1.start();
       this.ambientOsc2.start();
@@ -158,7 +227,7 @@ class CyberSoundEngine {
   public stopAmbientDrone() {
     if (!this.isDroneActive) return;
     try {
-      if (this.ambientGain && this.ctx) {
+      if (this.ambientGain && this.ctx && this.ctx.state === 'running') {
         this.ambientGain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.8);
       }
       setTimeout(() => {
@@ -183,17 +252,14 @@ class CyberSoundEngine {
   public playWelcome(customText?: string, speakVoiceNow: boolean = true) {
     if (this.isMuted) return;
     try {
-      this.initCtx();
-      if (!this.ctx) return;
-      if (this.ctx.state === 'suspended') {
-        this.ctx.resume().catch(() => {});
-      }
+      const ctx = this.unlockAudio();
+      if (!ctx || ctx.state !== 'running') return;
 
-      const now = this.ctx.currentTime;
+      const now = ctx.currentTime;
 
       // 1. Warm Analog Cyber Bass Foundation (clean sine, gentle presence)
-      const bassOsc = this.ctx.createOscillator();
-      const bassGain = this.ctx.createGain();
+      const bassOsc = ctx.createOscillator();
+      const bassGain = ctx.createGain();
       bassOsc.type = 'sine';
       bassOsc.frequency.setValueAtTime(75, now);
       bassOsc.frequency.exponentialRampToValueAtTime(52, now + 0.65);
@@ -201,7 +267,7 @@ class CyberSoundEngine {
       bassGain.gain.linearRampToValueAtTime(0.07, now + 0.12);
       bassGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.75);
       bassOsc.connect(bassGain);
-      bassGain.connect(this.ctx.destination);
+      bassGain.connect(ctx.destination);
       bassOsc.start(now);
       bassOsc.stop(now + 0.75);
 
@@ -217,11 +283,11 @@ class CyberSoundEngine {
       ];
 
       chimes.forEach(({ freq, start, dur, gainVal }) => {
-        if (!this.ctx) return;
-        const osc = this.ctx.createOscillator();
-        const overtone = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        const filter = this.ctx.createBiquadFilter();
+        if (!ctx) return;
+        const osc = ctx.createOscillator();
+        const overtone = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
 
         filter.type = 'lowpass';
         filter.frequency.setValueAtTime(3600, start);
@@ -236,14 +302,14 @@ class CyberSoundEngine {
         gain.gain.linearRampToValueAtTime(gainVal, start + 0.03);
         gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
 
-        const blendGain = this.ctx.createGain();
+        const blendGain = ctx.createGain();
         blendGain.gain.setValueAtTime(0.18, start);
         overtone.connect(blendGain);
         blendGain.connect(gain);
 
         osc.connect(gain);
         gain.connect(filter);
-        filter.connect(this.ctx.destination);
+        filter.connect(ctx.destination);
 
         osc.start(start);
         overtone.start(start);
@@ -252,9 +318,9 @@ class CyberSoundEngine {
       });
 
       // 3. Subtle Holographic Resonant Swell
-      const pulseOsc = this.ctx.createOscillator();
-      const pulseGain = this.ctx.createGain();
-      const pulseFilter = this.ctx.createBiquadFilter();
+      const pulseOsc = ctx.createOscillator();
+      const pulseGain = ctx.createGain();
+      const pulseFilter = ctx.createBiquadFilter();
 
       pulseFilter.type = 'bandpass';
       pulseFilter.Q.setValueAtTime(2.5, now + 0.1);
@@ -269,7 +335,7 @@ class CyberSoundEngine {
 
       pulseOsc.connect(pulseGain);
       pulseGain.connect(pulseFilter);
-      pulseFilter.connect(this.ctx.destination);
+      pulseFilter.connect(ctx.destination);
       pulseOsc.start(now + 0.1);
       pulseOsc.stop(now + 0.65);
 
@@ -293,14 +359,11 @@ class CyberSoundEngine {
 
   public replayWelcome(customText?: string) {
     if (this.isMuted) return;
-    this.initCtx();
-    if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume().catch(() => {});
-    }
+    this.unlockAudio();
     this.playWelcome(customText, true);
   }
 
-  public speakVoice(text: string, onStarted?: () => void, onError?: (err: any) => void) {
+  public speakVoice(text: string, onStarted?: () => void, onError?: (err: unknown) => void) {
     if (this.isMuted || !this.voiceEnabled || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
     try {
       if (window.speechSynthesis.paused) {
@@ -316,7 +379,7 @@ class CyberSoundEngine {
 
         const voices = this.cachedVoices.length > 0 ? this.cachedVoices : window.speechSynthesis.getVoices();
         if (voices.length > 0) {
-          // Explicitly prioritize the previous authentic English MALE voices
+          // Explicitly prioritize authentic English MALE voices
           const maleVoice =
             voices.find(
               (v) =>
@@ -369,21 +432,21 @@ class CyberSoundEngine {
   public playBlip() {
     if (this.isMuted) return;
     try {
-      this.initCtx();
-      if (!this.ctx) return;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
+      const ctx = this.initCtx();
+      if (!ctx || ctx.state !== 'running') return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(800, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(1400, this.ctx.currentTime + 0.08);
+      osc.frequency.setValueAtTime(800, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1400, ctx.currentTime + 0.08);
 
-      gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.05, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
 
       osc.connect(gain);
-      gain.connect(this.ctx.destination);
+      gain.connect(ctx.destination);
       osc.start();
-      osc.stop(this.ctx.currentTime + 0.08);
+      osc.stop(ctx.currentTime + 0.08);
     } catch {
       // Ignored
     }
@@ -392,21 +455,21 @@ class CyberSoundEngine {
   public playClick() {
     if (this.isMuted) return;
     try {
-      this.initCtx();
-      if (!this.ctx) return;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
+      const ctx = this.initCtx();
+      if (!ctx || ctx.state !== 'running') return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
       osc.type = 'triangle';
-      osc.frequency.setValueAtTime(1200, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.05);
+      osc.frequency.setValueAtTime(1200, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.05);
 
-      gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
 
       osc.connect(gain);
-      gain.connect(this.ctx.destination);
+      gain.connect(ctx.destination);
       osc.start();
-      osc.stop(this.ctx.currentTime + 0.05);
+      osc.stop(ctx.currentTime + 0.05);
     } catch {
       // Ignored
     }
@@ -415,21 +478,21 @@ class CyberSoundEngine {
   public playLaser() {
     if (this.isMuted) return;
     try {
-      this.initCtx();
-      if (!this.ctx) return;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
+      const ctx = this.initCtx();
+      if (!ctx || ctx.state !== 'running') return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
       osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(1800, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.25);
+      osc.frequency.setValueAtTime(1800, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.25);
 
-      gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.25);
+      gain.gain.setValueAtTime(0.04, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
 
       osc.connect(gain);
-      gain.connect(this.ctx.destination);
+      gain.connect(ctx.destination);
       osc.start();
-      osc.stop(this.ctx.currentTime + 0.25);
+      osc.stop(ctx.currentTime + 0.25);
     } catch {
       // Ignored
     }
@@ -438,31 +501,31 @@ class CyberSoundEngine {
   public playRadioStatic() {
     if (this.isMuted) return;
     try {
-      this.initCtx();
-      if (!this.ctx) return;
+      const ctx = this.initCtx();
+      if (!ctx || ctx.state !== 'running') return;
 
-      const bufferSize = this.ctx.sampleRate * 0.15;
-      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const bufferSize = ctx.sampleRate * 0.15;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
       const output = buffer.getChannelData(0);
       for (let i = 0; i < bufferSize; i++) {
         output[i] = (Math.random() * 2 - 1) * 0.3;
       }
 
-      const whiteNoise = this.ctx.createBufferSource();
+      const whiteNoise = ctx.createBufferSource();
       whiteNoise.buffer = buffer;
 
-      const filter = this.ctx.createBiquadFilter();
+      const filter = ctx.createBiquadFilter();
       filter.type = 'bandpass';
-      filter.frequency.setValueAtTime(1200, this.ctx.currentTime);
-      filter.Q.setValueAtTime(3, this.ctx.currentTime);
+      filter.frequency.setValueAtTime(1200, ctx.currentTime);
+      filter.Q.setValueAtTime(3, ctx.currentTime);
 
-      const gain = this.ctx.createGain();
-      gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.15);
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.06, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
 
       whiteNoise.connect(filter);
       filter.connect(gain);
-      gain.connect(this.ctx.destination);
+      gain.connect(ctx.destination);
 
       whiteNoise.start();
     } catch {
@@ -473,21 +536,21 @@ class CyberSoundEngine {
   public playPulse() {
     if (this.isMuted) return;
     try {
-      this.initCtx();
-      if (!this.ctx) return;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
+      const ctx = this.initCtx();
+      if (!ctx || ctx.state !== 'running') return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(120, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(45, this.ctx.currentTime + 0.4);
+      osc.frequency.setValueAtTime(120, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(45, ctx.currentTime + 0.4);
 
-      gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.4);
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
 
       osc.connect(gain);
-      gain.connect(this.ctx.destination);
+      gain.connect(ctx.destination);
       osc.start();
-      osc.stop(this.ctx.currentTime + 0.4);
+      osc.stop(ctx.currentTime + 0.4);
     } catch {
       // Ignored
     }
@@ -496,22 +559,22 @@ class CyberSoundEngine {
   public playAlert() {
     if (this.isMuted) return;
     try {
-      this.initCtx();
-      if (!this.ctx) return;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
+      const ctx = this.initCtx();
+      if (!ctx || ctx.state !== 'running') return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
       osc.type = 'square';
-      osc.frequency.setValueAtTime(650, this.ctx.currentTime);
-      osc.frequency.setValueAtTime(850, this.ctx.currentTime + 0.1);
-      osc.frequency.setValueAtTime(650, this.ctx.currentTime + 0.2);
+      osc.frequency.setValueAtTime(650, ctx.currentTime);
+      osc.frequency.setValueAtTime(850, ctx.currentTime + 0.1);
+      osc.frequency.setValueAtTime(650, ctx.currentTime + 0.2);
 
-      gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.35);
+      gain.gain.setValueAtTime(0.05, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
 
       osc.connect(gain);
-      gain.connect(this.ctx.destination);
+      gain.connect(ctx.destination);
       osc.start();
-      osc.stop(this.ctx.currentTime + 0.35);
+      osc.stop(ctx.currentTime + 0.35);
     } catch {
       // Ignored
     }
@@ -520,21 +583,21 @@ class CyberSoundEngine {
   public playTerminalKey() {
     if (this.isMuted) return;
     try {
-      this.initCtx();
-      if (!this.ctx) return;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
+      const ctx = this.initCtx();
+      if (!ctx || ctx.state !== 'running') return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
       osc.type = 'sine';
       const freq = 1800 + Math.random() * 400;
-      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
 
-      gain.gain.setValueAtTime(0.02, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.03);
+      gain.gain.setValueAtTime(0.02, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.03);
 
       osc.connect(gain);
-      gain.connect(this.ctx.destination);
+      gain.connect(ctx.destination);
       osc.start();
-      osc.stop(this.ctx.currentTime + 0.03);
+      osc.stop(ctx.currentTime + 0.03);
     } catch {
       // Ignored
     }
@@ -547,8 +610,21 @@ class CyberSoundEngine {
 
 export const cyberSound = new CyberSoundEngine();
 
-// Auto-trigger welcome sequence at initial document loading
+// Seamless global gesture unlock: unlocks Web Audio on user's first genuine interaction
 if (typeof window !== 'undefined') {
+  const unlockEvents = ['click', 'pointerdown', 'keydown', 'touchstart'];
+  const handleUserActivation = () => {
+    cyberSound.unlockAudio();
+    unlockEvents.forEach((evt) => {
+      window.removeEventListener(evt, handleUserActivation, true);
+    });
+  };
+
+  unlockEvents.forEach((evt) => {
+    window.addEventListener(evt, handleUserActivation, { capture: true, passive: true });
+  });
+
+  // Attempt welcome sequence (voice speech) on page load
   const tryAutoPlay = () => {
     cyberSound.triggerWelcomeSequence().catch(() => {});
   };
@@ -560,4 +636,3 @@ if (typeof window !== 'undefined') {
     window.addEventListener('load', tryAutoPlay, { once: true });
   }
 }
-
