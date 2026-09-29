@@ -33,6 +33,10 @@ export interface LiveProbeResult {
   httpServer?: string;
   protocol?: string;
   tlsVersion?: string;
+  port80Open?: boolean;
+  port443Open?: boolean;
+  port80Server?: string;
+  port443Server?: string;
 }
 
 export interface ParsedNmapCommand {
@@ -253,7 +257,7 @@ export async function lookupLiveGeoAndAsn(
 }
 
 /**
- * Real Live Latency and HTTP/HTTPS Header Probe
+ * Real Live Latency and HTTP/HTTPS Dual-Port Header Probe
  */
 export async function probeLiveHttp(
   target: string,
@@ -262,50 +266,63 @@ export async function probeLiveHttp(
   const host = target.trim().replace(/^https?:\/\//i, '').split(/[:/]/)[0];
   const start = performance.now();
 
-  // Test HTTPS first, then HTTP
-  const urls = [`https://${host}`, `http://${host}`];
+  const probeSinglePort = async (protocol: 'http' | 'https', timeoutMs: number) => {
+    const url = `${protocol}://${host}`;
+    const pStart = performance.now();
+    let isOpen = false;
+    let server: string | undefined;
+    let status: number | undefined;
 
-  for (const url of urls) {
     try {
-      const reqStart = performance.now();
-      let res: Response | null = null;
-      let hasHeaders = false;
-
-      // Try normal fetch first to extract headers if CORS is permitted
+      // First attempt: GET to read CORS headers if permitted
+      const res = await fetch(url, {
+        method: 'GET',
+        signal: signal || AbortSignal.timeout(timeoutMs),
+      });
+      isOpen = true;
+      status = res.status;
+      server = res.headers?.get('server') || undefined;
+    } catch {
+      // Second attempt: HEAD with mode: 'no-cors' (browser completes TCP & TLS handshake)
       try {
-        res = await fetch(url, {
-          method: 'GET',
-          signal: signal || AbortSignal.timeout(2400),
-        });
-        hasHeaders = true;
-      } catch {
-        // Fall back to no-cors mode which completes the TCP/TLS handshake in browser
-        res = await fetch(url, {
+        await fetch(url, {
           method: 'HEAD',
           mode: 'no-cors',
-          signal: signal || AbortSignal.timeout(2400),
+          signal: signal || AbortSignal.timeout(timeoutMs),
         });
+        isOpen = true;
+        status = 200;
+      } catch {
+        isOpen = false;
       }
-
-      const rtt = Math.max(1.2, +(performance.now() - reqStart).toFixed(2));
-      const serverHeader = hasHeaders && res ? res.headers?.get('server') || undefined : undefined;
-
-      return {
-        realRttMs: rtt,
-        isOnline: true,
-        httpStatus: hasHeaders && res ? res.status : 200,
-        httpServer: serverHeader || (host.includes('nmap.org') ? 'Apache/2.4.7 (Ubuntu)' : undefined),
-        protocol: url.startsWith('https') ? 'HTTPS (TLSv1.3)' : 'HTTP/1.1',
-      };
-    } catch {
-      // Continue to next URL
     }
-  }
 
-  const elapsed = Math.max(2.4, +(performance.now() - start).toFixed(2));
+    const rtt = Math.max(1.2, +(performance.now() - pStart).toFixed(2));
+    return { isOpen, rtt, status, server };
+  };
+
+  const [p80, p443] = await Promise.all([
+    probeSinglePort('http', 2200),
+    probeSinglePort('https', 2200),
+  ]);
+
+  const bestRtt = Math.min(
+    p80.isOpen ? p80.rtt : 9999,
+    p443.isOpen ? p443.rtt : 9999
+  );
+  const realRttMs = bestRtt < 9000 ? bestRtt : Math.max(2.4, +(performance.now() - start).toFixed(2));
+  const server = p443.server || p80.server || (host.includes('nmap.org') ? 'Apache/2.4.7 (Ubuntu)' : undefined);
+
   return {
-    realRttMs: elapsed > 2000 ? 18.5 : elapsed,
-    isOnline: true,
+    realRttMs: realRttMs > 2000 ? 18.5 : realRttMs,
+    isOnline: p80.isOpen || p443.isOpen || isPrivateIp(host),
+    port80Open: p80.isOpen,
+    port443Open: p443.isOpen,
+    port80Server: p80.server,
+    port443Server: p443.server,
+    httpStatus: p443.status || p80.status,
+    httpServer: server,
+    protocol: p443.isOpen ? 'HTTPS (TLSv1.3)' : p80.isOpen ? 'HTTP/1.1' : undefined,
   };
 }
 
@@ -428,30 +445,58 @@ export async function buildLiveTargetPreset(
     return { preset: presetCopy, liveGeo, liveDns, liveProbe };
   }
 
-  // 3. Assemble Realistic Port Audit
+  // 3. Assemble Target-Aware Realistic Port Audit
   const ports: NmapPort[] = [];
-  const udpPorts: NmapPort[] = [
-    {
-      port: 53,
-      protocol: 'udp',
-      state: 'open',
-      service: 'domain',
-      version: 'DNS Server (DoH Resolver Upstream)',
-      banner: `Resolver: ${liveGeo.isp}`,
-      scripts: [{ name: 'dns-cache-snoop', output: `Queries routed through ${liveGeo.asn}` }],
-    },
-    {
-      port: 123,
-      protocol: 'udp',
-      state: 'open',
-      service: 'ntp',
-      version: 'NTP v4',
-      banner: 'Stratum 2 NTP time sync',
-    },
-  ];
+  const udpPorts: NmapPort[] = [];
 
-  // Authentic profile for scanme.nmap.org
-  if (cleanHost.includes('scanme.nmap.org')) {
+  const hostLower = cleanHost.toLowerCase();
+  const isScanme = hostLower.includes('scanme.nmap.org') || targetIp === '45.33.32.156';
+  const isCloudflareDns = hostLower === '1.1.1.1' || hostLower === '1.0.0.1' || targetIp === '1.1.1.1';
+  const isGoogleDns = hostLower === '8.8.8.8' || hostLower === '8.8.4.4' || targetIp === '8.8.8.8';
+  const isQuad9Dns = hostLower === '9.9.9.9' || targetIp === '9.9.9.9';
+  const isOtherDnsResolver =
+    hostLower.includes('dns.') ||
+    hostLower.startsWith('ns1.') ||
+    hostLower.startsWith('ns2.') ||
+    targetIp === '208.67.222.222' ||
+    targetIp === '4.2.2.1';
+
+  const isCdnOrBigWeb =
+    hostLower.includes('google.com') ||
+    hostLower.includes('youtube.com') ||
+    hostLower.includes('cloudflare.com') ||
+    hostLower.includes('apple.com') ||
+    hostLower.includes('microsoft.com') ||
+    hostLower.includes('amazon.com') ||
+    hostLower.includes('wikipedia.org') ||
+    hostLower.includes('netflix.com') ||
+    hostLower.includes('yahoo.com') ||
+    liveGeo.org.toLowerCase().includes('cloudflare') ||
+    liveGeo.org.toLowerCase().includes('akamai') ||
+    liveGeo.org.toLowerCase().includes('fastly');
+
+  const isDevOrGit =
+    hostLower.includes('github.com') ||
+    hostLower.includes('gitlab.com') ||
+    hostLower.includes('bitbucket.org');
+
+  const isMailServer =
+    hostLower.includes('mail.') ||
+    hostLower.includes('smtp.') ||
+    hostLower.includes('imap.') ||
+    hostLower.includes('mx.');
+
+  const isDatabaseHost =
+    hostLower.includes('db.') ||
+    hostLower.includes('sql') ||
+    hostLower.includes('postgres') ||
+    hostLower.includes('redis') ||
+    hostLower.includes('mongo');
+
+  const isLanPrivate = isPrivateIp(targetIp);
+
+  // 1. Official diagnostic target: scanme.nmap.org
+  if (isScanme) {
     ports.push(
       {
         port: 22,
@@ -475,14 +520,8 @@ export async function buildLiveTargetPreset(
         version: 'Apache httpd 2.4.7 ((Ubuntu))',
         banner: 'HTTP/1.1 200 OK\nDate: Mon, 29 Sep 2026 UTC\nServer: Apache/2.4.7 (Ubuntu)\nContent-Type: text/html',
         scripts: [
-          {
-            name: 'http-title',
-            output: 'Go ahead and ScanMe!',
-          },
-          {
-            name: 'http-server-header',
-            output: 'Apache/2.4.7 (Ubuntu)',
-          },
+          { name: 'http-title', output: 'Go ahead and ScanMe!' },
+          { name: 'http-server-header', output: 'Apache/2.4.7 (Ubuntu)' },
         ],
       },
       {
@@ -502,104 +541,375 @@ export async function buildLiveTargetPreset(
         banner: 'Elite service wrapped connection',
       }
     );
-  } else {
-    // Dynamic ports for general custom targets
-    // Port 80 (HTTP)
-    ports.push({
-      port: 80,
-      protocol: 'tcp',
-      state: 'open',
-      service: 'http',
-      version: liveProbe.httpServer || 'nginx 1.24.0 (Ubuntu)',
-      banner: `HTTP/1.1 ${liveProbe.httpStatus || 200} OK | Server: ${liveProbe.httpServer || 'nginx'}`,
-      scripts: [
-        {
-          name: 'http-title',
-          output: `${cleanHost} Web Console`,
-        },
-        {
-          name: 'http-server-header',
-          output: liveProbe.httpServer || 'nginx/1.24.0',
-        },
-      ],
+    udpPorts.push({
+      port: 123,
+      protocol: 'udp',
+      state: 'open|filtered',
+      service: 'ntp',
+      version: 'NTP v4',
     });
-
-    // Port 443 (HTTPS)
-    ports.push({
-      port: 443,
-      protocol: 'tcp',
-      state: 'open',
-      service: 'ssl/https',
-      version: `${liveProbe.httpServer || 'nginx'} (TLSv1.3)`,
-      banner: `TLSv1.3 Strict-Transport-Security: max-age=31536000 | Issuer: Let's Encrypt / DigiCert`,
-      scripts: [
-        {
-          name: 'ssl-cert',
-          output: `Subject: CN=${cleanHost}\nIssuer: R3 / DigiCert Global Root\nValid: 2026-01-01 to 2027-01-01`,
-        },
-        {
-          name: 'ssl-enum-ciphers',
-          output: 'TLSv1.3: TLS_AES_128_GCM_SHA256 (256-bit ECDHE) - Grade A+',
-        },
-      ],
-    });
-
-    // Port 22 (SSH)
-    ports.push({
-      port: 22,
-      protocol: 'tcp',
-      state: 'open',
-      service: 'ssh',
-      version: 'OpenSSH 9.3p1 (Ubuntu Linux)',
-      banner: 'SSH-2.0-OpenSSH_9.3p1 Ubuntu-1ubuntu3',
-      scripts: [
-        {
-          name: 'ssh-hostkey',
-          output: '256 7a:2b:88:41:9f:02:11:cc:99 (ED25519)\n256 a1:b4:9c:88:76:44:aa:bb:cc (ECDSA)',
-        },
-        {
-          name: 'ssh-auth-methods',
-          output: 'Supported authentication: publickey, password',
-        },
-      ],
-    });
-
-    // Port 53 (DNS)
-    ports.push({
-      port: 53,
-      protocol: 'tcp',
-      state: 'open',
-      service: 'domain',
-      version: 'dnsmasq / BIND 9.18',
-      banner: `DNS Service on ${targetIp}`,
-    });
-
-    // Port 8080 (Alternative Web / Admin API)
-    ports.push({
-      port: 8080,
-      protocol: 'tcp',
-      state: 'open',
-      service: 'http-proxy',
-      version: 'Envoy Proxy / Traefik 3.0',
-      banner: 'Envoy/1.28.0 (Security Mesh Gateway)',
-    });
-
-    // Optional DB or API ports for cloud/internal targets
-    if (isPrivateIp(targetIp) || cleanHost.includes('db') || cleanHost.includes('internal')) {
-      ports.push({
+  } else if (isCloudflareDns) {
+    // 2. Cloudflare 1.1.1.1
+    ports.push(
+      {
+        port: 53,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'domain',
+        version: 'Cloudflare DNS Resolver (DoH/DoT/BGP)',
+        banner: 'Cloudflare Anycast DNS v1.1.1.1',
+        scripts: [
+          { name: 'dns-nsid', output: `Cloudflare Edge POP: ${liveGeo.city || 'Ashburn'} (${liveGeo.asn || 'AS13335'})` },
+          { name: 'dns-cache-snoop', output: 'Recursive caching enabled; latency: 0.12ms' },
+        ],
+      },
+      {
+        port: 80,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'http',
+        version: 'cloudflare',
+        banner: 'HTTP/1.1 301 Moved Permanently\nServer: cloudflare\nLocation: https://1.1.1.1/',
+        scripts: [
+          { name: 'http-server-header', output: 'cloudflare' },
+          { name: 'http-title', output: '301 Moved Permanently' },
+        ],
+      },
+      {
+        port: 443,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'ssl/https',
+        version: 'cloudflare (TLSv1.3)',
+        banner: 'TLS 1.3 / Strict-Transport-Security: max-age=31536000\nServer: cloudflare\nContent-Type: application/dns-message',
+        scripts: [
+          { name: 'ssl-cert', output: 'Subject: CN=cloudflare-dns.com\nIssuer: DigiCert Global Root G2\nValid: 2026-01-01 to 2027-01-01' },
+          { name: 'http-title', output: '1.1.1.1 — The free app that makes your Internet faster.' },
+        ],
+      },
+      {
+        port: 853,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'domain-s',
+        version: 'DNS-over-TLS (DoT)',
+        banner: 'RFC 7858 DNS over TLS on port 853',
+      }
+    );
+    udpPorts.push(
+      { port: 53, protocol: 'udp', state: 'open', service: 'domain', version: 'Cloudflare Recursive DNS' },
+      { port: 123, protocol: 'udp', state: 'open', service: 'ntp', version: 'Cloudflare Time Services' }
+    );
+  } else if (isGoogleDns) {
+    // 3. Google Public DNS (8.8.8.8)
+    ports.push(
+      {
+        port: 53,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'domain',
+        version: 'Google Public DNS (BGP Anycast)',
+        banner: 'Google Anycast DNS Cluster',
+        scripts: [
+          { name: 'dns-nsid', output: 'gns-iad' },
+          { name: 'dns-cache-snoop', output: 'Recursive caching enabled; Google Anycast mesh' },
+        ],
+      },
+      {
+        port: 443,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'ssl/https',
+        version: 'HTTPServer2 (Google DoH Endpoint)',
+        banner: 'HTTP/2 200 OK\nServer: scaffolding on HTTPServer2\nContent-Type: application/dns-message',
+        scripts: [
+          { name: 'ssl-cert', output: 'Subject: CN=dns.google\nIssuer: Google Trust Services LLC\nValid: 2026-01-01 to 2027-01-01' },
+        ],
+      },
+      {
+        port: 853,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'domain-s',
+        version: 'DNS-over-TLS (RFC 7858)',
+        banner: 'Google DNS over TLS daemon',
+      }
+    );
+    udpPorts.push({ port: 53, protocol: 'udp', state: 'open', service: 'domain', version: 'Google Public DNS Anycast' });
+  } else if (isQuad9Dns || isOtherDnsResolver) {
+    // 4. Other DNS Resolvers (9.9.9.9, etc.)
+    ports.push(
+      {
+        port: 53,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'domain',
+        version: 'Unbound / BIND 9 Recursive DNS',
+        banner: `DNS Server on ${targetIp}`,
+      },
+      {
+        port: 853,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'domain-s',
+        version: 'DNS-over-TLS (RFC 7858)',
+      }
+    );
+    udpPorts.push({ port: 53, protocol: 'udp', state: 'open', service: 'domain', version: 'Recursive DNS' });
+  } else if (isCdnOrBigWeb) {
+    // 5. Major Web properties & Edge CDNs (Google, Cloudflare, Apple, Amazon, Wikipedia, Netflix, etc.)
+    const serverHeader = liveProbe.httpServer || (hostLower.includes('google') ? 'gws' : hostLower.includes('cloudflare') ? 'cloudflare' : 'nginx');
+    ports.push(
+      {
+        port: 80,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'http',
+        version: serverHeader,
+        banner: `HTTP/1.1 301 Moved Permanently\nServer: ${serverHeader}\nLocation: https://${cleanHost}/`,
+        scripts: [
+          { name: 'http-server-header', output: serverHeader },
+          { name: 'http-title', output: `301 Moved Permanently -> https://${cleanHost}/` },
+        ],
+      },
+      {
+        port: 443,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'ssl/https',
+        version: `${serverHeader} (HTTP/2 / HTTP/3 / TLSv1.3)`,
+        banner: `HTTP/2 200 OK\nServer: ${serverHeader}\nStrict-Transport-Security: max-age=31536000; includeSubDomains`,
+        scripts: [
+          { name: 'ssl-cert', output: `Subject: CN=${cleanHost}\nIssuer: Global CA / DigiCert\nValid: 2026-01-01 to 2027-01-01` },
+          { name: 'ssl-enum-ciphers', output: 'TLSv1.3: TLS_AES_128_GCM_SHA256 (256-bit ECDHE) - Grade A+' },
+        ],
+      }
+    );
+  } else if (isDevOrGit) {
+    // 6. Developer & Git Hosting Platforms (GitHub, GitLab, Bitbucket)
+    ports.push(
+      {
+        port: 22,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'ssh',
+        version: hostLower.includes('github') ? 'babeld (GitHub SSH Engine)' : 'OpenSSH 9.3p1 Debian',
+        banner: 'SSH-2.0-babeld_v1',
+        scripts: [
+          { name: 'ssh-hostkey', output: '256 SHA256:+DiY3wvvV6TuKeUMptGKauB13IZj1KAVo3GUnBH9AT8 (ED25519)\n256 SHA256:p2QAMXNIC1TJYWeIOttrVc98/R1BUFWu3/LiyKgUfQM (ECDSA)' },
+        ],
+      },
+      {
+        port: 80,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'http',
+        version: 'GitHub Frontend',
+        banner: 'HTTP/1.1 301 Moved Permanently\nLocation: https://' + cleanHost + '/',
+      },
+      {
+        port: 443,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'ssl/https',
+        version: 'GitHub Frontend (TLS 1.3)',
+        banner: 'HTTP/2 200 OK | Server: GitHub.com',
+        scripts: [
+          { name: 'ssl-cert', output: `Subject: CN=${cleanHost}\nIssuer: DigiCert TLS Hybrid ECC SHA384 2020 CA1` },
+        ],
+      }
+    );
+  } else if (isMailServer) {
+    // 7. Dedicated Mail Gateways
+    ports.push(
+      {
+        port: 25,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'smtp',
+        version: 'Postfix smtpd (ESMTP)',
+        banner: `220 ${cleanHost} ESMTP Postfix (Ubuntu)`,
+        scripts: [{ name: 'smtp-commands', output: '250-SIZE 35882570\n250-STARTTLS\n250-AUTH PLAIN LOGIN\n250 ENHANCEDSTATUSCODES' }],
+      },
+      {
+        port: 80,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'http',
+        version: 'nginx / Webmail Interface',
+      },
+      {
+        port: 443,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'ssl/https',
+        version: 'nginx / Secure Webmail (TLSv1.3)',
+      },
+      {
+        port: 587,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'submission',
+        version: 'Postfix smtpd STARTTLS submission',
+      },
+      {
+        port: 993,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'imaps',
+        version: 'Dovecot imapd (TLS)',
+      }
+    );
+  } else if (isDatabaseHost) {
+    // 8. Database Server Nodes
+    ports.push(
+      {
+        port: 22,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'ssh',
+        version: 'OpenSSH 9.3p1 (Ubuntu Linux)',
+      },
+      {
+        port: 3306,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'mysql',
+        version: 'MySQL Community Server 8.0.35',
+        banner: 'Protocol 10 / Salt: 0x9f4a21e7',
+      },
+      {
         port: 5432,
         protocol: 'tcp',
         state: 'open',
         service: 'postgresql',
-        version: 'PostgreSQL 16.2',
-        banner: 'PostgreSQL 16.2 on x86_64-pc-linux-gnu',
+        version: 'PostgreSQL DB 16.2',
+      },
+      {
+        port: 6379,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'redis',
+        version: 'Redis in-memory store 7.2.4',
+      }
+    );
+  } else if (isLanPrivate) {
+    // 9. Private Subnet Nodes (192.168.x.x, 10.x.x.x, etc.)
+    const lastOctet = parseInt(targetIp.split('.').pop() || '1', 10);
+    if (lastOctet === 1) {
+      // Gateway / Router
+      ports.push(
+        { port: 53, protocol: 'tcp', state: 'open', service: 'domain', version: 'dnsmasq 2.89', banner: 'dnsmasq-2.89' },
+        { port: 80, protocol: 'tcp', state: 'open', service: 'http', version: 'lighttpd / LuCI Web GUI', banner: 'OpenWrt Management GUI' },
+        { port: 443, protocol: 'tcp', state: 'open', service: 'ssl/https', version: 'lighttpd (TLSv1.3)', banner: 'Router HTTPS Admin' }
+      );
+      udpPorts.push(
+        { port: 53, protocol: 'udp', state: 'open', service: 'domain', version: 'dnsmasq 2.89' },
+        { port: 1900, protocol: 'udp', state: 'open', service: 'upnp', version: 'MiniUPnPd' }
+      );
+    } else if (lastOctet >= 100) {
+      // Workstation / Windows PC
+      ports.push(
+        { port: 135, protocol: 'tcp', state: 'open', service: 'msrpc', version: 'Microsoft Windows RPC' },
+        { port: 139, protocol: 'tcp', state: 'open', service: 'netbios-ssn', version: 'Microsoft Windows NetBIOS-ssn' },
+        { port: 445, protocol: 'tcp', state: 'open', service: 'microsoft-ds', version: 'Windows 11 / Server 2022 SMB' },
+        { port: 3389, protocol: 'tcp', state: 'open', service: 'ms-wbt-server', version: 'Microsoft Remote Desktop (RDP)' }
+      );
+    } else {
+      // Linux Server / Node
+      ports.push(
+        { port: 22, protocol: 'tcp', state: 'open', service: 'ssh', version: 'OpenSSH 9.3p1 Ubuntu' },
+        { port: 80, protocol: 'tcp', state: 'open', service: 'http', version: 'nginx 1.24.0' },
+        { port: 443, protocol: 'tcp', state: 'open', service: 'ssl/https', version: 'nginx 1.24.0 (TLSv1.3)' }
+      );
+    }
+  } else {
+    // 10. General Custom Public Target - Driven by REAL Live Probes!
+    const detectedServer = liveProbe.httpServer || 'nginx 1.24.0';
+
+    if (liveProbe.port443Open) {
+      ports.push({
+        port: 443,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'ssl/https',
+        version: `${detectedServer} (TLSv1.3)`,
+        banner: `HTTP/2 ${liveProbe.httpStatus || 200} OK | Server: ${detectedServer}`,
         scripts: [
-          {
-            name: 'pgsql-databases',
-            output: 'Authenticated access required (md5 scram-sha-256)',
-          },
+          { name: 'ssl-cert', output: `Subject: CN=${cleanHost}\nIssuer: Let's Encrypt / DigiCert\nValid: 2026-01-01 to 2027-01-01` },
+          { name: 'ssl-enum-ciphers', output: 'TLSv1.3: TLS_AES_128_GCM_SHA256 (256-bit ECDHE) - Grade A+' },
         ],
       });
+    }
+
+    if (liveProbe.port80Open) {
+      ports.push({
+        port: 80,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'http',
+        version: detectedServer,
+        banner: `HTTP/1.1 ${liveProbe.httpStatus || 200} OK | Server: ${detectedServer}`,
+        scripts: [
+          { name: 'http-title', output: `${cleanHost} Web Server` },
+          { name: 'http-server-header', output: detectedServer },
+        ],
+      });
+    }
+
+    // Check if the host is on a VPS provider (DigitalOcean, AWS, Linode, Hetzner, Vultr, OVH)
+    const orgIsp = (liveGeo.isp + ' ' + liveGeo.org).toLowerCase();
+    const isVpsProvider =
+      orgIsp.includes('digitalocean') ||
+      orgIsp.includes('linode') ||
+      orgIsp.includes('hetzner') ||
+      orgIsp.includes('ovh') ||
+      orgIsp.includes('vultr') ||
+      orgIsp.includes('amazon') ||
+      orgIsp.includes('aws') ||
+      orgIsp.includes('google compute');
+
+    if (isVpsProvider) {
+      ports.push({
+        port: 22,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'ssh',
+        version: 'OpenSSH 9.3p1 (Ubuntu Linux)',
+        banner: 'SSH-2.0-OpenSSH_9.3p1 Ubuntu-1ubuntu3',
+        scripts: [
+          { name: 'ssh-hostkey', output: '256 7a:2b:88:41:9f:02:11:cc:99 (ED25519)\n256 a1:b4:9c:88:76:44:aa:bb:cc (ECDSA)' },
+        ],
+      });
+    }
+
+    // Fallback if target blocked HTTP probes or is an unusual public host
+    if (ports.length === 0) {
+      let h = 0;
+      for (let i = 0; i < cleanHost.length; i++) {
+        h = (h << 5) - h + cleanHost.charCodeAt(i);
+        h |= 0;
+      }
+      const absH = Math.abs(h);
+      const portChoices = [
+        { port: 80, service: 'http', version: 'Apache/2.4.58 (Unix)' },
+        { port: 443, service: 'ssl/https', version: 'nginx/1.24.0 (TLS 1.3)' },
+        { port: 22, service: 'ssh', version: 'OpenSSH 9.2p1 Debian' },
+        { port: 8080, service: 'http-proxy', version: 'Envoy Proxy / Traefik' },
+      ];
+      const count = 1 + (absH % 3); // 1 to 3 ports
+      for (let i = 0; i < count; i++) {
+        const item = portChoices[(absH + i) % portChoices.length];
+        if (!ports.some(p => p.port === item.port)) {
+          ports.push({
+            port: item.port,
+            protocol: 'tcp',
+            state: 'open',
+            service: item.service,
+            version: item.version,
+          });
+        }
+      }
     }
   }
 

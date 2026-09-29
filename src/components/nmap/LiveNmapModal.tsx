@@ -18,7 +18,6 @@ import {
   Download,
   AlertTriangle,
   Radio,
-  Activity,
   Filter,
   Globe,
   FileCode,
@@ -73,6 +72,7 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
   const [flagOs, setFlagOs] = useState(true);
   const [flagTraceroute, setFlagTraceroute] = useState(true);
   const [portPreset, setPortPreset] = useState<'top20' | 'top100' | 'web' | 'database' | 'all'>('top100');
+  const [customPortSpec, setCustomPortSpec] = useState<string | null>(null);
 
   // Scanner State & Tabs
   const [isScanning, setIsScanning] = useState(false);
@@ -110,6 +110,7 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
       }
       setSelectedPort(null);
       setLiveTargetPreset(null);
+      setCustomPortSpec(null);
     }
   }, [isOpen, initialTarget]);
 
@@ -126,8 +127,8 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
 
   // Dynamically Filtered Ports based on Scan Type (-sU vs TCP) and Port Preset (web, db, top20, etc.)
   const activePorts: NmapPort[] = useMemo(() => {
-    return filterPortsForScan(currentTarget, scanType, portPreset);
-  }, [currentTarget, scanType, portPreset]);
+    return filterPortsForScan(currentTarget, scanType, portPreset, customPortSpec || undefined);
+  }, [currentTarget, scanType, portPreset, customPortSpec]);
 
   // Compute live command string
   const commandString = useMemo(() => {
@@ -137,7 +138,8 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
     if (flagOs) parts.push('-O');
     if (flagTraceroute) parts.push('--traceroute');
 
-    if (portPreset === 'top20') parts.push('--top-ports 20');
+    if (customPortSpec) parts.push(`-p ${customPortSpec}`);
+    else if (portPreset === 'top20') parts.push('--top-ports 20');
     else if (portPreset === 'top100') parts.push('-F');
     else if (portPreset === 'web') parts.push('-p 80,443,8080,8443');
     else if (portPreset === 'database') parts.push('-p 1433,3306,5432,6379');
@@ -146,7 +148,7 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
     parts.push('-T4');
     parts.push(currentTarget.ip);
     return parts.join(' ');
-  }, [scanType, flagVersion, flagScripts, flagOs, flagTraceroute, portPreset, currentTarget]);
+  }, [scanType, flagVersion, flagScripts, flagOs, flagTraceroute, portPreset, customPortSpec, currentTarget]);
 
   // Initial terminal welcome lines
   useEffect(() => {
@@ -192,6 +194,9 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
       if (parsed.traceroute) setFlagTraceroute(true);
       if (['top20', 'top100', 'web', 'database', 'all'].includes(parsed.portSpec)) {
         setPortPreset(parsed.portSpec as any);
+        setCustomPortSpec(null);
+      } else if (parsed.portSpec) {
+        setCustomPortSpec(parsed.portSpec);
       }
     }
   };
@@ -335,14 +340,18 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
     setTerminalLines((prev) => [...prev, ...dnsLines]);
 
     // Active ports for this scan
-    const currentActivePorts = filterPortsForScan(resolvedPreset, scanType, portPreset);
+    const currentActivePorts = filterPortsForScan(resolvedPreset, scanType, portPreset, customPortSpec || undefined);
+    const openPorts = currentActivePorts.filter((p) => p.state === 'open');
 
-    const closedPortsCount =
-      portPreset === 'all'
-        ? 65535 - currentActivePorts.length
+    const totalScanned =
+      customPortSpec
+        ? currentActivePorts.length
+        : portPreset === 'all'
+        ? 65535
         : portPreset === 'top20'
-        ? 20 - currentActivePorts.length
-        : 1000 - currentActivePorts.length;
+        ? 20
+        : 1000;
+    const closedPortsCount = Math.max(0, totalScanned - openPorts.length);
 
     // Step 1: Port Sweep (at 600ms)
     const t1 = window.setTimeout(() => {
@@ -363,23 +372,18 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
       setScanProgress(58);
       cyberSound.playBlip();
 
-      const discoveredMsgs = currentActivePorts.map((p, idx) => ({
+      const discoveredMsgs = openPorts.map((p, idx) => ({
         id: `port-${idx}-${Date.now()}`,
-        text: `Discovered open port ${p.port}/${p.protocol} on ${resolvedPreset.ip} [${p.service}]`,
-        color: p.state === 'open' ? '#00F0C0' : '#F59E0B',
+        text: `Discovered open port ${p.port}/${p.protocol} on ${resolvedPreset.ip}`,
+        color: '#00F0C0',
       }));
 
       setTerminalLines((prev) => [
         ...prev,
         ...discoveredMsgs,
         {
-          id: `not-shown-${Date.now()}`,
-          text: `Not shown: ${closedPortsCount} closed ${scanType === '-sU' ? 'udp' : 'tcp'} ports (reset)`,
-          color: '#64748B',
-        },
-        {
           id: `syn-done-${Date.now()}`,
-          text: `Completed ${scanMethodText} in ${(parseFloat(dynamicLatency) * 0.08 + 1.2).toFixed(2)}s`,
+          text: `Completed ${scanMethodText} at ${new Date().toLocaleTimeString()}, ${(parseFloat(dynamicLatency) * 0.08 + 1.2).toFixed(2)}s elapsed (${totalScanned} total ports)`,
           color: '#94A3B8',
         },
       ]);
@@ -392,51 +396,64 @@ export const LiveNmapModal: React.FC<LiveNmapModalProps> = ({
 
       const portReportHeader = [
         {
+          id: `rep-for-${Date.now()}`,
+          text: `\nNmap scan report for ${resolvedPreset.hostname || resolvedPreset.ip} (${resolvedPreset.ip})`,
+          color: '#F8FAFC',
+        },
+        {
+          id: `rep-up-${Date.now()}`,
+          text: `Host is up (${(parseFloat(dynamicLatency) / 1000).toFixed(4)}s latency).`,
+          color: '#10B981',
+        },
+        {
+          id: `not-shown-${Date.now()}`,
+          text: `Not shown: ${closedPortsCount} closed ${scanType === '-sU' ? 'udp' : 'tcp'} ports (reset)`,
+          color: '#64748B',
+        },
+        {
           id: `hdr-${Date.now()}`,
-          text: `\nPORT      STATE    SERVICE        ${flagVersion ? 'VERSION' : ''}`,
+          text: `PORT      STATE    SERVICE        ${flagVersion ? 'VERSION' : ''}`,
           color: '#38BDF8',
         },
       ];
 
-      const portReportRows = currentActivePorts.map((p, idx) => {
-        const versionString = flagVersion ? p.version : '';
-        return {
+      const portReportRows: { id: string; text: string; color: string }[] = [];
+      currentActivePorts.forEach((p, idx) => {
+        const versionString = flagVersion ? (p.version || '') : '';
+        portReportRows.push({
           id: `row-${idx}-${Date.now()}`,
           text: `${(p.port + '/' + p.protocol).padEnd(9)} ${(p.state).padEnd(8)} ${(p.service).padEnd(14)} ${versionString}`,
           color: p.state === 'open' ? '#34D399' : '#FBBF24',
-        };
-      });
+        });
 
-      // NSE scripts and vulnerability alerts ONLY IF flagScripts is TRUE
-      const vulnReports: { id: string; text: string; color: string }[] = [];
-      if (flagScripts) {
-        currentActivePorts.forEach((p) => {
-          if (p.cveList && p.cveList.length > 0) {
-            p.cveList.forEach((cve, cveIdx) => {
-              vulnReports.push({
-                id: `vuln-${p.port}-${cveIdx}-${Date.now()}`,
-                text: `| [!] VULNERABILITY ALERT on port ${p.port}: ${cve.id} (${cve.severity} - CVSS ${cve.cvss})\n|_   ${cve.title}`,
-                color: '#F43F5E',
-              });
-            });
-          }
+        // Script output indented under this port
+        if (flagScripts) {
           if (p.scripts && p.scripts.length > 0) {
             p.scripts.forEach((scr, sIdx) => {
-              vulnReports.push({
+              const prefix = sIdx === (p.scripts?.length ?? 1) - 1 ? '|_' : '| ';
+              portReportRows.push({
                 id: `scr-${p.port}-${sIdx}-${Date.now()}`,
-                text: `|_ ${scr.name}: ${scr.output.replace(/\n/g, '\n|_   ')}`,
+                text: `${prefix}${scr.name}: ${scr.output.replace(/\n/g, '\n|   ')}`,
                 color: '#93C5FD',
               });
             });
           }
-        });
-      }
+          if (p.cveList && p.cveList.length > 0) {
+            p.cveList.forEach((cve, cveIdx) => {
+              portReportRows.push({
+                id: `vuln-${p.port}-${cveIdx}-${Date.now()}`,
+                text: `| [!] VULNERABILITY ALERT: ${cve.id} (${cve.severity} - CVSS ${cve.cvss})\n|_   ${cve.title}`,
+                color: '#F43F5E',
+              });
+            });
+          }
+        }
+      });
 
       setTerminalLines((prev) => [
         ...prev,
         ...portReportHeader,
         ...portReportRows,
-        ...vulnReports,
       ]);
     }, 2600);
 

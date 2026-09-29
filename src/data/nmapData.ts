@@ -636,18 +636,331 @@ export const NMAP_PRESETS: NmapTargetPreset[] = [
       { hop: 3, rtt: '34.2 ms', address: '198.51.100.99', host: 'apt-beacon-04.darknet.ru' },
     ],
   },
+  {
+    id: 'scanme',
+    name: 'Official Nmap Diagnostic Target',
+    ip: '45.33.32.156',
+    hostname: 'scanme.nmap.org',
+    description: 'Official test machine set up by Gordon Lyon (Fyodor) and the Nmap project for diagnostic scans.',
+    category: 'Cloud Edge',
+    latencyMs: 38.5,
+    os: {
+      deviceType: 'General Purpose Server',
+      running: 'Linux 5.X | 6.X (Ubuntu Linux)',
+      osCpe: 'cpe:/o:canonical:ubuntu_linux:20.04',
+      osDetails: 'Linux 5.4.0-105-generic #119-Ubuntu SMP x86_64',
+      uptime: '382 days, 14:10:02',
+      tcpSequence: 'Difficulty=256 (Good luck!)',
+    },
+    ports: [
+      {
+        port: 22,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'ssh',
+        version: 'OpenSSH 6.6.1p1 Ubuntu 2ubuntu2.13 (Ubuntu Linux; protocol 2.0)',
+        banner: 'SSH-2.0-OpenSSH_6.6.1p1 Ubuntu-2ubuntu2.13',
+        scripts: [
+          {
+            name: 'ssh-hostkey',
+            output: '2048 ac:00:a0:1a:82:ff:a7:f3:99:ea:27:1d:4a:22:a0:80 (RSA)\n256 20:41:59:2e:8e:5b:ab:44:95:0b:15:60:b4:13:e2:8f (ECDSA)\n256 43:d2:9c:23:4b:57:aa:e2:58:31:54:b1:ca:ab:82:67 (ED25519)',
+          },
+        ],
+      },
+      {
+        port: 80,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'http',
+        version: 'Apache httpd 2.4.7 ((Ubuntu))',
+        banner: 'HTTP/1.1 200 OK\nDate: Mon, 29 Sep 2026 UTC\nServer: Apache/2.4.7 (Ubuntu)\nContent-Type: text/html',
+        scripts: [
+          {
+            name: 'http-title',
+            output: 'Go ahead and ScanMe!',
+          },
+          {
+            name: 'http-server-header',
+            output: 'Apache/2.4.7 (Ubuntu)',
+          },
+        ],
+      },
+      {
+        port: 9929,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'nping-echo',
+        version: 'Nping echo',
+        banner: 'Nping echo server running on port 9929',
+      },
+      {
+        port: 31337,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'Elite',
+        version: 'tcpwrapped',
+        banner: 'Elite service wrapped connection',
+      },
+    ],
+    udpPorts: [
+      {
+        port: 123,
+        protocol: 'udp',
+        state: 'open|filtered',
+        service: 'ntp',
+        version: 'NTP v4',
+      },
+    ],
+    traceroute: [
+      { hop: 1, rtt: '0.45 ms', address: '192.168.1.1', host: 'gateway.local' },
+      { hop: 2, rtt: '2.10 ms', address: '10.200.0.1', host: 'isp-gateway.net' },
+      { hop: 3, rtt: '14.8 ms', address: '172.30.12.1', host: 'linode-router.net' },
+      { hop: 4, rtt: '38.5 ms', address: '45.33.32.156', host: 'scanme.nmap.org' },
+    ],
+  },
+  {
+    id: 'dns-cloudflare',
+    name: 'Cloudflare Fast Anycast Resolver',
+    ip: '1.1.1.1',
+    hostname: 'one.one.one.one',
+    description: 'Cloudflare Privacy-first 1.1.1.1 recursive DNS resolver, DoH API, and DoT endpoint.',
+    category: 'Cloud Edge',
+    latencyMs: 3.2,
+    os: {
+      deviceType: 'Anycast DNS Cluster / Edge Router',
+      running: 'Linux 5.X (Cloudflare Edge OS)',
+      osCpe: 'cpe:/o:linux:linux_kernel:5',
+      osDetails: 'Linux 5.15 Anycast BGP Edge Routing Cluster',
+      uptime: '1240 days, 08:22:15',
+      tcpSequence: 'Difficulty=260 (Good luck!)',
+    },
+    ports: [
+      {
+        port: 53,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'domain',
+        version: 'Cloudflare DNS Resolver (DoH/DoT/BGP)',
+        banner: 'Cloudflare Anycast DNS v1.1.1.1',
+        scripts: [
+          {
+            name: 'dns-nsid',
+            output: 'Cloudflare Edge POP: Ashburn (IAD)',
+          },
+          {
+            name: 'dns-cache-snoop',
+            output: 'Recursive caching enabled; latency: 0.12ms',
+          },
+        ],
+      },
+      {
+        port: 80,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'http',
+        version: 'cloudflare',
+        banner: 'HTTP/1.1 301 Moved Permanently\nServer: cloudflare\nLocation: https://1.1.1.1/',
+        scripts: [
+          {
+            name: 'http-server-header',
+            output: 'cloudflare',
+          },
+          {
+            name: 'http-title',
+            output: '301 Moved Permanently',
+          },
+        ],
+      },
+      {
+        port: 443,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'ssl/https',
+        version: 'cloudflare (TLSv1.3)',
+        banner: 'TLS 1.3 / Strict-Transport-Security: max-age=31536000\nServer: cloudflare\nContent-Type: application/dns-message',
+        scripts: [
+          {
+            name: 'ssl-cert',
+            output: 'Subject: CN=cloudflare-dns.com\nIssuer: DigiCert Global Root G2\nValid: 2026-01-01 to 2027-01-01',
+          },
+          {
+            name: 'http-title',
+            output: '1.1.1.1 — The free app that makes your Internet faster.',
+          },
+        ],
+      },
+      {
+        port: 853,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'domain-s',
+        version: 'DNS-over-TLS (DoT)',
+        banner: 'RFC 7858 DNS over TLS on port 853',
+      },
+    ],
+    udpPorts: [
+      {
+        port: 53,
+        protocol: 'udp',
+        state: 'open',
+        service: 'domain',
+        version: 'Cloudflare Recursive DNS',
+      },
+      {
+        port: 123,
+        protocol: 'udp',
+        state: 'open',
+        service: 'ntp',
+        version: 'Cloudflare Time Services (time.cloudflare.com)',
+      },
+    ],
+    traceroute: [
+      { hop: 1, rtt: '0.41 ms', address: '192.168.1.1', host: 'gateway.local' },
+      { hop: 2, rtt: '1.85 ms', address: '10.200.0.1', host: 'edge-gw.net' },
+      { hop: 3, rtt: '3.20 ms', address: '1.1.1.1', host: 'one.one.one.one' },
+    ],
+  },
+  {
+    id: 'dns-google',
+    name: 'Google Public Anycast DNS',
+    ip: '8.8.8.8',
+    hostname: 'dns.google',
+    description: 'Google Anycast Recursive DNS Resolver and RFC 8484 DNS-over-HTTPS (DoH) engine.',
+    category: 'Cloud Edge',
+    latencyMs: 4.1,
+    os: {
+      deviceType: 'Anycast DNS Resolver / Borg Cluster',
+      running: 'Linux 5.X (Google Production Kernel)',
+      osCpe: 'cpe:/o:google:linux:5',
+      osDetails: 'Google Production OS (Borg Containerized Edge Infrastructure)',
+      uptime: '1580 days, 19:44:31',
+      tcpSequence: 'Difficulty=265 (Good luck!)',
+    },
+    ports: [
+      {
+        port: 53,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'domain',
+        version: 'Google Public DNS (BGP Anycast)',
+        banner: 'Google Anycast DNS Cluster',
+        scripts: [
+          {
+            name: 'dns-nsid',
+            output: 'gns-iad',
+          },
+          {
+            name: 'dns-cache-snoop',
+            output: 'Recursive caching enabled; Google Anycast mesh',
+          },
+        ],
+      },
+      {
+        port: 443,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'ssl/https',
+        version: 'HTTPServer2 (Google DoH Endpoint)',
+        banner: 'HTTP/2 200 OK\nServer: scaffolding on HTTPServer2\nContent-Type: application/dns-message',
+        scripts: [
+          {
+            name: 'ssl-cert',
+            output: 'Subject: CN=dns.google\nIssuer: Google Trust Services LLC\nValid: 2026-01-01 to 2027-01-01',
+          },
+        ],
+      },
+      {
+        port: 853,
+        protocol: 'tcp',
+        state: 'open',
+        service: 'domain-s',
+        version: 'DNS-over-TLS (RFC 7858)',
+        banner: 'Google DNS over TLS daemon',
+      },
+    ],
+    udpPorts: [
+      {
+        port: 53,
+        protocol: 'udp',
+        state: 'open',
+        service: 'domain',
+        version: 'Google Public DNS Anycast',
+      },
+    ],
+    traceroute: [
+      { hop: 1, rtt: '0.41 ms', address: '192.168.1.1', host: 'gateway.local' },
+      { hop: 2, rtt: '1.92 ms', address: '10.200.0.1', host: 'edge-gw.net' },
+      { hop: 3, rtt: '4.10 ms', address: '8.8.8.8', host: 'dns.google' },
+    ],
+  },
 ];
 
 /**
- * Filter ports based on port range preset and protocol
+ * Filter ports based on port range preset, protocol, and optional custom CLI port spec (-p)
  */
 export function filterPortsForScan(
   target: NmapTargetPreset,
   scanType: '-sS' | '-sT' | '-sU',
-  portPreset: 'top20' | 'top100' | 'web' | 'database' | 'all'
+  portPreset: 'top20' | 'top100' | 'web' | 'database' | 'all',
+  customPortSpec?: string
 ): NmapPort[] {
   const isUdp = scanType === '-sU';
   const basePorts = isUdp ? target.udpPorts : target.ports;
+
+  // Custom port specification (-p 80,443 or -p 22 or -p 21,22,80,443,8080)
+  if (customPortSpec && customPortSpec.trim() && !['top20', 'top100', 'web', 'database', 'all'].includes(customPortSpec)) {
+    const rawList = customPortSpec
+      .replace(/^-p\s*/, '')
+      .split(',')
+      .map((s) => parseInt(s.trim(), 10))
+      .filter((n) => !isNaN(n) && n > 0 && n <= 65535);
+
+    if (rawList.length > 0) {
+      const wellKnownServiceMap: Record<number, string> = {
+        21: 'ftp',
+        22: 'ssh',
+        23: 'telnet',
+        25: 'smtp',
+        53: 'domain',
+        80: 'http',
+        110: 'pop3',
+        111: 'rpcbind',
+        135: 'msrpc',
+        139: 'netbios-ssn',
+        143: 'imap',
+        443: 'ssl/https',
+        445: 'microsoft-ds',
+        587: 'submission',
+        853: 'domain-s',
+        993: 'imaps',
+        995: 'pop3s',
+        1433: 'ms-sql-s',
+        1521: 'oracle',
+        3306: 'mysql',
+        3389: 'ms-wbt-server',
+        5432: 'postgresql',
+        6379: 'redis',
+        8080: 'http-proxy',
+        8443: 'https-alt',
+        9000: 'cslistener',
+        9929: 'nping-echo',
+        27017: 'mongodb',
+        31337: 'Elite',
+      };
+
+      return rawList.map((pNum) => {
+        const found = basePorts.find((p) => p.port === pNum);
+        if (found) return found;
+        return {
+          port: pNum,
+          protocol: isUdp ? 'udp' : 'tcp',
+          state: 'closed',
+          service: wellKnownServiceMap[pNum] || 'unknown',
+          version: 'Connection refused (Port closed)',
+        };
+      });
+    }
+  }
 
   if (portPreset === 'web') {
     const webPortNumbers = [80, 443, 8000, 8080, 8443, 8888];
@@ -659,7 +972,7 @@ export function filterPortsForScan(
           protocol: isUdp ? 'udp' : 'tcp',
           state: 'closed',
           service: 'http',
-          version: 'Connection refused (No HTTP server on this host)',
+          version: 'Connection refused (No HTTP listener on this host)',
         },
       ];
     }
@@ -686,24 +999,11 @@ export function filterPortsForScan(
   if (portPreset === 'top20') {
     const top20Numbers = [21, 22, 23, 25, 53, 80, 110, 111, 135, 139, 143, 443, 445, 993, 995, 1723, 3306, 3389, 5900, 8080];
     const filtered = basePorts.filter((p) => top20Numbers.includes(p.port));
-    return filtered.length > 0 ? filtered : basePorts.slice(0, 2);
+    return filtered;
   }
 
   if (portPreset === 'all') {
-    // If all ports selected, include standard ports plus high ephemeral ports
-    const extraHighPorts: NmapPort[] = isUdp
-      ? []
-      : [
-          {
-            port: 31337,
-            protocol: 'tcp',
-            state: 'open',
-            service: 'elite-daemon',
-            version: 'Cyberforage Telemetry Socket v2.4',
-            banner: 'Cyberforage Node Mesh Listener',
-          },
-        ];
-    return [...basePorts, ...extraHighPorts];
+    return basePorts;
   }
 
   return basePorts;
