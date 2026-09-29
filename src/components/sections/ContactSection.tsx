@@ -3,6 +3,7 @@ import { Mail, Globe, Send, Shield, CheckCircle2, Lock, ArrowRight, Copy, Check,
 import { GithubIcon, LinkedinIcon, TwitterIcon, DiscordIcon, TelegramIcon, MatrixIcon } from '../icons/BrandIcons';
 import { cyberSound } from '../../audio/cyberSoundEngine';
 import { Cyber3DCard } from '../ui/Cyber3DCard';
+import { LinkedInProfileEmbed } from '../ui/LinkedInProfileEmbed';
 import { useSiteContent } from '../../context/SiteContentContext';
 
 export const ContactSection: React.FC = () => {
@@ -411,6 +412,15 @@ export const ContactSection: React.FC = () => {
             </Cyber3DCard>
           </div>
         </div>
+
+        {/* Live LinkedIn Profile Iframe Component (Controlled by Admin Panel Toggle) */}
+        {linkedinUrl && socialsVisible.linkedin && (
+          <LinkedInProfileEmbed
+            url={linkedinUrl}
+            onExpandModal={() => setShowLinkedInModal(true)}
+            className="w-full"
+          />
+        )}
 
         {/* Encrypted Transmission Terminal Form Card */}
         <div className="relative rounded-2xl bg-[#071324]/90 border border-[#00F0C0]/30 backdrop-blur-xl p-6 sm:p-10 shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden">
