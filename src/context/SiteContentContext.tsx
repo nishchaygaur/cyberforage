@@ -165,7 +165,7 @@ interface SiteContentContextValue {
   exportConfigJson: () => string;
   importConfigJson: (jsonStr: string) => boolean;
   isCloudSyncActive: boolean;
-  syncToSupabase: () => Promise<{ success: boolean; error?: string }>;
+  syncToSupabase: (overrideContent?: SiteContent) => Promise<{ success: boolean; error?: string }>;
 }
 
 const SiteContentContext = createContext<SiteContentContextValue | null>(null);
@@ -199,24 +199,42 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
     return DEFAULT_CONTENT;
   });
 
+  const isInitialLoadDoneRef = React.useRef<boolean>(false);
   const isCloudSyncActive = isSupabaseConfigured();
 
   // Load latest content from Supabase if configured
   useEffect(() => {
+    let isMounted = true;
     if (isSupabaseConfigured()) {
-      loadContentFromSupabase().then((remoteData) => {
-        if (remoteData) {
-          setContent((prev) => ({
-            ...prev,
-            ...remoteData,
-          }));
-        }
-      });
+      loadContentFromSupabase()
+        .then((remoteData) => {
+          if (!isMounted) return;
+          if (remoteData) {
+            setContent((prev) => ({
+              ...prev,
+              ...remoteData,
+            }));
+          }
+        })
+        .finally(() => {
+          if (isMounted) {
+            isInitialLoadDoneRef.current = true;
+          }
+        });
+    } else {
+      isInitialLoadDoneRef.current = true;
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Save to localStorage and auto-sync to Supabase if authenticated
   useEffect(() => {
+    // Prevent unhydrated local state from overwriting Supabase before remote fetch completes
+    if (!isInitialLoadDoneRef.current) return;
+
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(content));
     } catch (err) {
@@ -224,12 +242,24 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
 
     if (isSupabaseConfigured() && sessionStorage.getItem('cyberforage_admin_auth') === 'true') {
-      saveContentToSupabase(content);
+      const timer = setTimeout(() => {
+        saveContentToSupabase(content).catch((err) => {
+          console.warn('Auto-save to Supabase failed:', err);
+        });
+      }, 600);
+
+      return () => clearTimeout(timer);
     }
   }, [content]);
 
-  const syncToSupabase = async () => {
-    return await saveContentToSupabase(content);
+  const syncToSupabase = async (overrideContent?: SiteContent) => {
+    const dataToSave = overrideContent || content;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+    } catch {
+      // Ignored
+    }
+    return await saveContentToSupabase(dataToSave);
   };
 
   const updateHero = (data: Partial<HeroContent>) => {

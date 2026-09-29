@@ -318,6 +318,27 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
 
             {isAuthenticated && (
               <button
+                onClick={handleManualCloudSync}
+                disabled={isSyncingCloud}
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded bg-[#00F0C0]/15 hover:bg-[#00F0C0]/25 text-[#00F0C0] border border-[#00F0C0]/40 text-xs font-mono transition-all cursor-pointer shadow-[0_0_10px_rgba(0,240,192,0.2)] disabled:opacity-50"
+                title="Save all changes directly to Supabase cloud database"
+              >
+                {isSyncingCloud ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <Cloud className="w-3.5 h-3.5" />
+                    <span>Save to Database</span>
+                  </>
+                )}
+              </button>
+            )}
+
+            {isAuthenticated && (
+              <button
                 onClick={handleLogout}
                 className="p-1.5 rounded-lg bg-white/5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-transparent hover:border-rose-500/30 transition-colors cursor-pointer"
                 title="Log out of Admin Session"

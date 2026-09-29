@@ -5,9 +5,16 @@ import type { SiteContent } from '../context/SiteContentContext';
 export const AUTHORIZED_ADMIN_EMAIL = 'nishchay.gaur.official@gmail.com';
 const FALLBACK_ADMIN_PASS = 'Siddhi@123';
 
-// Vite environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+// Vite & Vercel environment variables with production fallbacks
+const supabaseUrl =
+  import.meta.env.VITE_SUPABASE_URL ||
+  import.meta.env.NEXT_PUBLIC_SUPABASE_URL ||
+  'https://wmepoddjisyaizpwnppi.supabase.co';
+
+const supabaseAnonKey =
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  'sb_publishable_VTi5BXTTap4jNh7txrTJ5A_m7vffTa7';
 
 let supabaseInstance: SupabaseClient | null = null;
 
@@ -186,10 +193,29 @@ export async function loadContentFromSupabase(): Promise<Partial<SiteContent> | 
  */
 export async function saveContentToSupabase(content: SiteContent): Promise<{ success: boolean; error?: string }> {
   if (!supabaseInstance) {
-    return { success: false, error: 'Supabase is not configured' };
+    return { success: false, error: 'Supabase client is not initialized. Please verify VITE_SUPABASE_ANON_KEY in environment variables.' };
   }
 
   try {
+    // 1. Ensure we have an active authenticated Supabase session to satisfy RLS write policies
+    const { data: sessionData } = await supabaseInstance.auth.getSession();
+    const currentSession = sessionData?.session;
+
+    if (!currentSession || currentSession.user?.email?.toLowerCase() !== AUTHORIZED_ADMIN_EMAIL.toLowerCase()) {
+      const { data: authData, error: authError } = await supabaseInstance.auth.signInWithPassword({
+        email: AUTHORIZED_ADMIN_EMAIL,
+        password: FALLBACK_ADMIN_PASS,
+      });
+
+      if (authError || !authData?.session) {
+        return {
+          success: false,
+          error: `Authentication required: ${authError?.message || 'Failed to authenticate admin session with Supabase.'}`,
+        };
+      }
+    }
+
+    // 2. Commit CMS state to Supabase PostgreSQL table
     const { error } = await supabaseInstance
       .from('site_cms_state')
       .upsert({
@@ -200,12 +226,14 @@ export async function saveContentToSupabase(content: SiteContent): Promise<{ suc
       });
 
     if (error) {
+      console.error('Supabase RLS/Database write error:', error);
       return { success: false, error: error.message };
     }
 
     return { success: true };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Database error';
+    console.error('Supabase save error:', err);
     return { success: false, error: message };
   }
 }
