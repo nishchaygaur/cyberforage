@@ -26,6 +26,7 @@ import {
   Sliders,
   ExternalLink,
   Eye,
+  EyeOff,
   LogOut,
   Terminal,
 } from 'lucide-react';
@@ -1630,183 +1631,422 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
                       </div>
                     </div>
 
-                    {/* Extended Social Channels */}
-                    <div>
-                      <h4 className="text-[11px] font-bold text-slate-300 mb-3 flex items-center gap-1.5">
-                        <Globe className="w-3.5 h-3.5 text-[#00F0C0]" />
-                        <span>PUBLIC SOCIAL & COMMUNITY CHANNELS</span>
-                      </h4>
+                    {/* Extended Social Channels with Frontend Visibility Toggles */}
+                    {(() => {
+                      const socialsVisible = {
+                        github: true,
+                        linkedin: true,
+                        twitter: true,
+                        discord: true,
+                        telegram: true,
+                        matrix: true,
+                        ...(content.contact.socialsVisible || {}),
+                      };
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {/* GitHub */}
-                        <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <label className="text-[10px] text-slate-400 flex items-center gap-1.5">
-                              <GithubIcon className="w-3 h-3 text-white" />
-                              <span>GITHUB URL</span>
-                            </label>
-                            {content.contact.githubUrl && (
-                              <a
-                                href={content.contact.githubUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-[10px] text-[#00E5BE] hover:underline inline-flex items-center gap-1"
-                              >
-                                <span>Visit</span>
-                                <ExternalLink className="w-2.5 h-2.5" />
-                              </a>
-                            )}
-                          </div>
-                          <input
-                            type="url"
-                            value={content.contact.githubUrl}
-                            onChange={(e) => updateContact({ githubUrl: e.target.value })}
-                            placeholder="https://github.com/..."
-                            className="w-full px-3 py-2 rounded-lg bg-[#07172C] border border-white/10 text-white focus:outline-none focus:border-[#00F0C0]"
-                          />
-                        </div>
+                      const toggleSocial = (key: 'github' | 'linkedin' | 'twitter' | 'discord' | 'telegram' | 'matrix') => {
+                        const current = socialsVisible[key] !== false;
+                        const next = !current;
+                        updateContact({
+                          socialsVisible: {
+                            ...socialsVisible,
+                            [key]: next,
+                          },
+                        });
+                        cyberSound.playClick();
+                        triggerSaveNotification(
+                          `${key.toUpperCase()} link ${next ? 'enabled (shown on frontend)' : 'disabled (hidden from frontend)'}`
+                        );
+                      };
 
-                        {/* LinkedIn */}
-                        <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <label className="text-[10px] text-slate-400 flex items-center gap-1.5">
-                              <LinkedinIcon className="w-3 h-3 text-[#38BDF8]" />
-                              <span>LINKEDIN URL</span>
-                            </label>
-                            {content.contact.linkedinUrl && (
-                              <a
-                                href={content.contact.linkedinUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-[10px] text-[#38BDF8] hover:underline inline-flex items-center gap-1"
-                              >
-                                <span>Visit</span>
-                                <ExternalLink className="w-2.5 h-2.5" />
-                              </a>
-                            )}
-                          </div>
-                          <input
-                            type="url"
-                            value={content.contact.linkedinUrl}
-                            onChange={(e) => updateContact({ linkedinUrl: e.target.value })}
-                            placeholder="https://linkedin.com/in/..."
-                            className="w-full px-3 py-2 rounded-lg bg-[#07172C] border border-white/10 text-white focus:outline-none focus:border-[#00F0C0]"
-                          />
-                        </div>
+                      const setAllSocials = (visible: boolean) => {
+                        updateContact({
+                          socialsVisible: {
+                            github: visible,
+                            linkedin: visible,
+                            twitter: visible,
+                            discord: visible,
+                            telegram: visible,
+                            matrix: visible,
+                          },
+                        });
+                        cyberSound.playClick();
+                        triggerSaveNotification(
+                          visible ? 'All social links enabled on frontend' : 'All social links hidden from frontend'
+                        );
+                      };
 
-                        {/* Twitter / X */}
-                        <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <label className="text-[10px] text-slate-400 flex items-center gap-1.5">
-                              <TwitterIcon className="w-3 h-3 text-white" />
-                              <span>TWITTER / X URL</span>
-                            </label>
-                            {content.contact.twitterUrl && (
-                              <a
-                                href={content.contact.twitterUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-[10px] text-[#00E5BE] hover:underline inline-flex items-center gap-1"
-                              >
-                                <span>Visit</span>
-                                <ExternalLink className="w-2.5 h-2.5" />
-                              </a>
-                            )}
-                          </div>
-                          <input
-                            type="url"
-                            value={content.contact.twitterUrl || ''}
-                            onChange={(e) => updateContact({ twitterUrl: e.target.value })}
-                            placeholder="https://twitter.com/..."
-                            className="w-full px-3 py-2 rounded-lg bg-[#07172C] border border-white/10 text-white focus:outline-none focus:border-[#00F0C0]"
-                          />
-                        </div>
+                      const activeCount = Object.values(socialsVisible).filter(Boolean).length;
 
-                        {/* Discord */}
-                        <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <label className="text-[10px] text-slate-400 flex items-center gap-1.5">
-                              <DiscordIcon className="w-3 h-3 text-[#818CF8]" />
-                              <span>DISCORD SERVER / INVITE URL</span>
-                            </label>
-                            {content.contact.discordUrl && (
-                              <a
-                                href={content.contact.discordUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-[10px] text-[#818CF8] hover:underline inline-flex items-center gap-1"
-                              >
-                                <span>Visit</span>
-                                <ExternalLink className="w-2.5 h-2.5" />
-                              </a>
-                            )}
-                          </div>
-                          <input
-                            type="url"
-                            value={content.contact.discordUrl || ''}
-                            onChange={(e) => updateContact({ discordUrl: e.target.value })}
-                            placeholder="https://discord.gg/..."
-                            className="w-full px-3 py-2 rounded-lg bg-[#07172C] border border-white/10 text-white focus:outline-none focus:border-[#00F0C0]"
-                          />
-                        </div>
+                      return (
+                        <div className="space-y-4 pt-2">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-[#030B18] border border-white/10">
+                            <div>
+                              <h4 className="text-[11px] font-bold text-slate-200 flex items-center gap-1.5">
+                                <Globe className="w-3.5 h-3.5 text-[#00F0C0]" />
+                                <span>PUBLIC SOCIAL CHANNELS &amp; FRONTEND VISIBILITY</span>
+                              </h4>
+                              <p className="text-[10px] text-slate-400 mt-0.5">
+                                Toggle channels ON / OFF. When turned off, they will not be shown on the frontend (Contact card &amp; Footer).
+                              </p>
+                            </div>
 
-                        {/* Telegram */}
-                        <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <label className="text-[10px] text-slate-400 flex items-center gap-1.5">
-                              <TelegramIcon className="w-3 h-3 text-[#38BDF8]" />
-                              <span>TELEGRAM CHANNEL / GROUP URL</span>
-                            </label>
-                            {content.contact.telegramUrl && (
-                              <a
-                                href={content.contact.telegramUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-[10px] text-[#38BDF8] hover:underline inline-flex items-center gap-1"
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span
+                                className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${
+                                  activeCount > 0
+                                    ? 'bg-[#00F0C0]/10 text-[#00F0C0] border-[#00F0C0]/30'
+                                    : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                                }`}
                               >
-                                <span>Visit</span>
-                                <ExternalLink className="w-2.5 h-2.5" />
-                              </a>
-                            )}
+                                {activeCount}/6 VISIBLE
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setAllSocials(true)}
+                                className="text-[10px] font-mono px-2.5 py-1 rounded bg-[#00F0C0]/10 hover:bg-[#00F0C0]/20 text-[#00F0C0] border border-[#00F0C0]/30 transition-all cursor-pointer"
+                                title="Show all social links on frontend"
+                              >
+                                Enable All
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setAllSocials(false)}
+                                className="text-[10px] font-mono px-2.5 py-1 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition-all cursor-pointer"
+                                title="Hide all social links from frontend"
+                              >
+                                Disable All
+                              </button>
+                            </div>
                           </div>
-                          <input
-                            type="url"
-                            value={content.contact.telegramUrl || ''}
-                            onChange={(e) => updateContact({ telegramUrl: e.target.value })}
-                            placeholder="https://t.me/..."
-                            className="w-full px-3 py-2 rounded-lg bg-[#07172C] border border-white/10 text-white focus:outline-none focus:border-[#00F0C0]"
-                          />
-                        </div>
 
-                        {/* Matrix */}
-                        <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <label className="text-[10px] text-slate-400 flex items-center gap-1.5">
-                              <MatrixIcon className="w-3 h-3 text-[#00F0C0]" />
-                              <span>MATRIX ROOM / HOMESERVER URL</span>
-                            </label>
-                            {content.contact.matrixUrl && (
-                              <a
-                                href={content.contact.matrixUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-[10px] text-[#00E5BE] hover:underline inline-flex items-center gap-1"
-                              >
-                                <span>Visit</span>
-                                <ExternalLink className="w-2.5 h-2.5" />
-                              </a>
-                            )}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {/* GitHub */}
+                            <div className={`p-3 rounded-xl border transition-all ${socialsVisible.github ? 'bg-[#07172C]/70 border-white/10' : 'bg-[#050C17]/40 border-rose-500/20'}`}>
+                              <div className="flex items-center justify-between mb-2">
+                                <label className="text-[10px] font-bold text-slate-300 flex items-center gap-1.5">
+                                  <GithubIcon className="w-3.5 h-3.5 text-white" />
+                                  <span>GITHUB URL</span>
+                                </label>
+                                <div className="flex items-center gap-2">
+                                  {content.contact.githubUrl && (
+                                    <a
+                                      href={content.contact.githubUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[10px] text-[#00E5BE] hover:underline inline-flex items-center gap-1"
+                                      title="Open link in new tab"
+                                    >
+                                      <span>Visit</span>
+                                      <ExternalLink className="w-2.5 h-2.5" />
+                                    </a>
+                                  )}
+                                  <button
+                                    type="button"
+                                    role="switch"
+                                    aria-checked={socialsVisible.github}
+                                    onClick={() => toggleSocial('github')}
+                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-mono font-bold transition-all cursor-pointer select-none ${
+                                      socialsVisible.github
+                                        ? 'bg-[#00F0C0]/20 text-[#00F0C0] border-[#00F0C0]/60 shadow-[0_0_8px_rgba(0,240,192,0.25)] hover:bg-[#00F0C0]/30'
+                                        : 'bg-rose-950/40 text-rose-400 border-rose-500/40 hover:bg-rose-900/40'
+                                    }`}
+                                    title={socialsVisible.github ? 'Click to hide GitHub from frontend' : 'Click to show GitHub on frontend'}
+                                  >
+                                    {socialsVisible.github ? <Eye className="w-3 h-3 text-[#00F0C0]" /> : <EyeOff className="w-3 h-3 text-rose-400" />}
+                                    <span>{socialsVisible.github ? 'ON (VISIBLE)' : 'OFF (HIDDEN)'}</span>
+                                  </button>
+                                </div>
+                              </div>
+                              <input
+                                type="url"
+                                value={content.contact.githubUrl}
+                                onChange={(e) => updateContact({ githubUrl: e.target.value })}
+                                placeholder="https://github.com/..."
+                                className={`w-full px-3 py-2 rounded-lg bg-[#040A14] border text-white focus:outline-none transition-all ${
+                                  socialsVisible.github ? 'border-white/10 focus:border-[#00F0C0]' : 'border-rose-500/20 text-slate-400'
+                                }`}
+                              />
+                              {!socialsVisible.github && (
+                                <p className="text-[9px] font-mono text-rose-400/80 mt-1.5 flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                                  <span>Turned OFF: Hidden from frontend contact section &amp; footer.</span>
+                                </p>
+                              )}
+                            </div>
+
+                            {/* LinkedIn */}
+                            <div className={`p-3 rounded-xl border transition-all ${socialsVisible.linkedin ? 'bg-[#07172C]/70 border-white/10' : 'bg-[#050C17]/40 border-rose-500/20'}`}>
+                              <div className="flex items-center justify-between mb-2">
+                                <label className="text-[10px] font-bold text-slate-300 flex items-center gap-1.5">
+                                  <LinkedinIcon className="w-3.5 h-3.5 text-[#38BDF8]" />
+                                  <span>LINKEDIN URL</span>
+                                </label>
+                                <div className="flex items-center gap-2">
+                                  {content.contact.linkedinUrl && (
+                                    <a
+                                      href={content.contact.linkedinUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[10px] text-[#38BDF8] hover:underline inline-flex items-center gap-1"
+                                      title="Open link in new tab"
+                                    >
+                                      <span>Visit</span>
+                                      <ExternalLink className="w-2.5 h-2.5" />
+                                    </a>
+                                  )}
+                                  <button
+                                    type="button"
+                                    role="switch"
+                                    aria-checked={socialsVisible.linkedin}
+                                    onClick={() => toggleSocial('linkedin')}
+                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-mono font-bold transition-all cursor-pointer select-none ${
+                                      socialsVisible.linkedin
+                                        ? 'bg-[#00F0C0]/20 text-[#00F0C0] border-[#00F0C0]/60 shadow-[0_0_8px_rgba(0,240,192,0.25)] hover:bg-[#00F0C0]/30'
+                                        : 'bg-rose-950/40 text-rose-400 border-rose-500/40 hover:bg-rose-900/40'
+                                    }`}
+                                    title={socialsVisible.linkedin ? 'Click to hide LinkedIn from frontend' : 'Click to show LinkedIn on frontend'}
+                                  >
+                                    {socialsVisible.linkedin ? <Eye className="w-3 h-3 text-[#00F0C0]" /> : <EyeOff className="w-3 h-3 text-rose-400" />}
+                                    <span>{socialsVisible.linkedin ? 'ON (VISIBLE)' : 'OFF (HIDDEN)'}</span>
+                                  </button>
+                                </div>
+                              </div>
+                              <input
+                                type="url"
+                                value={content.contact.linkedinUrl}
+                                onChange={(e) => updateContact({ linkedinUrl: e.target.value })}
+                                placeholder="https://linkedin.com/in/..."
+                                className={`w-full px-3 py-2 rounded-lg bg-[#040A14] border text-white focus:outline-none transition-all ${
+                                  socialsVisible.linkedin ? 'border-white/10 focus:border-[#00F0C0]' : 'border-rose-500/20 text-slate-400'
+                                }`}
+                              />
+                              {!socialsVisible.linkedin && (
+                                <p className="text-[9px] font-mono text-rose-400/80 mt-1.5 flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                                  <span>Turned OFF: Hidden from frontend contact section &amp; footer.</span>
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Twitter / X */}
+                            <div className={`p-3 rounded-xl border transition-all ${socialsVisible.twitter ? 'bg-[#07172C]/70 border-white/10' : 'bg-[#050C17]/40 border-rose-500/20'}`}>
+                              <div className="flex items-center justify-between mb-2">
+                                <label className="text-[10px] font-bold text-slate-300 flex items-center gap-1.5">
+                                  <TwitterIcon className="w-3.5 h-3.5 text-white" />
+                                  <span>TWITTER / X URL</span>
+                                </label>
+                                <div className="flex items-center gap-2">
+                                  {content.contact.twitterUrl && (
+                                    <a
+                                      href={content.contact.twitterUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[10px] text-[#00E5BE] hover:underline inline-flex items-center gap-1"
+                                      title="Open link in new tab"
+                                    >
+                                      <span>Visit</span>
+                                      <ExternalLink className="w-2.5 h-2.5" />
+                                    </a>
+                                  )}
+                                  <button
+                                    type="button"
+                                    role="switch"
+                                    aria-checked={socialsVisible.twitter}
+                                    onClick={() => toggleSocial('twitter')}
+                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-mono font-bold transition-all cursor-pointer select-none ${
+                                      socialsVisible.twitter
+                                        ? 'bg-[#00F0C0]/20 text-[#00F0C0] border-[#00F0C0]/60 shadow-[0_0_8px_rgba(0,240,192,0.25)] hover:bg-[#00F0C0]/30'
+                                        : 'bg-rose-950/40 text-rose-400 border-rose-500/40 hover:bg-rose-900/40'
+                                    }`}
+                                    title={socialsVisible.twitter ? 'Click to hide Twitter/X from frontend' : 'Click to show Twitter/X on frontend'}
+                                  >
+                                    {socialsVisible.twitter ? <Eye className="w-3 h-3 text-[#00F0C0]" /> : <EyeOff className="w-3 h-3 text-rose-400" />}
+                                    <span>{socialsVisible.twitter ? 'ON (VISIBLE)' : 'OFF (HIDDEN)'}</span>
+                                  </button>
+                                </div>
+                              </div>
+                              <input
+                                type="url"
+                                value={content.contact.twitterUrl || ''}
+                                onChange={(e) => updateContact({ twitterUrl: e.target.value })}
+                                placeholder="https://twitter.com/..."
+                                className={`w-full px-3 py-2 rounded-lg bg-[#040A14] border text-white focus:outline-none transition-all ${
+                                  socialsVisible.twitter ? 'border-white/10 focus:border-[#00F0C0]' : 'border-rose-500/20 text-slate-400'
+                                }`}
+                              />
+                              {!socialsVisible.twitter && (
+                                <p className="text-[9px] font-mono text-rose-400/80 mt-1.5 flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                                  <span>Turned OFF: Hidden from frontend contact section &amp; footer.</span>
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Discord */}
+                            <div className={`p-3 rounded-xl border transition-all ${socialsVisible.discord ? 'bg-[#07172C]/70 border-white/10' : 'bg-[#050C17]/40 border-rose-500/20'}`}>
+                              <div className="flex items-center justify-between mb-2">
+                                <label className="text-[10px] font-bold text-slate-300 flex items-center gap-1.5">
+                                  <DiscordIcon className="w-3.5 h-3.5 text-[#818CF8]" />
+                                  <span>DISCORD SERVER URL</span>
+                                </label>
+                                <div className="flex items-center gap-2">
+                                  {content.contact.discordUrl && (
+                                    <a
+                                      href={content.contact.discordUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[10px] text-[#818CF8] hover:underline inline-flex items-center gap-1"
+                                      title="Open link in new tab"
+                                    >
+                                      <span>Visit</span>
+                                      <ExternalLink className="w-2.5 h-2.5" />
+                                    </a>
+                                  )}
+                                  <button
+                                    type="button"
+                                    role="switch"
+                                    aria-checked={socialsVisible.discord}
+                                    onClick={() => toggleSocial('discord')}
+                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-mono font-bold transition-all cursor-pointer select-none ${
+                                      socialsVisible.discord
+                                        ? 'bg-[#00F0C0]/20 text-[#00F0C0] border-[#00F0C0]/60 shadow-[0_0_8px_rgba(0,240,192,0.25)] hover:bg-[#00F0C0]/30'
+                                        : 'bg-rose-950/40 text-rose-400 border-rose-500/40 hover:bg-rose-900/40'
+                                    }`}
+                                    title={socialsVisible.discord ? 'Click to hide Discord from frontend' : 'Click to show Discord on frontend'}
+                                  >
+                                    {socialsVisible.discord ? <Eye className="w-3 h-3 text-[#00F0C0]" /> : <EyeOff className="w-3 h-3 text-rose-400" />}
+                                    <span>{socialsVisible.discord ? 'ON (VISIBLE)' : 'OFF (HIDDEN)'}</span>
+                                  </button>
+                                </div>
+                              </div>
+                              <input
+                                type="url"
+                                value={content.contact.discordUrl || ''}
+                                onChange={(e) => updateContact({ discordUrl: e.target.value })}
+                                placeholder="https://discord.gg/..."
+                                className={`w-full px-3 py-2 rounded-lg bg-[#040A14] border text-white focus:outline-none transition-all ${
+                                  socialsVisible.discord ? 'border-white/10 focus:border-[#00F0C0]' : 'border-rose-500/20 text-slate-400'
+                                }`}
+                              />
+                              {!socialsVisible.discord && (
+                                <p className="text-[9px] font-mono text-rose-400/80 mt-1.5 flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                                  <span>Turned OFF: Hidden from frontend contact section &amp; footer.</span>
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Telegram */}
+                            <div className={`p-3 rounded-xl border transition-all ${socialsVisible.telegram ? 'bg-[#07172C]/70 border-white/10' : 'bg-[#050C17]/40 border-rose-500/20'}`}>
+                              <div className="flex items-center justify-between mb-2">
+                                <label className="text-[10px] font-bold text-slate-300 flex items-center gap-1.5">
+                                  <TelegramIcon className="w-3.5 h-3.5 text-[#38BDF8]" />
+                                  <span>TELEGRAM CHANNEL URL</span>
+                                </label>
+                                <div className="flex items-center gap-2">
+                                  {content.contact.telegramUrl && (
+                                    <a
+                                      href={content.contact.telegramUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[10px] text-[#38BDF8] hover:underline inline-flex items-center gap-1"
+                                      title="Open link in new tab"
+                                    >
+                                      <span>Visit</span>
+                                      <ExternalLink className="w-2.5 h-2.5" />
+                                    </a>
+                                  )}
+                                  <button
+                                    type="button"
+                                    role="switch"
+                                    aria-checked={socialsVisible.telegram}
+                                    onClick={() => toggleSocial('telegram')}
+                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-mono font-bold transition-all cursor-pointer select-none ${
+                                      socialsVisible.telegram
+                                        ? 'bg-[#00F0C0]/20 text-[#00F0C0] border-[#00F0C0]/60 shadow-[0_0_8px_rgba(0,240,192,0.25)] hover:bg-[#00F0C0]/30'
+                                        : 'bg-rose-950/40 text-rose-400 border-rose-500/40 hover:bg-rose-900/40'
+                                    }`}
+                                    title={socialsVisible.telegram ? 'Click to hide Telegram from frontend' : 'Click to show Telegram on frontend'}
+                                  >
+                                    {socialsVisible.telegram ? <Eye className="w-3 h-3 text-[#00F0C0]" /> : <EyeOff className="w-3 h-3 text-rose-400" />}
+                                    <span>{socialsVisible.telegram ? 'ON (VISIBLE)' : 'OFF (HIDDEN)'}</span>
+                                  </button>
+                                </div>
+                              </div>
+                              <input
+                                type="url"
+                                value={content.contact.telegramUrl || ''}
+                                onChange={(e) => updateContact({ telegramUrl: e.target.value })}
+                                placeholder="https://t.me/..."
+                                className={`w-full px-3 py-2 rounded-lg bg-[#040A14] border text-white focus:outline-none transition-all ${
+                                  socialsVisible.telegram ? 'border-white/10 focus:border-[#00F0C0]' : 'border-rose-500/20 text-slate-400'
+                                }`}
+                              />
+                              {!socialsVisible.telegram && (
+                                <p className="text-[9px] font-mono text-rose-400/80 mt-1.5 flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                                  <span>Turned OFF: Hidden from frontend contact section &amp; footer.</span>
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Matrix */}
+                            <div className={`p-3 rounded-xl border transition-all ${socialsVisible.matrix ? 'bg-[#07172C]/70 border-white/10' : 'bg-[#050C17]/40 border-rose-500/20'}`}>
+                              <div className="flex items-center justify-between mb-2">
+                                <label className="text-[10px] font-bold text-slate-300 flex items-center gap-1.5">
+                                  <MatrixIcon className="w-3.5 h-3.5 text-[#00F0C0]" />
+                                  <span>MATRIX ROOM URL</span>
+                                </label>
+                                <div className="flex items-center gap-2">
+                                  {content.contact.matrixUrl && (
+                                    <a
+                                      href={content.contact.matrixUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[10px] text-[#00E5BE] hover:underline inline-flex items-center gap-1"
+                                      title="Open link in new tab"
+                                    >
+                                      <span>Visit</span>
+                                      <ExternalLink className="w-2.5 h-2.5" />
+                                    </a>
+                                  )}
+                                  <button
+                                    type="button"
+                                    role="switch"
+                                    aria-checked={socialsVisible.matrix}
+                                    onClick={() => toggleSocial('matrix')}
+                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-mono font-bold transition-all cursor-pointer select-none ${
+                                      socialsVisible.matrix
+                                        ? 'bg-[#00F0C0]/20 text-[#00F0C0] border-[#00F0C0]/60 shadow-[0_0_8px_rgba(0,240,192,0.25)] hover:bg-[#00F0C0]/30'
+                                        : 'bg-rose-950/40 text-rose-400 border-rose-500/40 hover:bg-rose-900/40'
+                                    }`}
+                                    title={socialsVisible.matrix ? 'Click to hide Matrix from frontend' : 'Click to show Matrix on frontend'}
+                                  >
+                                    {socialsVisible.matrix ? <Eye className="w-3 h-3 text-[#00F0C0]" /> : <EyeOff className="w-3 h-3 text-rose-400" />}
+                                    <span>{socialsVisible.matrix ? 'ON (VISIBLE)' : 'OFF (HIDDEN)'}</span>
+                                  </button>
+                                </div>
+                              </div>
+                              <input
+                                type="url"
+                                value={content.contact.matrixUrl || ''}
+                                onChange={(e) => updateContact({ matrixUrl: e.target.value })}
+                                placeholder="https://matrix.to/#/..."
+                                className={`w-full px-3 py-2 rounded-lg bg-[#040A14] border text-white focus:outline-none transition-all ${
+                                  socialsVisible.matrix ? 'border-white/10 focus:border-[#00F0C0]' : 'border-rose-500/20 text-slate-400'
+                                }`}
+                              />
+                              {!socialsVisible.matrix && (
+                                <p className="text-[9px] font-mono text-rose-400/80 mt-1.5 flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                                  <span>Turned OFF: Hidden from frontend contact section &amp; footer.</span>
+                                </p>
+                              )}
+                            </div>
                           </div>
-                          <input
-                            type="url"
-                            value={content.contact.matrixUrl || ''}
-                            onChange={(e) => updateContact({ matrixUrl: e.target.value })}
-                            placeholder="https://matrix.to/#/..."
-                            className="w-full px-3 py-2 rounded-lg bg-[#07172C] border border-white/10 text-white focus:outline-none focus:border-[#00F0C0]"
-                          />
                         </div>
-                      </div>
-                    </div>
+                      );
+                    })()}
 
                     {/* Cryptographic PGP */}
                     <div className="pt-2 border-t border-white/[0.08]">

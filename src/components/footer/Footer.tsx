@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowUp } from 'lucide-react';
-import { GithubIcon, LinkedinIcon, TwitterIcon, DiscordIcon, TelegramIcon } from '../icons/BrandIcons';
+import { GithubIcon, LinkedinIcon, TwitterIcon, DiscordIcon, TelegramIcon, MatrixIcon } from '../icons/BrandIcons';
 import { cyberSound } from '../../audio/cyberSoundEngine';
 import { useSiteContent } from '../../context/SiteContentContext';
 
@@ -11,6 +11,15 @@ interface FooterProps {
 export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   const { content } = useSiteContent();
   const contact = content.contact;
+  const socialsVisible = {
+    github: true,
+    linkedin: true,
+    twitter: true,
+    discord: true,
+    telegram: true,
+    matrix: true,
+    ...(contact?.socialsVisible || {}),
+  };
 
   const scrollToTop = () => {
     cyberSound.playClick();
@@ -100,7 +109,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
 
           {/* Social Icons & Scroll Top */}
           <div className="flex items-center space-x-2.5">
-            {contact?.githubUrl && (
+            {contact?.githubUrl && socialsVisible.github && (
               <a
                 href={contact.githubUrl}
                 target="_blank"
@@ -114,7 +123,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               </a>
             )}
 
-            {contact?.linkedinUrl && (
+            {contact?.linkedinUrl && socialsVisible.linkedin && (
               <a
                 href={contact.linkedinUrl}
                 target="_blank"
@@ -128,7 +137,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               </a>
             )}
 
-            {contact?.twitterUrl && (
+            {contact?.twitterUrl && socialsVisible.twitter && (
               <a
                 href={contact.twitterUrl}
                 target="_blank"
@@ -142,7 +151,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               </a>
             )}
 
-            {contact?.discordUrl && (
+            {contact?.discordUrl && socialsVisible.discord && (
               <a
                 href={contact.discordUrl}
                 target="_blank"
@@ -156,7 +165,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               </a>
             )}
 
-            {contact?.telegramUrl && (
+            {contact?.telegramUrl && socialsVisible.telegram && (
               <a
                 href={contact.telegramUrl}
                 target="_blank"
@@ -167,6 +176,20 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 className="p-2 text-slate-400 hover:text-[#00F0C0] hover:bg-white/5 rounded-lg transition-colors"
               >
                 <TelegramIcon className="w-4 h-4" />
+              </a>
+            )}
+
+            {contact?.matrixUrl && socialsVisible.matrix && (
+              <a
+                href={contact.matrixUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => cyberSound.playClick()}
+                aria-label="Matrix"
+                title="Matrix Room"
+                className="p-2 text-slate-400 hover:text-[#00F0C0] hover:bg-white/5 rounded-lg transition-colors"
+              >
+                <MatrixIcon className="w-4 h-4 text-[#00F0C0]" />
               </a>
             )}
 

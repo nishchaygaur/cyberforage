@@ -17,6 +17,18 @@ export const ContactSection: React.FC = () => {
   const matrixUrl = contact?.matrixUrl;
   const pgpKey = contact?.pgpKey;
 
+  const socialsVisible = {
+    github: true,
+    linkedin: true,
+    twitter: true,
+    discord: true,
+    telegram: true,
+    matrix: true,
+    ...(contact?.socialsVisible || {}),
+  };
+
+  const [showLinkedInModal, setShowLinkedInModal] = useState(false);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -225,7 +237,7 @@ export const ContactSection: React.FC = () => {
                 style={{ transform: 'translateZ(38px)' }}
                 className="flex flex-wrap items-center gap-2.5 pt-2"
               >
-                {githubUrl && (
+                {githubUrl && socialsVisible.github && (
                   <a
                     href={githubUrl}
                     target="_blank"
@@ -239,7 +251,7 @@ export const ContactSection: React.FC = () => {
                   </a>
                 )}
 
-                {linkedinUrl && (
+                {linkedinUrl && socialsVisible.linkedin && (
                   <a
                     href={linkedinUrl}
                     target="_blank"
@@ -252,7 +264,7 @@ export const ContactSection: React.FC = () => {
                   </a>
                 )}
 
-                {twitterUrl && (
+                {twitterUrl && socialsVisible.twitter && (
                   <a
                     href={twitterUrl}
                     target="_blank"
@@ -265,7 +277,7 @@ export const ContactSection: React.FC = () => {
                   </a>
                 )}
 
-                {discordUrl && (
+                {discordUrl && socialsVisible.discord && (
                   <a
                     href={discordUrl}
                     target="_blank"
@@ -278,7 +290,7 @@ export const ContactSection: React.FC = () => {
                   </a>
                 )}
 
-                {telegramUrl && (
+                {telegramUrl && socialsVisible.telegram && (
                   <a
                     href={telegramUrl}
                     target="_blank"
@@ -291,7 +303,7 @@ export const ContactSection: React.FC = () => {
                   </a>
                 )}
 
-                {matrixUrl && (
+                {matrixUrl && socialsVisible.matrix && (
                   <a
                     href={matrixUrl}
                     target="_blank"
@@ -302,6 +314,19 @@ export const ContactSection: React.FC = () => {
                     <MatrixIcon className="w-3.5 h-3.5 text-[#00F0C0]" />
                     <span>Matrix</span>
                   </a>
+                )}
+
+                {!(
+                  (githubUrl && socialsVisible.github) ||
+                  (linkedinUrl && socialsVisible.linkedin) ||
+                  (twitterUrl && socialsVisible.twitter) ||
+                  (discordUrl && socialsVisible.discord) ||
+                  (telegramUrl && socialsVisible.telegram) ||
+                  (matrixUrl && socialsVisible.matrix)
+                ) && (
+                  <span className="text-[11px] font-mono text-slate-500 italic">
+                    Public social channels currently toggled offline by administrator.
+                  </span>
                 )}
               </div>
             </Cyber3DCard>
@@ -360,7 +385,7 @@ export const ContactSection: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ transform: 'translateZ(38px)' }} className="pt-2">
+              <div style={{ transform: 'translateZ(38px)' }} className="pt-2 space-y-2">
                 <a
                   href={`mailto:${contactEmail}`}
                   className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#00F0C0]/10 hover:bg-[#00F0C0]/20 border border-[#00F0C0]/30 hover:border-[#00F0C0] text-xs font-mono font-bold text-[#00F0C0] transition-colors shadow-md hover:scale-105 active:scale-95"
@@ -368,6 +393,20 @@ export const ContactSection: React.FC = () => {
                   <Mail className="w-3.5 h-3.5" />
                   <span>Send Direct Email</span>
                 </a>
+
+                {linkedinUrl && socialsVisible.linkedin && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowLinkedInModal(true);
+                      cyberSound.playClick();
+                    }}
+                    className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#0077B5]/15 hover:bg-[#0077B5]/25 border border-[#0077B5]/40 hover:border-[#38BDF8] text-xs font-mono font-bold text-[#38BDF8] transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95"
+                  >
+                    <LinkedinIcon className="w-3.5 h-3.5 text-[#38BDF8]" />
+                    <span>View LinkedIn Profile Iframe</span>
+                  </button>
+                )}
               </div>
             </Cyber3DCard>
           </div>
@@ -633,6 +672,105 @@ export const ContactSection: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* LinkedIn Profile Iframe / Embed Interactive Modal */}
+      {showLinkedInModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-6 animate-fadeIn"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowLinkedInModal(false);
+              cyberSound.playClick();
+            }
+          }}
+        >
+          <div className="relative w-full max-w-3xl bg-[#061222] border border-[#0077B5]/60 rounded-2xl shadow-[0_0_60px_rgba(0,119,181,0.35)] overflow-hidden flex flex-col max-h-[92vh]">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 sm:px-6 border-b border-white/10 bg-[#040C18]">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-[#0077B5]/20 border border-[#0077B5]/40 flex items-center justify-center text-[#38BDF8] shadow-[0_0_15px_rgba(0,119,181,0.3)]">
+                  <LinkedinIcon className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm sm:text-base font-bold text-white font-mono">
+                      Nishchay Gaur
+                    </h4>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#0077B5]/25 text-[#38BDF8] border border-[#0077B5]/40 font-mono">
+                      LinkedIn Profile
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 font-mono">
+                    https://www.linkedin.com/in/nishchay-gaur/
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <a
+                  href={linkedinUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0077B5]/20 hover:bg-[#0077B5]/35 text-[#38BDF8] border border-[#0077B5]/40 text-xs font-mono font-medium transition-all"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Open in Tab</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowLinkedInModal(false);
+                    cyberSound.playClick();
+                  }}
+                  className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                  title="Close Modal"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Iframe Container */}
+            <div className="relative flex-1 min-h-[420px] sm:min-h-[500px] bg-[#02060E] overflow-hidden flex flex-col">
+              <iframe
+                src={linkedinUrl}
+                title="Nishchay Gaur LinkedIn Profile Frame"
+                className="w-full flex-1 border-0 min-h-[360px]"
+                loading="lazy"
+                sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+              />
+
+              {/* LinkedIn CSP / Security Direct Access Card */}
+              <div className="p-4 sm:p-5 border-t border-white/10 bg-[#051122]/95 backdrop-blur-md">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-[#00F0C0] animate-pulse" />
+                      <span className="text-xs font-mono font-bold text-white">Nishchay Gaur</span>
+                      <span className="text-[10px] font-mono text-[#00F0C0]">• Cyberforage Founder</span>
+                    </div>
+                    <p className="text-xs text-slate-300 font-mono leading-relaxed">
+                      Defensive Security Engineering • Adversary Emulation • Autonomous Threat Triage
+                    </p>
+                  </div>
+
+                  <a
+                    href={linkedinUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => cyberSound.playClick()}
+                    className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#0077B5] hover:bg-[#0088D1] text-white text-xs font-mono font-bold transition-all shadow-[0_0_20px_rgba(0,119,181,0.4)] flex-shrink-0 hover:scale-105 active:scale-95"
+                  >
+                    <LinkedinIcon className="w-4 h-4" />
+                    <span>Connect with Nishchay</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };

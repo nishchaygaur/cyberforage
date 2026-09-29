@@ -28,6 +28,15 @@ export interface TelemetrySettings {
   isAlertActive: boolean;
 }
 
+export interface ContactSocialVisibility {
+  github: boolean;
+  linkedin: boolean;
+  twitter: boolean;
+  discord: boolean;
+  telegram: boolean;
+  matrix: boolean;
+}
+
 export interface ContactSettings {
   email: string;
   n8nUrl: string;
@@ -38,6 +47,7 @@ export interface ContactSettings {
   telegramUrl?: string;
   matrixUrl?: string;
   pgpKey: string;
+  socialsVisible?: ContactSocialVisibility;
 }
 
 export interface Scene3DConfig {
@@ -94,11 +104,20 @@ const DEFAULT_CONTENT: SiteContent = {
     email: 'contact@cyberforage.space',
     n8nUrl: 'https://n8nrequest.cyberforage.space/',
     githubUrl: 'https://github.com/nishchaygaur',
-    linkedinUrl: 'https://linkedin.com/company/cyberforage',
+    linkedinUrl: 'https://www.linkedin.com/in/nishchay-gaur/',
     twitterUrl: 'https://twitter.com/cyberforage',
     discordUrl: 'https://discord.gg/cyberforage',
     telegramUrl: 'https://t.me/cyberforage',
+    matrixUrl: 'https://matrix.to/#/@nishchay:matrix.org',
     pgpKey: '4A79 F82D 9C1B 33E4 8802  DAF6 5E21 00C8 99B7 12FA',
+    socialsVisible: {
+      github: true,
+      linkedin: true,
+      twitter: true,
+      discord: true,
+      telegram: true,
+      matrix: true,
+    },
   },
   sceneConfig: {
     defaultMode: 'globe',
@@ -109,6 +128,15 @@ const DEFAULT_CONTENT: SiteContent = {
 };
 
 const STORAGE_KEY = 'cyberforage_cms_content_v1';
+
+const DEFAULT_SOCIALS_VISIBLE: ContactSocialVisibility = {
+  github: true,
+  linkedin: true,
+  twitter: true,
+  discord: true,
+  telegram: true,
+  matrix: true,
+};
 
 interface SiteContentContextValue {
   content: SiteContent;
@@ -151,7 +179,14 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
           hero: { ...DEFAULT_CONTENT.hero, ...(parsed.hero || {}) },
           ecosystem: { ...DEFAULT_CONTENT.ecosystem, ...(parsed.ecosystem || {}) },
           telemetry: { ...DEFAULT_CONTENT.telemetry, ...(parsed.telemetry || {}) },
-          contact: { ...DEFAULT_CONTENT.contact, ...(parsed.contact || {}) },
+          contact: {
+            ...DEFAULT_CONTENT.contact,
+            ...(parsed.contact || {}),
+            socialsVisible: {
+              ...DEFAULT_SOCIALS_VISIBLE,
+              ...(parsed.contact?.socialsVisible || {}),
+            },
+          },
           sceneConfig: { ...DEFAULT_CONTENT.sceneConfig, ...(parsed.sceneConfig || {}) },
         };
       }
@@ -293,7 +328,15 @@ export const SiteContentProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const updateContact = (data: Partial<ContactSettings>) => {
     setContent((prev) => ({
       ...prev,
-      contact: { ...prev.contact, ...data },
+      contact: {
+        ...prev.contact,
+        ...data,
+        socialsVisible: {
+          ...DEFAULT_SOCIALS_VISIBLE,
+          ...(prev.contact.socialsVisible || {}),
+          ...(data.socialsVisible || {}),
+        },
+      },
     }));
   };
 
