@@ -38,11 +38,11 @@ export const CyberScene: React.FC<CyberSceneProps> = ({
   // Interaction State
   const isDragging = useRef(false);
   const previousMousePosition = useRef({ x: 0, y: 0 });
-  const cameraRotation = useRef({ x: 0.2, y: 0 });
+  const cameraRotation = useRef({ x: 0.08, y: 0 });
   const targetHover = useRef({ x: 0, y: 0 });
   const hoverOffset = useRef({ x: 0, y: 0 });
-  const cameraTargetDistance = useRef(mode === 'server' ? 8.5 : 9.4);
-  const currentCameraDistance = useRef(mode === 'server' ? 8.5 : 9.4);
+  const cameraTargetDistance = useRef(mode === 'server' ? 8.5 : 8.8);
+  const currentCameraDistance = useRef(mode === 'server' ? 8.5 : 8.8);
 
   // Animation Frame
   const animationFrameId = useRef<number | null>(null);
@@ -72,7 +72,7 @@ export const CyberScene: React.FC<CyberSceneProps> = ({
     const scene = new THREE.Scene();
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.set(0, 1.2, 9.4);
+    camera.position.set(0, 0.4, 8.8);
 
     const renderer = new THREE.WebGLRenderer({
       canvas,

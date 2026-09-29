@@ -387,21 +387,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           {/* Right Column: 3D Interactive Canvas & Orbital Badges */}
           <div className="relative flex flex-col items-center justify-center w-full overflow-visible">
             {/* Free-Floating 3D Globe Wrapper - Zero square bounding box */}
-            <div className="relative w-full aspect-square max-w-[340px] sm:max-w-[400px] md:max-w-[450px] lg:max-w-[480px] xl:max-w-[520px] max-h-[55vh] sm:max-h-[60vh] mx-auto flex items-center justify-center select-none overflow-visible">
-              {/* Zero-G Anti-Gravity Levitation Shadow / Energy Field */}
-              <div
-                className="absolute -bottom-3 left-1/2 w-[70%] h-8 bg-gradient-to-r from-transparent via-[#00F0C0]/35 to-transparent blur-xl rounded-full pointer-events-none transform -translate-x-1/2 scale-y-50 animate-float-shadow"
-                aria-hidden="true"
-              />
-
-              {/* Soft Radial Ambient Luminous Glow matching reference image */}
-              <div
-                className="absolute inset-2 sm:inset-4 rounded-full bg-[radial-gradient(circle_at_center,rgba(0,240,192,0.18)_0%,rgba(4,38,52,0.12)_45%,transparent_72%)] blur-2xl pointer-events-none"
-                aria-hidden="true"
-              />
-
-              {/* Floating Globe Body (Zero-G Levitation Animation) */}
-              <div className="relative w-full h-full flex items-center justify-center animate-float-levitate overflow-visible">
+            <div className="relative w-full aspect-square max-w-[380px] sm:max-w-[440px] md:max-w-[500px] lg:max-w-[540px] xl:max-w-[580px] max-h-[60vh] sm:max-h-[65vh] mx-auto flex items-center justify-center select-none overflow-visible">
+              {/* Floating Globe Body */}
+              <div className="relative w-full h-full flex items-center justify-center overflow-visible">
                 {/* Master 3D WebGL Canvas */}
                 <CyberScene
                   mode={sceneMode}
@@ -410,10 +398,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   className="relative z-10 w-full h-full"
                 />
 
-                {/* Floating Holographic Cyber Badges - Exact styling from reference image */}
+                {/* Floating Holographic Cyber Badges - Exact styling and positions from reference video */}
                 {/* 1. SECURITY Badge (Top-Left) */}
-                <div className="absolute top-[14%] left-[14%] sm:left-[16%] z-20 pointer-events-none animate-badge-float-1">
-                  <div className="flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-lg bg-[#061220]/90 border border-[#163354] backdrop-blur-md shadow-[0_0_20px_rgba(0,240,192,0.16)]">
+                <div className="absolute top-[16%] left-[12%] sm:left-[14%] z-20 pointer-events-none">
+                  <div className="flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-lg bg-[#061220]/90 border border-[#163354] backdrop-blur-md shadow-[0_0_20px_rgba(0,240,192,0.18)]">
                     <span className="w-2 h-2 rounded-full bg-[#00F0C0] shadow-[0_0_8px_#00F0C0]" />
                     <span className="text-[11px] sm:text-xs font-mono font-bold tracking-widest text-slate-100">
                       SECURITY
@@ -422,8 +410,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 </div>
 
                 {/* 2. AI Badge (Top-Right, Neon Purple Dot) */}
-                <div className="absolute top-[24%] right-[4%] sm:right-[6%] z-20 pointer-events-none animate-badge-float-2">
-                  <div className="flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-lg bg-[#061220]/90 border border-[#2b1b42] backdrop-blur-md shadow-[0_0_20px_rgba(192,132,252,0.18)]">
+                <div className="absolute top-[26%] right-[8%] sm:right-[10%] z-20 pointer-events-none">
+                  <div className="flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-lg bg-[#061220]/90 border border-[#2b1b42] backdrop-blur-md shadow-[0_0_20px_rgba(192,132,252,0.22)]">
                     <span className="w-2 h-2 rounded-full bg-[#C084FC] shadow-[0_0_8px_#C084FC]" />
                     <span className="text-[11px] sm:text-xs font-mono font-bold tracking-widest text-slate-100">
                       AI
@@ -432,8 +420,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 </div>
 
                 {/* 3. RESEARCH Badge (Bottom-Left) */}
-                <div className="absolute bottom-[26%] left-[6%] sm:left-[8%] z-20 pointer-events-none animate-badge-float-3">
-                  <div className="flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-lg bg-[#061220]/90 border border-[#163354] backdrop-blur-md shadow-[0_0_20px_rgba(0,240,192,0.16)]">
+                <div className="absolute bottom-[28%] left-[4%] sm:left-[6%] z-20 pointer-events-none">
+                  <div className="flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-lg bg-[#061220]/90 border border-[#163354] backdrop-blur-md shadow-[0_0_20px_rgba(0,240,192,0.18)]">
                     <span className="w-2 h-2 rounded-full bg-[#00F0C0] shadow-[0_0_8px_#00F0C0]" />
                     <span className="text-[11px] sm:text-xs font-mono font-bold tracking-widest text-slate-100">
                       RESEARCH
@@ -442,8 +430,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 </div>
 
                 {/* 4. AUTOMATION Badge (Bottom-Right) */}
-                <div className="absolute bottom-[18%] right-[5%] sm:right-[7%] z-20 pointer-events-none animate-badge-float-4">
-                  <div className="flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-lg bg-[#061220]/90 border border-[#163354] backdrop-blur-md shadow-[0_0_20px_rgba(0,240,192,0.16)]">
+                <div className="absolute bottom-[18%] right-[8%] sm:right-[10%] z-20 pointer-events-none">
+                  <div className="flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-lg bg-[#061220]/90 border border-[#163354] backdrop-blur-md shadow-[0_0_20px_rgba(0,240,192,0.18)]">
                     <span className="w-2 h-2 rounded-full bg-[#00F0C0] shadow-[0_0_8px_#00F0C0]" />
                     <span className="text-[11px] sm:text-xs font-mono font-bold tracking-widest text-slate-100">
                       AUTOMATION
@@ -474,19 +462,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 </div>
               )}
             </div>
-
-            {/* 3D Mode & Simulation Controls */}
-            <div className="mt-2.5 sm:mt-3 w-full flex justify-center">
-              <CyberHUDControls
-                currentMode={sceneMode}
-                onModeChange={onSceneModeChange}
-                onSimulateAttack={onSimulateAttack}
-                incident={incident}
-              />
-            </div>
-            <p className="mt-1 text-[10px] sm:text-[11px] font-mono text-slate-400 text-center">
-              Drag to orbit 360° | Ctrl + Scroll to zoom | Click nodes to inspect
-            </p>
           </div>
         </div>
       </div>

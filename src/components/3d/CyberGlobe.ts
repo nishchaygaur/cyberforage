@@ -63,7 +63,7 @@ interface OrbitRingData {
   group: THREE.Group;
   line: THREE.Line;
   radius: number;
-  bead: THREE.Mesh;
+  bead: THREE.Group;
   angle: number;
   speed: number;
 }
@@ -137,9 +137,6 @@ export class CyberGlobeController {
     this.group.add(this.nodesGroup);
     this.group.add(this.arcsGroup);
     this.group.add(this.ringsGroup);
-
-    // Initial attack simulation arcs
-    this.triggerAttackSimulation();
   }
 
   private latLonToVector3(lat: number, lon: number, radius: number): THREE.Vector3 {
@@ -273,7 +270,7 @@ export class CyberGlobeController {
     const texture = new THREE.CanvasTexture(canvas);
 
     const mat = new THREE.PointsMaterial({
-      size: 0.082,
+      size: 0.088,
       vertexColors: true,
       map: texture,
       transparent: true,
@@ -282,7 +279,7 @@ export class CyberGlobeController {
       depthWrite: false
     });
 
-    // Vertex & Fragment depth attenuation: front dots are full size and bright; back dots are smaller and softer
+    // Vertex & Fragment depth attenuation: front dots are luminous and crisp; back dots maintain clear glowing presence
     mat.onBeforeCompile = (shader) => {
       shader.vertexShader = 'varying float vFrontFace;\n' + shader.vertexShader;
       shader.vertexShader = shader.vertexShader.replace(
@@ -291,17 +288,17 @@ export class CyberGlobeController {
         'vec3 vViewDir = -normalize(mvPosition.xyz);\n' +
         'float NdotV = dot(vSphereNorm, vViewDir);\n' +
         'vFrontFace = smoothstep(-0.35, 0.65, NdotV);\n' +
-        'gl_PointSize = size * (0.60 + 0.45 * vFrontFace);'
+        'gl_PointSize = size * (0.72 + 0.40 * vFrontFace);'
       );
       shader.fragmentShader = 'varying float vFrontFace;\n' + shader.fragmentShader;
       shader.fragmentShader = shader.fragmentShader.replace(
         '#include <color_fragment>',
         '#include <color_fragment>\n' +
-        'diffuseColor.a *= (0.28 + 0.72 * vFrontFace);\n' +
+        'diffuseColor.a *= (0.42 + 0.58 * vFrontFace);\n' +
         'if (diffuseColor.a < 0.02) discard;'
       );
     };
-    mat.customProgramCacheKey = () => 'cyber-globe-fibonacci-depth-dots';
+    mat.customProgramCacheKey = () => 'cyber-globe-fibonacci-depth-dots-v2';
 
     this.spherePoints = new THREE.Points(geo, mat);
     this.group.add(this.spherePoints);
@@ -491,13 +488,14 @@ export class CyberGlobeController {
    */
   private createOrbitRings() {
     const ringConfigs = [
-      { radius: 3.32, rot: new THREE.Euler(0.75, 0.18, -0.55), speed: 0.008, color: 0x00f0c0, opacity: 0.38 },
-      { radius: 3.56, rot: new THREE.Euler(-0.62, 0.36, 0.70), speed: -0.006, color: 0x00f0c0, opacity: 0.32 },
-      { radius: 3.42, rot: new THREE.Euler(0.28, -0.45, 0.22), speed: 0.007, color: 0x00f0c0, opacity: 0.30 }
+      { radius: 3.38, rot: new THREE.Euler(0.72, 0.22, -0.52), speed: 0.008, color: 0x00f0c0, opacity: 0.38 },
+      { radius: 3.56, rot: new THREE.Euler(-0.62, 0.38, 0.68), speed: -0.006, color: 0x00f0c0, opacity: 0.32 },
+      { radius: 3.44, rot: new THREE.Euler(0.30, -0.42, 0.20), speed: 0.007, color: 0x00f0c0, opacity: 0.30 }
     ];
 
     const segments = 128;
-    const beadGeo = new THREE.SphereGeometry(0.048, 16, 16);
+    const coreGeo = new THREE.SphereGeometry(0.055, 16, 16);
+    const haloGeo = new THREE.RingGeometry(0.065, 0.135, 24);
 
     ringConfigs.forEach((cfg) => {
       const ringGroup = new THREE.Group();
@@ -520,15 +518,31 @@ export class CyberGlobeController {
       const ringLine = new THREE.Line(ringGeo, ringMat);
       ringGroup.add(ringLine);
 
-      // Glowing traveling bead
-      const beadMat = new THREE.MeshBasicMaterial({
+      // Glowing traveling photon packet with white-hot core and cyan aura
+      const beadGroup = new THREE.Group();
+
+      const coreMat = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.98,
+        blending: THREE.AdditiveBlending
+      });
+      const core = new THREE.Mesh(coreGeo, coreMat);
+      beadGroup.add(core);
+
+      const haloMat = new THREE.MeshBasicMaterial({
         color: cfg.color,
         transparent: true,
-        opacity: 0.95
+        opacity: 0.85,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending
       });
-      const bead = new THREE.Mesh(beadGeo, beadMat);
-      bead.position.set(cfg.radius, 0, 0);
-      ringGroup.add(bead);
+      const halo = new THREE.Mesh(haloGeo, haloMat);
+      halo.lookAt(new THREE.Vector3(0, 0, 1));
+      beadGroup.add(halo);
+
+      beadGroup.position.set(cfg.radius, 0, 0);
+      ringGroup.add(beadGroup);
 
       this.ringsGroup.add(ringGroup);
 
@@ -536,7 +550,7 @@ export class CyberGlobeController {
         group: ringGroup,
         line: ringLine,
         radius: cfg.radius,
-        bead,
+        bead: beadGroup,
         angle: Math.random() * Math.PI * 2,
         speed: cfg.speed
       });
@@ -757,8 +771,12 @@ export class CyberGlobeController {
     this.orbitRings.forEach((r) => {
       r.line.geometry.dispose();
       (r.line.material as THREE.Material).dispose();
-      r.bead.geometry.dispose();
-      (r.bead.material as THREE.Material).dispose();
+      r.bead.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.geometry.dispose();
+          (child.material as THREE.Material).dispose();
+        }
+      });
     });
   }
 }
