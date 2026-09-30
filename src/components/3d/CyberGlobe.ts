@@ -80,6 +80,7 @@ export class CyberGlobeController {
   public group: THREE.Group;
 
   // Visual Groups
+  private globePivot: THREE.Group;
   private sphereContainer: THREE.Group;
   private spherePoints!: THREE.Points;
   private networkLines: THREE.LineSegments | null = null;
@@ -115,15 +116,16 @@ export class CyberGlobeController {
 
   constructor() {
     this.group = new THREE.Group();
+    this.globePivot = new THREE.Group();
     this.sphereContainer = new THREE.Group();
     this.nodesGroup = new THREE.Group();
     this.beaconsGroup = new THREE.Group();
     this.arcsGroup = new THREE.Group();
     this.ringsGroup = new THREE.Group();
 
-    // Tilt the polar axis forward towards the viewer so concentric circles face the user
-    this.sphereContainer.rotation.x = 0.38; // ~22 degrees forward tilt
-    this.sphereContainer.rotation.z = -0.12; // ~-7 degrees side tilt
+    // Uniform forward polar tilt applied to the entire globe system (both rotating sphere and orbital rings)
+    this.globePivot.rotation.x = 0.38; // ~22 degrees forward tilt towards viewer
+    this.globePivot.rotation.z = 0; // Strict zero side-tilt: ensures orbital rings are 100% mathematically symmetrical
 
     // 1. Inner volumetric teal atmospheric core glow
     this.createInnerAtmosphereGlow();
@@ -134,7 +136,7 @@ export class CyberGlobeController {
     // 3. Dynamic larger pulsing beacon dots with glowing core and halo ring
     this.createPulsingNodes();
 
-    // 4. 3 Sleek orbital rings with traveling photon beads
+    // 4. 3 Perfectly aligned, symmetrical orbital rings with traveling photon beads
     this.createOrbitRings();
 
     // Assemble hierarchy
@@ -142,8 +144,11 @@ export class CyberGlobeController {
     this.sphereContainer.add(this.nodesGroup);
     this.sphereContainer.add(this.arcsGroup);
 
-    this.group.add(this.sphereContainer);
-    this.group.add(this.ringsGroup);
+    // Both the rotating sphere and stationary orbital rings share the exact same globePivot center & tilt
+    this.globePivot.add(this.sphereContainer);
+    this.globePivot.add(this.ringsGroup);
+
+    this.group.add(this.globePivot);
   }
 
   private latLonToVector3(lat: number, lon: number, radius: number): THREE.Vector3 {
@@ -294,7 +299,8 @@ export class CyberGlobeController {
       const numPts = Math.max(1, Math.round(circ / 0.158));
 
       for (let j = 0; j < numPts; j++) {
-        const lon = (j * 2 * Math.PI) / numPts + (i * 0.15);
+        // Aligned concentric circles
+        const lon = (j * 2 * Math.PI) / numPts;
         const x = r * Math.cos(lon);
         const z = r * Math.sin(lon);
 
@@ -364,38 +370,6 @@ export class CyberGlobeController {
 
     this.spherePoints = new THREE.Points(geo, mat);
     this.sphereContainer.add(this.spherePoints);
-
-    // Subtle geometric network connection lines in the front region (matching video)
-    const linePoints: THREE.Vector3[] = [];
-    const maxLines = 80;
-    let lineCount = 0;
-
-    for (let i = 0; i < points.length && lineCount < maxLines; i += 2) {
-      const p1 = points[i];
-      if (p1.z > 0.45) {
-        for (let j = i + 1; j < Math.min(i + 14, points.length); j++) {
-          const p2 = points[j];
-          const dist = p1.distanceTo(p2);
-          if (dist > 0.22 && dist < 0.42) {
-            linePoints.push(p1, p2);
-            lineCount++;
-            break;
-          }
-        }
-      }
-    }
-
-    if (linePoints.length > 0) {
-      const lineGeo = new THREE.BufferGeometry().setFromPoints(linePoints);
-      const lineMat = new THREE.LineBasicMaterial({
-        color: 0x00f0c0,
-        transparent: true,
-        opacity: 0.15,
-        blending: THREE.AdditiveBlending
-      });
-      this.networkLines = new THREE.LineSegments(lineGeo, lineMat);
-      this.sphereContainer.add(this.networkLines);
-    }
   }
 
   /**
@@ -508,15 +482,18 @@ export class CyberGlobeController {
 
   /**
    * Creates the 3 sleek orbital rings matching the video reference
+   * Perfectly aligned, concentric, and mathematically symmetrical
    */
   private createOrbitRings() {
+    // All 3 orbital rings have uniform, identical radius perfectly framing the 2.50 radius sphere
+    const ringRadius = 2.92;
     const ringConfigs = [
-      // 1. Ascending Orbit (Research to AI)
-      { radius: 3.24, rot: new THREE.Euler(0.48, 0.15, -0.62), speed: 0.007, color: 0x00f0c0, opacity: 0.34 },
-      // 2. Descending Orbit (Security to Automation)
-      { radius: 3.36, rot: new THREE.Euler(-0.45, 0.20, 0.60), speed: -0.006, color: 0x00f0c0, opacity: 0.34 },
-      // 3. Equatorial / Transverse Orbit
-      { radius: 3.44, rot: new THREE.Euler(1.18, -0.08, 0.20), speed: 0.005, color: 0x00f0c0, opacity: 0.28 }
+      // 1. Ascending Orbit (passing near Research & AI)
+      { radius: ringRadius, rot: new THREE.Euler(0.04, 0.04, 0.40), speed: 0.006, color: 0x00f0c0, opacity: 0.35 },
+      // 2. Descending Orbit (passing near Security & Automation) - exact mathematical mirror twin
+      { radius: ringRadius, rot: new THREE.Euler(0.04, -0.04, -0.40), speed: -0.006, color: 0x00f0c0, opacity: 0.35 },
+      // 3. Equatorial Orbit - circles concentric around the globe equator
+      { radius: ringRadius, rot: new THREE.Euler(0, 0, 0), speed: 0.005, color: 0x00f0c0, opacity: 0.30 }
     ];
 
     const segments = 128;

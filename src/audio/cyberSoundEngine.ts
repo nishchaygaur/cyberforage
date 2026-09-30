@@ -14,6 +14,7 @@ class CyberSoundEngine {
   private pendingWelcomeText?: string;
 
   public voiceHasSpoken: boolean = false;
+  private voiceLoadAttempted: boolean = false;
   private stateListeners: Set<(state: AudioContextState | 'unsupported') => void> = new Set();
 
   constructor() {
@@ -90,8 +91,7 @@ class CyberSoundEngine {
     if (typeof window === 'undefined') return null;
 
     if (!this.ctx) {
-      // Chrome Autoplay Policy: only create AudioContext after user gesture
-      if (!this.userHasInteracted && !this.isUserGestureAvailable()) {
+      if (!force && !this.userHasInteracted && !this.isUserGestureAvailable()) {
         return null;
       }
 
@@ -121,7 +121,7 @@ class CyberSoundEngine {
       }
     }
 
-    if (this.ctx && this.ctx.state === 'suspended' && (this.userHasInteracted || this.isUserGestureAvailable())) {
+    if (this.ctx && this.ctx.state === 'suspended' && (this.userHasInteracted || this.isUserGestureAvailable() || force)) {
       this.ctx.resume().catch(() => {});
     }
 
@@ -135,25 +135,9 @@ class CyberSoundEngine {
     this.userHasInteracted = true;
     if (typeof window === 'undefined') return null;
 
-    if (!this.ctx) {
-      try {
-        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-        if (AudioCtx) {
-          this.ctx = new AudioCtx();
-          this.ctx.addEventListener('statechange', () => {
-            this.notifyStateListeners();
-            if (this.ctx && this.ctx.state === 'running' && this.isDroneActive && !this.ambientOsc1) {
-              this.startAmbientDrone();
-            }
-          });
-        }
-      } catch {
-        return null;
-      }
-    }
-
-    if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume().catch(() => {});
+    const ctx = this.initCtx(true);
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
     }
 
     this.notifyStateListeners();
@@ -170,14 +154,14 @@ class CyberSoundEngine {
       this.startAmbientDrone();
     }
 
-    return this.ctx;
+    return ctx;
   }
 
   /**
    * Triggers the welcome sequence following Google Chrome's Web Audio Autoplay specification:
-   * 1. Speaks tactical male voice synthesizer on page load.
-   * 2. Defers Web Audio instantiation until user interaction to eliminate console autoplay warnings.
-   * 3. Arms gesture listeners so the first touch/click/key automatically unrolls harmonic chimes and ambient drone.
+   * 1. Speaks tactical male voice synthesizer immediately on page load.
+   * 2. Instantiates AudioContext and attempts resume() for immediate audio start.
+   * 3. Arms multi-event gesture & movement listeners so any page interaction unlocks chimes instantly.
    */
   public async triggerWelcomeSequence(customText?: string): Promise<boolean> {
     if (this.hasWelcomed || this.isMuted || this.isWelcoming) return this.hasWelcomed;
@@ -197,9 +181,45 @@ class CyberSoundEngine {
       } catch {}
     }
 
-    // 2. Set up gesture listener so the first tap/click/key automatically unlocks Web Audio
+    // 2. Initialize AudioContext on page load per Chrome Autoplay Guide
+    const ctx = this.initCtx(true);
+
+    if (ctx) {
+      // If allowed by Chrome Media Engagement Index (MEI), state is already 'running'
+      if (ctx.state === 'running') {
+        this.hasWelcomed = true;
+        if (typeof window !== 'undefined') {
+          (window as unknown as { __CYBERFORAGE_PAGE_WELCOMED?: boolean }).__CYBERFORAGE_PAGE_WELCOMED = true;
+        }
+        this.playWelcome(customText, false);
+        setTimeout(() => {
+          this.isWelcoming = false;
+        }, 3500);
+        return true;
+      }
+
+      // Attempt resume on page load in case browser permits it
+      try {
+        await ctx.resume();
+        if ((ctx.state as AudioContextState) === 'running') {
+          this.hasWelcomed = true;
+          if (typeof window !== 'undefined') {
+            (window as unknown as { __CYBERFORAGE_PAGE_WELCOMED?: boolean }).__CYBERFORAGE_PAGE_WELCOMED = true;
+          }
+          this.playWelcome(customText, false);
+          setTimeout(() => {
+            this.isWelcoming = false;
+          }, 3500);
+          return true;
+        }
+      } catch {
+        // Suspended pending user interaction; statechange listener and gesture fallback are active
+      }
+    }
+
+    // 3. Set up multi-event gesture and movement listener so the first touch/click/scroll/key automatically unlocks Web Audio
     if (typeof window !== 'undefined' && !this.userHasInteracted) {
-      const gestureEvents = ['click', 'pointerdown', 'keydown', 'touchstart'];
+      const gestureEvents = ['click', 'pointerdown', 'keydown', 'touchstart', 'scroll', 'wheel', 'pointermove'];
       const onUserGesture = () => {
         gestureEvents.forEach((evt) => window.removeEventListener(evt, onUserGesture));
         this.unlockAudio();
@@ -207,14 +227,14 @@ class CyberSoundEngine {
       gestureEvents.forEach((evt) => window.addEventListener(evt, onUserGesture, { passive: true, once: true }));
     }
 
-    // 3. If user gesture is already available (e.g. navigation within page or active user activation):
+    // 4. If user gesture is already available:
     if (this.isUserGestureAvailable()) {
-      const ctx = this.unlockAudio();
+      const activeCtx = this.unlockAudio();
       this.isWelcoming = false;
-      return !!ctx;
+      return !!activeCtx;
     }
 
-    // Defer AudioContext creation until first user gesture to comply with Chrome Web Audio Autoplay policy (prevents console warnings)
+    // Defer AudioContext chimes until gesture/MEI activation
     this.pendingWelcomeChime = true;
     this.isWelcoming = false;
     this.notifyStateListeners();
@@ -447,13 +467,18 @@ class CyberSoundEngine {
         utterance.volume = 1.0;
 
         let voices = this.cachedVoices.length > 0 ? this.cachedVoices : window.speechSynthesis.getVoices();
-        if (voices.length === 0) {
-          const handleVoices = () => {
-            window.speechSynthesis.removeEventListener('voiceschanged', handleVoices);
+        if (voices.length === 0 && !this.voiceLoadAttempted) {
+          this.voiceLoadAttempted = true;
+          let hasProceeded = false;
+          const proceed = () => {
+            if (hasProceeded) return;
+            hasProceeded = true;
+            window.speechSynthesis.removeEventListener('voiceschanged', proceed);
             this.cachedVoices = window.speechSynthesis.getVoices();
             this.speakVoice(text, onStarted, onError);
           };
-          window.speechSynthesis.addEventListener('voiceschanged', handleVoices, { once: true });
+          window.speechSynthesis.addEventListener('voiceschanged', proceed, { once: true });
+          setTimeout(proceed, 180);
           return;
         }
         this.cachedVoices = voices;
