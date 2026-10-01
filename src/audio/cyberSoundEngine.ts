@@ -14,7 +14,7 @@ class CyberSoundEngine {
   private pendingWelcomeText?: string;
 
   public voiceHasSpoken: boolean = false;
-  private voiceLoadAttempted: boolean = false;
+  private currentUtterance: SpeechSynthesisUtterance | null = null;
   private stateListeners: Set<(state: AudioContextState | 'unsupported') => void> = new Set();
 
   constructor() {
@@ -452,69 +452,120 @@ class CyberSoundEngine {
     this.playWelcome(customText, true);
   }
 
+  private getBestMaleVoice(): SpeechSynthesisVoice | null {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return null;
+    const voices = this.cachedVoices.length > 0 ? this.cachedVoices : window.speechSynthesis.getVoices();
+    if (!voices || voices.length === 0) return null;
+
+    // 1. Explicit priority list of authentic English MALE voices
+    // 'Microsoft David' is the premier Windows tactical voice from the earlier commits
+    const maleNames = [
+      'David', // Microsoft David (Default Windows male - previous voice)
+      'UK English Male', // Google UK English Male (Chrome desktop male)
+      'Mark', // Microsoft Mark (Windows male)
+      'Guy', // Microsoft Guy (Edge Natural male)
+      'Christopher', // Microsoft Christopher (Edge Natural male)
+      'George', // Microsoft George (Windows UK male)
+      'Daniel', // Apple / Google Daniel (male)
+      'Alex', // Apple Alex (male)
+      'Fred', // Apple Fred (male)
+      'Oliver', // Oliver (male)
+      'Ryan', // Microsoft Ryan (male)
+      'Eric', // Microsoft Eric (male)
+      'Brian', // Microsoft Brian (male)
+      'Thomas', // Microsoft Thomas (male)
+    ];
+
+    for (const name of maleNames) {
+      const found = voices.find(
+        (v) => v.lang.startsWith('en') && v.name.includes(name)
+      );
+      if (found) return found;
+    }
+
+    // 2. Generic check for 'male' in name, strictly avoiding 'female'
+    const genericMale = voices.find(
+      (v) =>
+        v.lang.startsWith('en') &&
+        v.name.toLowerCase().includes('male') &&
+        !v.name.toLowerCase().includes('female')
+    );
+    if (genericMale) return genericMale;
+
+    // 3. Strict female blacklist to prevent Google US English, Zira, Jenny, Aria from ever speaking
+    const femaleKeywords = [
+      'female', 'google us english', 'zira', 'samantha', 'jenny', 'aria',
+      'eva', 'victoria', 'karen', 'susan', 'ava', 'heera', 'neerja',
+      'veena', 'hazel', 'linda', 'heather', 'catherine', 'cynthia',
+      'moira', 'tessa', 'fiona', 'ana', 'clara', 'steffi'
+    ];
+    const nonFemale = voices.find((v) => {
+      if (!v.lang.startsWith('en')) return false;
+      const lower = v.name.toLowerCase();
+      return !femaleKeywords.some((kw) => lower.includes(kw));
+    });
+    if (nonFemale) return nonFemale;
+
+    // 4. Fallback to first English voice
+    return voices.find((v) => v.lang.startsWith('en')) || voices[0] || null;
+  }
+
+  private ensureVoicesLoaded(callback: () => void) {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      callback();
+      return;
+    }
+
+    const voices = window.speechSynthesis.getVoices();
+    if (voices && voices.length > 0) {
+      this.cachedVoices = voices;
+      callback();
+      return;
+    }
+
+    let resolved = false;
+    const onVoicesReady = () => {
+      if (resolved) return;
+      resolved = true;
+      window.speechSynthesis.removeEventListener('voiceschanged', onVoicesReady);
+      this.cachedVoices = window.speechSynthesis.getVoices();
+      callback();
+    };
+
+    window.speechSynthesis.addEventListener('voiceschanged', onVoicesReady, { once: true });
+
+    // Polling fallback: check every 25ms up to 600ms in case voiceschanged is delayed
+    const start = Date.now();
+    const timer = setInterval(() => {
+      const v = window.speechSynthesis.getVoices();
+      if (v && v.length > 0) {
+        clearInterval(timer);
+        onVoicesReady();
+      } else if (Date.now() - start > 600) {
+        clearInterval(timer);
+        onVoicesReady();
+      }
+    }, 25);
+  }
+
   public speakVoice(text: string, onStarted?: () => void, onError?: (err: unknown) => void) {
     if (this.isMuted || !this.voiceEnabled || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    try {
-      if (window.speechSynthesis.paused) {
-        window.speechSynthesis.resume();
-      }
-      window.speechSynthesis.cancel();
 
+    this.ensureVoicesLoaded(() => {
       try {
+        if (window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+        }
+        window.speechSynthesis.cancel();
+
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.pitch = 0.85;
-        utterance.rate = 1.02;
+        utterance.pitch = 0.80; // Deep, tactical male command pitch
+        utterance.rate = 1.0;
         utterance.volume = 1.0;
 
-        let voices = this.cachedVoices.length > 0 ? this.cachedVoices : window.speechSynthesis.getVoices();
-        if (voices.length === 0 && !this.voiceLoadAttempted) {
-          this.voiceLoadAttempted = true;
-          let hasProceeded = false;
-          const proceed = () => {
-            if (hasProceeded) return;
-            hasProceeded = true;
-            window.speechSynthesis.removeEventListener('voiceschanged', proceed);
-            this.cachedVoices = window.speechSynthesis.getVoices();
-            this.speakVoice(text, onStarted, onError);
-          };
-          window.speechSynthesis.addEventListener('voiceschanged', proceed, { once: true });
-          setTimeout(proceed, 180);
-          return;
-        }
-        this.cachedVoices = voices;
-
-        if (voices.length > 0) {
-          // Explicitly prioritize authentic English MALE voices
-          const maleVoice =
-            voices.find(
-              (v) =>
-                v.lang.startsWith('en') &&
-                (v.name.includes('David') ||
-                 v.name.includes('Mark') ||
-                 v.name.includes('George') ||
-                 v.name.includes('Daniel') ||
-                 v.name.includes('Alex') ||
-                 v.name.includes('Guy') ||
-                 v.name.includes('Christopher') ||
-                 v.name.includes('UK English Male') ||
-                 (v.name.toLowerCase().includes('male') && !v.name.toLowerCase().includes('female')))
-            ) ||
-            voices.find(
-              (v) =>
-                v.lang.startsWith('en') &&
-                !v.name.toLowerCase().includes('zira') &&
-                !v.name.toLowerCase().includes('samantha') &&
-                !v.name.toLowerCase().includes('jenny') &&
-                !v.name.toLowerCase().includes('eva') &&
-                !v.name.toLowerCase().includes('victoria') &&
-                !v.name.toLowerCase().includes('karen') &&
-                !v.name.toLowerCase().includes('female')
-            ) ||
-            voices.find((v) => v.lang.startsWith('en'));
-
-          if (maleVoice) {
-            utterance.voice = maleVoice;
-          }
+        const maleVoice = this.getBestMaleVoice();
+        if (maleVoice) {
+          utterance.voice = maleVoice;
         }
 
         utterance.onstart = () => {
@@ -526,13 +577,14 @@ class CyberSoundEngine {
           if (onError) onError(e);
         };
 
+        this.currentUtterance = utterance;
+        (window as unknown as { __CYBER_SPEECH?: SpeechSynthesisUtterance }).__CYBER_SPEECH = utterance;
+
         window.speechSynthesis.speak(utterance);
-      } catch (e) {
-        if (onError) onError(e);
+      } catch (err) {
+        if (onError) onError(err);
       }
-    } catch (err) {
-      if (onError) onError(err);
-    }
+    });
   }
 
   public playBlip() {
