@@ -25,3 +25,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Temporary theme video and analysis artifacts
+theme_video.mp4
+extracted_frames/
+extracted_frames_detail/
+extracted_themes/
+public/theme_previews/

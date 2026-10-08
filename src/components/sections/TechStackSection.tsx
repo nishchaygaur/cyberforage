@@ -67,13 +67,16 @@ export const TechStackSection: React.FC<TechStackSectionProps> = ({ onFocusMesh3
               className="p-6 flex flex-col justify-between"
             >
               <div style={{ transform: 'translateZ(30px)' }}>
-                <span className="text-xs font-mono tracking-[0.2em] text-[#00E5BE] font-medium uppercase mb-2 block">
-                  TECHNOLOGIES
-                </span>
-                <h2 className="text-2xl font-bold text-white tracking-tight">
+                <div className="inline-flex items-center gap-2 mb-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.12] backdrop-blur-md">
+                  <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-[#ff0055] via-[#00ffaa] to-[#00e5ff] animate-pulse" />
+                  <span className="text-[10px] font-mono tracking-[0.2em] text-slate-300 font-semibold uppercase">
+                    TECHNOLOGIES
+                  </span>
+                </div>
+                <h2 className="text-2xl font-bold text-white tracking-tight font-mono">
                   Powered by Modern Tools.
                 </h2>
-                <p className="text-xs text-slate-300 mt-2 leading-relaxed">
+                <p className="text-xs text-slate-300 mt-2 leading-relaxed font-mono">
                   Battle-tested frameworks, telemetry pipelines, and detection agents driving Cyberforage operations.
                 </p>
               </div>
@@ -131,7 +134,7 @@ export const TechStackSection: React.FC<TechStackSectionProps> = ({ onFocusMesh3
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search tools (Python, YARA, MITRE, Docker...)"
-                  className="w-full pl-10 pr-4 py-2 rounded-xl bg-[#091424]/90 border border-white/10 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#00F0C0] transition-colors font-mono"
+                  className="w-full pl-10 pr-4 py-2 rounded-full bg-white/[0.04] border border-white/10 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-white/30 transition-colors font-mono"
                 />
               </div>
 
@@ -240,7 +243,7 @@ export const TechStackSection: React.FC<TechStackSectionProps> = ({ onFocusMesh3
                     cyberSound.playClick();
                     onFocusMesh3D();
                   }}
-                  className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-[#A855F7]/15 hover:bg-[#A855F7]/25 border border-[#A855F7]/40 hover:border-[#A855F7] text-purple-300 text-xs font-mono font-semibold transition-all cursor-pointer shadow-[0_0_15px_rgba(168,85,247,0.2)] hover:scale-105 active:scale-95"
+                  className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-4 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/20 hover:border-white/40 text-white text-xs font-mono font-semibold transition-all cursor-pointer shadow-[0_0_15px_rgba(255,255,255,0.15)] hover:scale-105 active:scale-95"
                 >
                   <Network className="w-3.5 h-3.5 text-purple-400" />
                   <span>Inspect Mesh in 3D</span>

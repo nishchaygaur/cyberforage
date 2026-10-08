@@ -213,10 +213,13 @@ export const ContactSection: React.FC = () => {
                     <GithubIcon className="w-7 h-7" />
                   </div>
                   <div>
-                    <span className="text-xs font-mono tracking-[0.2em] text-[#00E5BE] font-medium uppercase mb-1.5 block">
-                      OPEN SOURCE
-                    </span>
-                    <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                    <div className="inline-flex items-center gap-2 mb-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.12] backdrop-blur-md">
+                      <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-[#ff0055] via-[#00ffaa] to-[#00e5ff] animate-pulse" />
+                      <span className="text-[10px] font-mono tracking-[0.2em] text-slate-300 font-semibold uppercase">
+                        OPEN SOURCE
+                      </span>
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-tight font-mono">
                       Built in public. Secured in public.
                     </h3>
                   </div>
@@ -340,9 +343,12 @@ export const ContactSection: React.FC = () => {
             >
               <div>
                 <div style={{ transform: 'translateZ(32px)' }}>
-                  <span className="text-xs font-mono tracking-[0.2em] text-[#00E5BE] font-medium uppercase mb-2 block">
-                    VERIFIED IDENTITY
-                  </span>
+                  <div className="inline-flex items-center gap-2 mb-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.12] backdrop-blur-md">
+                    <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-[#ff0055] via-[#00ffaa] to-[#00e5ff] animate-pulse" />
+                    <span className="text-[10px] font-mono tracking-[0.2em] text-slate-300 font-semibold uppercase">
+                      VERIFIED IDENTITY
+                    </span>
+                  </div>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#061528] to-[#0a2340] border border-[#00F0C0]/30 flex items-center justify-center text-[#00F0C0] shadow-md">
                       <Shield className="w-5 h-5" />
@@ -351,7 +357,7 @@ export const ContactSection: React.FC = () => {
                       <h4 className="text-base font-bold text-white font-mono">Cyberforage</h4>
                       <span className="text-[10px] font-mono text-[#00E5BE]">Nishchay Gaur</span>
                     </div>
-                    <span className="ml-auto px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono">
+                    <span className="ml-auto px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono">
                       Verified
                     </span>
                   </div>
@@ -386,9 +392,9 @@ export const ContactSection: React.FC = () => {
               <div style={{ transform: 'translateZ(38px)' }} className="pt-2 space-y-2">
                 <a
                   href={`mailto:${contactEmail}`}
-                  className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#00F0C0]/10 hover:bg-[#00F0C0]/20 border border-[#00F0C0]/30 hover:border-[#00F0C0] text-xs font-mono font-bold text-[#00F0C0] transition-colors shadow-md hover:scale-105 active:scale-95"
+                  className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/20 hover:border-white/40 text-xs font-mono font-semibold text-white transition-all shadow-md hover:scale-105 active:scale-95"
                 >
-                  <Mail className="w-3.5 h-3.5" />
+                  <Mail className="w-3.5 h-3.5 text-[#00F0C0]" />
                   <span>Send Direct Email</span>
                 </a>
 
@@ -398,7 +404,7 @@ export const ContactSection: React.FC = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => cyberSound.playClick()}
-                    className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#0077B5]/15 hover:bg-[#0077B5]/25 border border-[#0077B5]/40 hover:border-[#38BDF8] text-xs font-mono font-bold text-[#38BDF8] transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95"
+                    className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-[#38BDF8] text-xs font-mono font-semibold text-slate-200 hover:text-white transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95"
                   >
                     <LinkedinIcon className="w-3.5 h-3.5 text-[#38BDF8]" />
                     <span>Connect on LinkedIn</span>
@@ -421,17 +427,17 @@ export const ContactSection: React.FC = () => {
           {/* Form Header with Quick Test Action */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-white/[0.08]">
             <div>
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#00F0C0] animate-pulse" />
-                <span className="text-xs font-mono tracking-[0.2em] text-[#00E5BE] font-semibold uppercase">
+              <div className="inline-flex items-center gap-2 mb-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.12] backdrop-blur-md">
+                <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-[#ff0055] via-[#00ffaa] to-[#00e5ff] animate-pulse" />
+                <span className="text-[10px] font-mono tracking-[0.2em] text-slate-300 font-semibold uppercase">
                   SECURE TRANSMISSION CONSOLE
                 </span>
               </div>
-              <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-tight font-mono">
                 Send an Encrypted Dispatch
               </h3>
-              <p className="text-xs sm:text-sm text-slate-300 mt-1">
-                Directly route security research, tool feedback, or collaboration dispatches to <span className="text-[#00F0C0] font-mono">{contactEmail}</span>.
+              <p className="text-xs sm:text-sm text-slate-300 mt-1 font-mono">
+                Directly route security research, tool feedback, or collaboration dispatches to <span className="text-white font-semibold font-mono underline decoration-[#00F0C0]">{contactEmail}</span>.
               </p>
             </div>
 
@@ -439,7 +445,7 @@ export const ContactSection: React.FC = () => {
               <button
                 type="button"
                 onClick={handleAutoFillDemo}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.04] hover:bg-[#00F0C0]/15 border border-white/10 hover:border-[#00F0C0]/40 text-xs font-mono text-slate-300 hover:text-white transition-all cursor-pointer self-start sm:self-auto"
+                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/20 hover:border-white/40 text-xs font-mono text-slate-200 hover:text-white transition-all cursor-pointer self-start sm:self-auto hover:scale-105 active:scale-95"
                 title="Populate test payload data"
               >
                 <Sparkles className="w-3.5 h-3.5 text-[#00E5BE]" />
@@ -496,7 +502,7 @@ export const ContactSection: React.FC = () => {
                 <a
                   href={transmittedData.mailtoUrl}
                   onClick={() => cyberSound.playClick()}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#00E5BE] hover:bg-[#00F0C0] text-[#04131E] text-xs font-mono font-bold transition-all shadow-[0_0_20px_rgba(0,229,190,0.35)] hover:shadow-[0_0_30px_rgba(0,240,192,0.55)] cursor-pointer hover:scale-105 active:scale-95"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-black hover:bg-slate-200 text-xs font-mono font-bold transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)] cursor-pointer hover:scale-105 active:scale-95"
                 >
                   <Mail className="w-4 h-4" />
                   <span>Open in Mail App (contact@cyberforage.space)</span>
@@ -507,7 +513,7 @@ export const ContactSection: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleCopyPayload}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 hover:border-white/25 text-xs font-mono font-medium text-white transition-all cursor-pointer"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/20 hover:border-white/40 text-xs font-mono font-medium text-white transition-all cursor-pointer"
                 >
                   {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-slate-300" />}
                   <span>{copied ? 'Copied to Clipboard!' : 'Copy Signed Payload'}</span>
@@ -517,7 +523,7 @@ export const ContactSection: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/5 hover:border-white/15 text-xs font-mono text-slate-400 hover:text-white transition-all cursor-pointer ml-auto"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 hover:border-white/20 text-xs font-mono text-slate-400 hover:text-white transition-all cursor-pointer ml-auto"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                   <span>Send Another Dispatch</span>
@@ -656,10 +662,10 @@ export const ContactSection: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isTransmitting}
-                  className={`inline-flex items-center justify-center gap-2 py-3 px-7 rounded-xl font-mono font-bold text-xs sm:text-sm transition-all cursor-pointer shadow-lg hover:scale-105 active:scale-95 ${
+                  className={`inline-flex items-center justify-center gap-2 py-3 px-8 rounded-full font-mono font-bold text-xs sm:text-sm transition-all cursor-pointer shadow-lg hover:scale-105 active:scale-95 ${
                     isTransmitting
                       ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 cursor-wait'
-                      : 'bg-[#00E5BE] hover:bg-[#00F0C0] text-[#04131E] shadow-[0_0_25px_rgba(0,229,190,0.35)] hover:shadow-[0_0_35px_rgba(0,240,192,0.55)]'
+                      : 'bg-white text-black hover:bg-slate-200 shadow-[0_0_25px_rgba(255,255,255,0.3)] hover:shadow-[0_0_35px_rgba(255,255,255,0.45)]'
                   }`}
                 >
                   <Send className={`w-4 h-4 ${isTransmitting ? 'animate-spin' : ''}`} />

@@ -28,10 +28,13 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ onInspect3D, o
         {/* Header & Filter Controls */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
           <div>
-            <span className="text-xs font-mono tracking-[0.2em] text-[#00E5BE] font-medium uppercase mb-2 block">
-              FEATURED PROJECTS & DEFENSES
-            </span>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight">
+            <div className="inline-flex items-center gap-2 mb-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.12] backdrop-blur-md">
+              <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-[#ff0055] via-[#00ffaa] to-[#00e5ff] animate-pulse" />
+              <span className="text-[10px] font-mono tracking-[0.2em] text-slate-300 font-semibold uppercase">
+                FEATURED PROJECTS & DEFENSES
+              </span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight font-mono">
               Built for Real-World Security
             </h2>
           </div>
@@ -48,10 +51,10 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ onInspect3D, o
                     setActiveFilter(cat);
                   }}
                   onMouseEnter={() => cyberSound.playBlip()}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer whitespace-nowrap ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-mono font-medium transition-all cursor-pointer whitespace-nowrap ${
                     isSelected
-                      ? 'bg-[#00F0C0]/15 text-[#00F0C0] border border-[#00F0C0]/40 shadow-sm'
-                      : 'text-slate-400 hover:text-white bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06]'
+                      ? 'bg-white text-black font-semibold shadow-[0_0_15px_rgba(255,255,255,0.3)]'
+                      : 'text-slate-400 hover:text-white bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08]'
                   }`}
                 >
                   {cat}

@@ -49,7 +49,9 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   ];
 
   return (
-    <footer className="relative bg-[#030712] border-t border-white/[0.06] pt-12 pb-10" aria-label="Cyberforage Footer">
+    <footer className="relative bg-[#02050b] border-t border-white/[0.06] pt-12 pb-10 overflow-hidden" aria-label="Cyberforage Footer">
+      {/* Prismatic rainbow accent top razor line */}
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#ff0055] via-[#00ffaa] via-[#00e5ff] to-transparent opacity-40" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 pb-10">
           {/* Logo & Brand */}
@@ -108,7 +110,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           </nav>
 
           {/* Social Icons & Scroll Top */}
-          <div className="flex items-center space-x-2.5">
+          <div className="flex items-center space-x-2">
             {contact?.githubUrl && socialsVisible.github && (
               <a
                 href={contact.githubUrl}
@@ -117,7 +119,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 onClick={() => cyberSound.playClick()}
                 aria-label="GitHub"
                 title="GitHub Profile"
-                className="p-2 text-slate-400 hover:text-[#00F0C0] hover:bg-white/5 rounded-lg transition-colors"
+                className="p-2.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-full border border-transparent hover:border-white/15 transition-all"
               >
                 <GithubIcon className="w-4 h-4" />
               </a>
@@ -131,7 +133,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 onClick={() => cyberSound.playClick()}
                 aria-label="LinkedIn"
                 title="LinkedIn Profile"
-                className="p-2 text-slate-400 hover:text-[#00F0C0] hover:bg-white/5 rounded-lg transition-colors"
+                className="p-2.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-full border border-transparent hover:border-white/15 transition-all"
               >
                 <LinkedinIcon className="w-4 h-4" />
               </a>
@@ -145,7 +147,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 onClick={() => cyberSound.playClick()}
                 aria-label="Twitter / X"
                 title="Twitter / X"
-                className="p-2 text-slate-400 hover:text-[#00F0C0] hover:bg-white/5 rounded-lg transition-colors"
+                className="p-2.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-full border border-transparent hover:border-white/15 transition-all"
               >
                 <TwitterIcon className="w-4 h-4" />
               </a>
@@ -159,7 +161,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 onClick={() => cyberSound.playClick()}
                 aria-label="Discord"
                 title="Discord Community"
-                className="p-2 text-slate-400 hover:text-[#00F0C0] hover:bg-white/5 rounded-lg transition-colors"
+                className="p-2.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-full border border-transparent hover:border-white/15 transition-all"
               >
                 <DiscordIcon className="w-4 h-4" />
               </a>
@@ -173,7 +175,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 onClick={() => cyberSound.playClick()}
                 aria-label="Telegram"
                 title="Telegram Channel"
-                className="p-2 text-slate-400 hover:text-[#00F0C0] hover:bg-white/5 rounded-lg transition-colors"
+                className="p-2.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-full border border-transparent hover:border-white/15 transition-all"
               >
                 <TelegramIcon className="w-4 h-4" />
               </a>
@@ -187,7 +189,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 onClick={() => cyberSound.playClick()}
                 aria-label="Matrix"
                 title="Matrix Room"
-                className="p-2 text-slate-400 hover:text-[#00F0C0] hover:bg-white/5 rounded-lg transition-colors"
+                className="p-2.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-full border border-transparent hover:border-white/15 transition-all"
               >
                 <MatrixIcon className="w-4 h-4 text-[#00F0C0]" />
               </a>
@@ -195,7 +197,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
 
             <button
               onClick={scrollToTop}
-              className="p-2 text-slate-400 hover:text-[#00F0C0] hover:bg-white/5 rounded-lg transition-colors cursor-pointer"
+              className="p-2.5 text-slate-400 hover:text-black hover:bg-white rounded-full border border-white/20 transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95"
               title="Scroll to Top"
             >
               <ArrowUp className="w-4 h-4" />

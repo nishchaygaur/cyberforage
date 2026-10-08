@@ -47,13 +47,16 @@ export const LabsSection: React.FC<LabsSectionProps> = ({
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
           <div>
-            <span className="text-xs font-mono tracking-[0.2em] text-[#00E5BE] font-medium uppercase mb-2 block">
-              EXPERIMENTATION & VALIDATION
-            </span>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight">
+            <div className="inline-flex items-center gap-2 mb-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.12] backdrop-blur-md">
+              <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-[#ff0055] via-[#00ffaa] to-[#00e5ff] animate-pulse" />
+              <span className="text-[10px] font-mono tracking-[0.2em] text-slate-300 font-semibold uppercase">
+                EXPERIMENTATION & VALIDATION
+              </span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight font-mono">
               Cyberforage Labs
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300 mt-2 max-w-2xl leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-300 mt-2 max-w-2xl leading-relaxed font-mono">
               Practical attack simulation, detection validation, forensic triage, and telemetry analysis environments engineered to stress-test real-world defenses.
             </p>
           </div>
@@ -70,10 +73,10 @@ export const LabsSection: React.FC<LabsSectionProps> = ({
                     setActiveCategory(cat);
                   }}
                   onMouseEnter={() => cyberSound.playBlip()}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer whitespace-nowrap ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-mono font-medium transition-all cursor-pointer whitespace-nowrap ${
                     isSelected
-                      ? 'bg-[#00F0C0]/15 text-[#00F0C0] border border-[#00F0C0]/40 shadow-sm'
-                      : 'text-slate-400 hover:text-white bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06]'
+                      ? 'bg-white text-black font-semibold shadow-[0_0_15px_rgba(255,255,255,0.3)]'
+                      : 'text-slate-400 hover:text-white bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08]'
                   }`}
                 >
                   {cat}
@@ -175,7 +178,7 @@ export const LabsSection: React.FC<LabsSectionProps> = ({
                       cyberSound.playClick();
                       onRunLabSimulation(lab);
                     }}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95"
+                    className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-mono font-semibold transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95"
                     style={{
                       backgroundColor: `${colorHex}15`,
                       borderColor: `${colorHex}50`,
@@ -193,7 +196,7 @@ export const LabsSection: React.FC<LabsSectionProps> = ({
                       cyberSound.playClick();
                       onFocusBlade3D(lab.id);
                     }}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 hover:border-white/30 text-xs font-mono text-slate-300 hover:text-white transition-all cursor-pointer hover:scale-105 active:scale-95"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.1] border border-white/10 hover:border-white/30 text-xs font-mono text-slate-300 hover:text-white transition-all cursor-pointer hover:scale-105 active:scale-95"
                     title="Inspect Blade in 3D Server Rack"
                   >
                     <Server className="w-3.5 h-3.5" style={{ color: colorHex }} />

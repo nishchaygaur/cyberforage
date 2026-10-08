@@ -165,8 +165,15 @@ export const Cyber3DCard: React.FC<Cyber3DCardProps> = ({
             : '0 4px 20px rgba(0, 0, 0, 0.4)',
           borderColor: isHovered ? colors.border : undefined,
         }}
-        className={`relative rounded-2xl bg-[#081220]/90 border border-white/[0.08] backdrop-blur-md overflow-hidden transition-colors ${className}`}
+        className={`relative rounded-2xl bg-gradient-to-b from-[#0d1526]/95 via-[#080d19]/95 to-[#03060c]/98 border border-white/[0.08] backdrop-blur-xl overflow-hidden transition-all duration-300 ${className}`}
       >
+        {/* Theme 1 Prismatic Rainbow Razor Top Edge */}
+        <div
+          className={`absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-[#ff0055] via-[#ffaa00] via-[#00ffaa] via-[#00e5ff] to-[#8b5cf6] z-30 transition-all duration-300 ${
+            isHovered ? 'opacity-100 shadow-[0_0_12px_rgba(0,229,255,0.8),0_0_24px_rgba(255,0,85,0.6)] h-[2.5px]' : 'opacity-60 shadow-[0_0_6px_rgba(0,229,255,0.3)]'
+          }`}
+        />
+
         {/* Holographic Mouse Glare Layer */}
         {isHovered && (
           <div

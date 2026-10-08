@@ -2,14 +2,19 @@
 
 @layer base {
   :root {
-    --bg-primary: #040812;
-    --bg-secondary: #071220;
-    --bg-tertiary: #0a182c;
+    --bg-primary: #020408;
+    --bg-secondary: #050a14;
+    --bg-tertiary: #08111e;
+    --bg-monolith: #070c16;
     --cyber-cyan: #00F0C0;
     --cyber-mint: #00E5BE;
     --cyber-purple: #A855F7;
     --cyber-rose: #F43F5E;
     --cyber-sky: #38BDF8;
+
+    /* Theme 1 Prism Spectrum Refraction */
+    --prism-spectrum: linear-gradient(90deg, #ff0055 0%, #ff7700 16%, #ffea00 33%, #00ff88 50%, #00e5ff 68%, #8b5cf6 85%, #ff0055 100%);
+    --prism-edge-glow: drop-shadow(0 0 8px rgba(0, 229, 255, 0.6)) drop-shadow(0 0 16px rgba(255, 0, 85, 0.4));
 
     /* Futuristic Cyan Tactical Stealth Arrow (Default) - Only clean cursor, nothing around it */
     --cursor-default: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M2 2L19 10L11 12.5L8 20L2 2Z' fill='%23040812' stroke='%2300F0C0' stroke-width='1.5' stroke-linejoin='miter' stroke-miterlimit='4'/%3E%3Cpath d='M4.5 5L14 9.5L10 11.2L8.5 15.8L4.5 5Z' fill='%2300F0C0' fill-opacity='0.25'/%3E%3Cpolygon points='2,2 6,3.5 3.5,6' fill='%2300F0C0'/%3E%3C/svg%3E") 2 2, auto;
@@ -249,3 +254,175 @@
     animation-timeline: scroll(root);
   }
 }
+
+/* ========================================================
+   THEME 1: PRISM MONOLITH / STEPPED 3D STAGE STYLING
+   ======================================================== */
+
+@keyframes prism-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes prism-shimmer {
+  0%, 100% {
+    opacity: 0.85;
+    filter: drop-shadow(0 0 6px rgba(0, 240, 192, 0.7)) drop-shadow(0 0 12px rgba(168, 85, 247, 0.4));
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 12px rgba(255, 0, 85, 0.8)) drop-shadow(0 0 20px rgba(56, 189, 248, 0.6));
+  }
+}
+
+.animate-prism-flow {
+  background-size: 200% 200%;
+  animation: prism-flow 6s ease infinite;
+}
+
+.animate-prism-shimmer {
+  animation: prism-shimmer 3.5s ease-in-out infinite;
+}
+
+/* Smooth Infinite Marquee for Hero Tech Fleet Dock */
+@keyframes marquee-scroll {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-marquee-smooth {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: marquee-scroll 32s linear infinite;
+}
+
+.animate-marquee-smooth:hover {
+  animation-play-state: paused;
+}
+
+/* Prismatic Rainbow Razor Edge */
+.prism-edge {
+  position: relative;
+}
+.prism-edge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #ff0055 0%, #ff7700 16%, #ffea00 33%, #00ff88 50%, #00e5ff 68%, #8b5cf6 85%, #ff0055 100%);
+  background-size: 200% 100%;
+  animation: prism-flow 5s linear infinite;
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.5), 0 0 16px rgba(255, 0, 85, 0.35);
+  border-radius: 9999px 9999px 0 0;
+  z-index: 20;
+}
+
+/* Obsidian Glass Monolith Card */
+.monolith-card {
+  background: linear-gradient(180deg, rgba(10, 16, 28, 0.95) 0%, rgba(4, 7, 14, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.8), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+}
+
+.monolith-card:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 15px 50px -10px rgba(0, 0, 0, 0.9), 0 0 30px rgba(0, 240, 192, 0.12), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+}
+
+/* Stepped Monolith Pillar Columns */
+.monolith-pillar {
+  background: linear-gradient(180deg, #0d1527 0%, #060a14 40%, #020408 100%);
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.monolith-pillar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2.5px;
+  background: linear-gradient(90deg, #ff0055 0%, #ff7700 18%, #ffee00 35%, #00ff88 52%, #00e5ff 70%, #8b5cf6 88%, #ff0055 100%);
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.7), 0 0 20px rgba(255, 0, 85, 0.5);
+  z-index: 10;
+}
+
+.monolith-pillar:hover {
+  transform: translateY(-6px);
+  background: linear-gradient(180deg, #131e36 0%, #080f1e 40%, #03060c 100%);
+}
+
+.monolith-pillar:hover::before {
+  height: 3px;
+  box-shadow: 0 0 14px rgba(0, 229, 255, 0.9), 0 0 28px rgba(255, 0, 85, 0.7);
+}
+
+/* Theme 1 Minimalist Pill Navigation Bar */
+.prism-nav-capsule {
+  background: rgba(4, 8, 16, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Minimalist Theme 1 High-Contrast White Pill CTA */
+.prism-pill-btn-primary {
+  background: #ffffff;
+  color: #030712;
+  font-weight: 700;
+  border-radius: 9999px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.9);
+}
+
+.prism-pill-btn-primary:hover {
+  background: #f1f5f9;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 25px rgba(255, 255, 255, 0.45), 0 0 20px rgba(0, 240, 192, 0.3);
+}
+
+.prism-pill-btn-secondary {
+  background: rgba(255, 255, 255, 0.04);
+  color: #f8fafc;
+  font-weight: 600;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.prism-pill-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(0, 240, 192, 0.5);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 0 20px rgba(0, 240, 192, 0.2);
+}
+
+/* Theme 1 Bottom Dock */
+.prism-dock {
+  background: rgba(5, 10, 20, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+

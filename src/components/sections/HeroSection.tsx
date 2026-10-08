@@ -1,7 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { ArrowRight, Terminal, ShieldAlert, CheckCircle2, ChevronDown, Network, Radio, Mic, MicOff, Volume2 } from 'lucide-react';
+import { ArrowRight, Terminal, ShieldAlert, CheckCircle2, ChevronDown, Network, Radio, Mic, MicOff, Volume2, Play } from 'lucide-react';
 import { CyberScene } from '../3d/CyberScene';
 import { CyberHUDControls } from '../3d/CyberHUDControls';
+import { PrismMonolithStage } from '../3d/PrismMonolithStage';
+import { PrismFleetDock } from '../ui/PrismFleetDock';
 import { SceneMode, SimulatedIncident } from '../../types';
 import { OrbitalNodeData } from '../3d/CyberGlobe';
 import { cyberSound } from '../../audio/cyberSoundEngine';
@@ -129,6 +131,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         aria-hidden="true"
       />
 
+      {/* Theme 1 Stepped Obsidian Monolith Stage with Prismatic Edges */}
+      <PrismMonolithStage />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full my-auto">
         {/* Global Emergency Alert Banner (Controlled via Admin Panel) */}
         {content.telemetry?.isAlertActive && (
@@ -157,62 +162,78 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 xl:gap-10 items-center">
           {/* Left Column: Hero Content */}
           <div className="flex flex-col items-start z-10 w-full max-w-xl mx-auto lg:mx-0">
-            {/* Top Chip */}
-            <div className="inline-flex items-center gap-2 mb-2 sm:mb-3 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-[#00F0C0]/5 border border-[#00F0C0]/25 backdrop-blur-sm">
-              <span className="w-2 h-2 rounded-full bg-[#00F0C0] animate-pulse" />
-              <span className="text-[10px] sm:text-xs md:text-sm font-mono tracking-[0.14em] sm:tracking-[0.22em] text-[#00E5BE] font-semibold uppercase">
+            {/* Top Chip with Iridescent Gradient Dot */}
+            <div className="inline-flex items-center gap-2 mb-2 sm:mb-3 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.12] backdrop-blur-md shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-gradient-to-r from-[#ff0055] via-[#00ffaa] to-[#00e5ff] animate-pulse" />
+              <span className="text-[10px] sm:text-xs font-mono tracking-[0.16em] sm:tracking-[0.22em] text-slate-200 font-semibold uppercase">
                 {content.hero?.badge || 'CYBERSECURITY / RESEARCH / AI / AUTOMATION'}
               </span>
             </div>
 
-            {/* Title */}
+            {/* Title with Subtle Prismatic Glow */}
             <h1 className="text-3xl sm:text-5xl lg:text-5xl xl:text-6xl font-extrabold tracking-tight mb-1.5 sm:mb-2 font-mono">
-              <span className="text-white">{content.hero?.brandPrefix || 'CYBER'}</span>
-              <span className="text-[#00F0C0] drop-shadow-[0_0_20px_rgba(0,240,192,0.4)]">
+              <span className="text-white drop-shadow-[0_0_25px_rgba(255,255,255,0.35)]">{content.hero?.brandPrefix || 'CYBER'}</span>
+              <span className="text-[#00F0C0] drop-shadow-[0_0_25px_rgba(0,240,192,0.5)]">
                 {content.hero?.brandSuffix || 'FORAGE'}
               </span>
             </h1>
 
             {/* Motto */}
-            <p className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-100 mb-2 sm:mb-2.5 tracking-tight">
-              {content.hero?.motto || 'Explore. Build. Defend.'}
+            <p className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-100 mb-2 sm:mb-2.5 tracking-tight flex items-center gap-2">
+              <span>{content.hero?.motto || 'Explore. Build. Defend.'}</span>
+              <span className="w-8 h-[2px] bg-gradient-to-r from-[#00F0C0] to-[#ff0055] rounded-full hidden sm:inline-block" />
             </p>
 
             {/* Subtext */}
-            <p className="text-xs sm:text-sm lg:text-base text-slate-300 max-w-lg mb-4 sm:mb-5 leading-relaxed font-normal">
+            <p className="text-xs sm:text-sm lg:text-base text-slate-300 max-w-lg mb-5 sm:mb-6 leading-relaxed font-normal">
               {content.hero?.description || 'A technology ecosystem for cybersecurity, security research, intelligent automation and defensive engineering.'}
             </p>
 
-            {/* Action Buttons */}
+            {/* Theme 1 Signature Hero Actions */}
             <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 mb-4 sm:mb-5">
+              {/* Primary High-Contrast White Pill (Explore Platform) */}
               <a
                 href="#projects"
                 onClick={() => cyberSound.playClick()}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-lg bg-[#00E5BE] text-[#04131E] font-bold text-xs sm:text-sm transition-all duration-200 hover:bg-[#00F0C0] shadow-[0_0_25px_rgba(0,229,190,0.35)] hover:shadow-[0_0_35px_rgba(0,240,192,0.55)] cursor-pointer group hover:scale-105 active:scale-95"
+                className="prism-pill-btn-primary inline-flex items-center justify-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 text-xs sm:text-sm font-mono cursor-pointer group"
               >
-                <span>Explore Projects</span>
-                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                <span>Explore Platform</span>
+                <ArrowRight className="w-3.5 h-3.5 text-[#030712] transition-transform group-hover:translate-x-1" />
               </a>
 
-              <a
-                href="#labs"
-                onClick={() => cyberSound.playClick()}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-lg bg-[#06101E]/80 hover:bg-[#09172B] text-slate-200 hover:text-white border border-slate-700/80 hover:border-[#00E5BE]/60 text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer hover:scale-105 active:scale-95"
+              {/* Secondary Translucent Pill (View Demo) */}
+              <button
+                onClick={() => {
+                  cyberSound.playClick();
+                  onSimulateAttack();
+                }}
+                className="prism-pill-btn-secondary inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-sm font-mono cursor-pointer group"
+                title="Launch simulated live attack demonstration"
               >
-                <span>Explore Labs</span>
-              </a>
+                <Play className="w-3.5 h-3.5 fill-current text-[#00E5BE] transition-transform group-hover:scale-110" />
+                <span>View Demo</span>
+              </button>
 
+              {/* Tactical CLI Button */}
               <button
                 onClick={() => {
                   cyberSound.playClick();
                   onOpenTerminal();
                 }}
-                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] text-[#00F0C0] border border-white/10 hover:border-[#00F0C0]/40 text-xs font-mono transition-all cursor-pointer hover:scale-105 active:scale-95"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-[#00F0C0] border border-white/10 hover:border-[#00F0C0]/40 text-xs font-mono transition-all cursor-pointer hover:scale-105 active:scale-95"
                 title="Launch Tactical Terminal (Ctrl+K or `~`)"
               >
                 <Terminal className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">CLI Console</span>
               </button>
+
+              <a
+                href="#labs"
+                onClick={() => cyberSound.playClick()}
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-full bg-white/[0.04] hover:bg-white/[0.09] text-slate-300 hover:text-white border border-white/10 hover:border-[#00E5BE]/50 text-xs font-mono transition-all cursor-pointer hover:scale-105 active:scale-95"
+              >
+                <span>Explore Labs</span>
+              </a>
 
               {onOpenNmap && (
                 <button
@@ -220,7 +241,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     cyberSound.playClick();
                     onOpenNmap();
                   }}
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-lg bg-[#10B981]/10 hover:bg-[#10B981]/25 text-emerald-300 border border-[#10B981]/40 text-xs font-mono transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-full bg-[#10B981]/10 hover:bg-[#10B981]/25 text-emerald-300 border border-[#10B981]/40 text-xs font-mono transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
                   title="Launch Live Nmap Network Port Scanner"
                 >
                   <Network className="w-3.5 h-3.5 text-emerald-400" />
@@ -231,12 +252,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               {/* Tactical AI Voice Control & Synthesizer Button */}
               <button
                 onClick={handleToggleVoice}
-                className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-lg border text-xs font-mono transition-all cursor-pointer hover:scale-105 active:scale-95 ${
+                className={`inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-full border text-xs font-mono transition-all cursor-pointer hover:scale-105 active:scale-95 ${
                   isListening
                     ? 'bg-rose-500/20 text-rose-300 border-rose-500/60 shadow-[0_0_20px_rgba(244,63,94,0.35)] animate-pulse'
                     : voiceActive
                     ? 'bg-[#A855F7]/15 hover:bg-[#A855F7]/25 text-purple-300 border-[#A855F7]/50 shadow-[0_0_15px_rgba(168,85,247,0.25)]'
-                    : 'bg-white/[0.03] hover:bg-white/[0.08] text-slate-400 border-white/10 hover:border-white/20'
+                    : 'bg-white/[0.04] hover:bg-white/[0.08] text-slate-400 border-white/10 hover:border-white/20'
                 }`}
                 title="Toggle Tactical AI Voice Synthesizer & Speech Recognition"
               >
@@ -265,7 +286,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     cyberSound.playClick();
                     onOpenAudioConsole();
                   }}
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-lg bg-[#38BDF8]/10 hover:bg-[#38BDF8]/20 text-sky-300 border border-[#38BDF8]/30 hover:border-[#38BDF8]/60 text-xs font-mono transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(56,189,248,0.15)]"
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-full bg-[#38BDF8]/10 hover:bg-[#38BDF8]/20 text-sky-300 border border-[#38BDF8]/30 hover:border-[#38BDF8]/60 text-xs font-mono transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(56,189,248,0.15)]"
                   title="Open Tactical Soundscape & Audio Console"
                 >
                   <Volume2 className="w-3.5 h-3.5 text-sky-400" />
@@ -463,6 +484,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               )}
             </div>
           </div>
+        </div>
+
+        {/* Theme 1 Signature Docked Fleet Bar */}
+        <div className="mt-6 lg:mt-8 mb-2 relative z-20">
+          <PrismFleetDock />
         </div>
       </div>
 

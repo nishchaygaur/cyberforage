@@ -14,13 +14,16 @@ export const EcosystemSection: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           {/* Left Description */}
           <div className="lg:col-span-4 flex flex-col justify-center">
-            <span className="text-xs font-mono tracking-[0.2em] text-[#00E5BE] font-medium uppercase mb-3 block">
-              THE CYBERFORAGE ECOSYSTEM
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-4">
+            <div className="inline-flex items-center gap-2 mb-3.5 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.12] backdrop-blur-md self-start">
+              <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-[#ff0055] via-[#00ffaa] to-[#00e5ff] animate-pulse" />
+              <span className="text-[10px] font-mono tracking-[0.2em] text-slate-300 font-semibold uppercase">
+                THE CYBERFORAGE ECOSYSTEM
+              </span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-4 font-mono">
               {content.ecosystem?.title || 'More Than Just Projects'}
             </h2>
-            <p className="text-slate-300 text-sm sm:text-base leading-relaxed mb-6">
+            <p className="text-slate-300 text-sm sm:text-base leading-relaxed mb-6 font-mono text-xs sm:text-sm">
               {content.ecosystem?.description ||
                 'Cyberforage brings together security, AI and automation into a unified ecosystem — building tools, labs and research for a safer digital world.'}
             </p>
@@ -28,10 +31,10 @@ export const EcosystemSection: React.FC = () => {
               <a
                 href="#projects"
                 onClick={() => cyberSound.playClick()}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#06101E]/90 hover:bg-[#0A182E] text-slate-200 hover:text-white border border-[#00E5BE]/30 hover:border-[#00E5BE] text-sm font-medium transition-all group cursor-pointer shadow-lg hover:shadow-[0_0_20px_rgba(0,229,190,0.2)]"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-black hover:bg-slate-200 text-sm font-semibold transition-all group cursor-pointer shadow-[0_0_20px_rgba(255,255,255,0.25)] hover:scale-[1.02]"
               >
                 <span>Explore Projects</span>
-                <ArrowRight className="w-4 h-4 text-[#00E5BE] transition-transform group-hover:translate-x-1" />
+                <ArrowRight className="w-4 h-4 text-black transition-transform group-hover:translate-x-1" />
               </a>
             </div>
           </div>

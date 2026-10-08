@@ -43,10 +43,13 @@ export const ResearchSection: React.FC<ResearchSectionProps> = ({ onOpenThreatGr
         <div>
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 sm:mb-12 gap-4">
             <div>
-              <span className="text-xs font-mono tracking-[0.2em] text-[#00E5BE] font-medium uppercase mb-2 block">
-                WHAT WE EXPLORE
-              </span>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight">
+              <div className="inline-flex items-center gap-2 mb-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.12] backdrop-blur-md">
+                <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-[#ff0055] via-[#00ffaa] to-[#00e5ff] animate-pulse" />
+                <span className="text-[10px] font-mono tracking-[0.2em] text-slate-300 font-semibold uppercase">
+                  WHAT WE EXPLORE
+                </span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight font-mono">
                 Research. Build. Innovate.
               </h2>
             </div>
@@ -57,9 +60,9 @@ export const ResearchSection: React.FC<ResearchSectionProps> = ({ onOpenThreatGr
                     cyberSound.playClick();
                     onOpenThreatGraph();
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#00F0C0]/10 hover:bg-[#00F0C0]/20 border border-[#00F0C0]/40 text-[#00F0C0] text-xs font-mono font-semibold transition-all hover:shadow-[0_0_15px_rgba(0,240,192,0.25)]"
+                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/20 text-white text-xs font-mono font-semibold transition-all hover:shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:scale-105 active:scale-95"
                 >
-                  <Network className="w-4 h-4" />
+                  <Network className="w-4 h-4 text-[#00F0C0]" />
                   <span>Threat Intel Graph</span>
                 </button>
               )}
@@ -128,14 +131,17 @@ export const ResearchSection: React.FC<ResearchSectionProps> = ({ onOpenThreatGr
         <div>
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 sm:mb-12">
             <div>
-              <span className="text-xs font-mono tracking-[0.2em] text-[#00E5BE] font-medium uppercase mb-2 block">
-                LATEST FROM CYBERFORAGE
-              </span>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight">
+              <div className="inline-flex items-center gap-2 mb-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.12] backdrop-blur-md">
+                <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-[#ff0055] via-[#00ffaa] to-[#00e5ff] animate-pulse" />
+                <span className="text-[10px] font-mono tracking-[0.2em] text-slate-300 font-semibold uppercase">
+                  LATEST FROM CYBERFORAGE
+                </span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight font-mono">
                 Research &amp; Insights
               </h2>
             </div>
-            <div className="mt-3 sm:mt-0 text-xs font-mono text-[#00F0C0] flex items-center gap-1.5">
+            <div className="mt-3 sm:mt-0 text-xs font-mono text-slate-300 flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/10">
               <span className="w-2 h-2 rounded-full bg-[#00F0C0] animate-pulse" />
               <span>Peer-Reviewed Intel</span>
             </div>
